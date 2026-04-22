@@ -5,7 +5,7 @@
 
 #define CONTROL_LOOP_TIME_MS                    100   // ms
 
-#define MIN_ZERO_CROSS_INTERVAL_US              1000  // us
+#define ZERO_CROSS_EDGE_MARGIN_US               100   // us
 
 #define POWER_BUDGET_MIN                        10    // Watt
 

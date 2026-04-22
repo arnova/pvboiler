@@ -41,6 +41,7 @@ PubSubClient g_MQTTClient(g_wifiClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
+volatile uint32_t g_iPhaseCorrectionTime = 0;
 volatile uint32_t g_iZeroCrossTime = 0;
 volatile bool g_bZeroCrossTimeUpdated = false;
 volatile float g_fTriacAngleFactor = 1.0; // Off
@@ -51,26 +52,41 @@ void startTriacTimer()
 {
   // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
   // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  const uint32_t iTriacDelayTicks = (g_fTriacAngleFactor * g_iZeroCrossTime * 80);
+  const uint32_t iTriacDelayTicks = ((g_fTriacAngleFactor * g_iZeroCrossTime) + g_iPhaseCorrectionTime) * 80;
 
   timer1_write(iTriacDelayTicks);
 }
 
 
-// Interrupt generated when microphone detects signal
+// Interrupt generated when crossing zero in either direction
 void IRAM_ATTR ZeroCrossISR()
 {
   const uint32_t iNow = micros();
 
-  // filter noise
-  if (g_iLastZeroCrossTime == 0 || iNow - g_iLastZeroCrossTime > MIN_ZERO_CROSS_INTERVAL_US)
+  if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
   {
-    if (g_iLastZeroCrossTime != 0)
+    // filter noise
+    if (g_iLastZeroCrossTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US)
     {
-      g_iZeroCrossTime = iNow - g_iLastZeroCrossTime;
-      g_bZeroCrossTimeUpdated = true;
+      if (g_iLastZeroCrossTime != 0)
+      {
+        g_iZeroCrossTime = iNow - g_iLastZeroCrossTime;
+        g_bZeroCrossTimeUpdated = true;
+      }
+      g_iLastZeroCrossTime = iNow;
     }
-    g_iLastZeroCrossTime = iNow;
+  }
+  else // Falling edge
+  {
+    // filter noise
+    if (g_iPhaseCorrectionTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US)
+    {
+      if (g_iLastZeroCrossTime != 0)
+      {
+        // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
+        g_iPhaseCorrectionTime = (iNow - g_iLastZeroCrossTime) / 2;
+      }
+    }
   }
 
   // Immediately turn on triac with 100% power
@@ -383,7 +399,7 @@ void setup()
   digitalWrite(TRIAC_OUTPUT, LOW);
 
   pinMode(ZERO_CROSS_INPUT, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
 
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
