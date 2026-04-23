@@ -33,7 +33,7 @@ bool CPVBoiler::MQTTPublishValues()
   }
 #endif
 
-#ifdef MQTT_SET_TARGET_PERCENTAGE
+#ifdef MQTT_SET_POWER_PERCENTAGE
   if (m_bUpdatePowerPercentage)
   {
     m_bUpdatePowerPercentage = false;
@@ -41,7 +41,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_pMQTTClient->publish(MQTT_PVBOILER_CTRL_PREFIX MQTT_SET_TARGET_PERCENTAGE, strTemp, true);
+    m_pMQTTClient->publish(MQTT_PVBOILER_CTRL_PREFIX MQTT_SET_POWER_PERCENTAGE, strTemp, true);
   }
 #endif
 
@@ -88,7 +88,7 @@ void CPVBoiler::Update()
   }
   else
   {
-#ifdef PERCENTAGE_CONTROL
+#ifdef POWER_PERCENTAGE_CONTROL
     if (m_iOutputPercentage < m_iPowerPercentage)
     {
       m_iOutputPercentage++;

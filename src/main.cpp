@@ -165,8 +165,8 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       MQTTPrintError();
   }
 #endif
-#ifdef MQTT_SET_TARGET_PERCENTAGE
-  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/set/" MQTT_SET_TARGET_PERCENTAGE))
+#ifdef MQTT_SET_POWER_PERCENTAGE
+  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_PERCENTAGE))
   {
     if (bValidInt || length == 0)
     {
@@ -320,9 +320,9 @@ bool MQTTReconnect()
   MQTTPublishConfig(MQTT_SET_POWER_BUDGET, CPVBoiler::NUMBER);
 #endif
 
-#ifdef MQTT_SET_TARGET_PERCENTAGE
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/set/" MQTT_SET_TARGET_PERCENTAGE, 1);
-  MQTTPublishConfig(MQTT_SET_TARGET_PERCENTAGE, CPVBoiler::NUMBER);
+#ifdef MQTT_SET_POWER_PERCENTAGE
+  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_PERCENTAGE, 1);
+  MQTTPublishConfig(MQTT_SET_POWER_PERCENTAGE, CPVBoiler::NUMBER);
 #endif
 
   // Publish our f/w version

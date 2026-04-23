@@ -14,8 +14,8 @@
 
 #define PERCENTAGE_CAP                          2.0 // %
 
-// Enable this if you want to control using setting percentage instead of providing power budget
-//#define PERCENTAGE_CONTROL
+// Enable this if you want to control using setting power percentage instead of providing power budget
+//#define POWER_PERCENTAGE_CONTROL
 
 // WiFi settings
 const char HOSTNAME[] = "pvboiler";

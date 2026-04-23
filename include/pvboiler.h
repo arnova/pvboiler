@@ -13,8 +13,8 @@
 // Control topics
 #define MQTT_CONTROLLER_ON_OFF                      "Controller Enable"
 
-#ifdef PERCENTAGE_CONTROL
-#define MQTT_SET_TARGET_PERCENTAGE                  "Power Percentage"
+#ifdef POWER_PERCENTAGE_CONTROL
+#define MQTT_SET_POWER_PERCENTAGE                   "Power Percentage"
 #else
 #define MQTT_SET_POWER_BUDGET                       "Power Budget"
 #endif
