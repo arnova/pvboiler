@@ -80,9 +80,9 @@ void CPVBoiler::Update()
 
   if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
   {
-    if (m_iOutputPercentage != 0)
+    if (m_iOutputPercentage > 0)
     {
-      m_iOutputPercentage = 0; // Device off or watch-dog triggered: output to 0%
+      m_iOutputPercentage--; // Device off or watch-dog triggered: output to 0%
       m_bUpdateOutputPercentage = true;
     }
   }
