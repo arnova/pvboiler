@@ -78,7 +78,7 @@ void CPVBoiler::Update()
     m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
 
-  if (/* m_iWatchdogRecoveryCounter > 0 || */ !m_bCtrlEnable)
+  if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
   {
     if (m_iOutputPercentage > 0)
     {

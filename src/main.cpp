@@ -103,7 +103,7 @@ void IRAM_ATTR ZeroCrossISR()
   {
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-    // NOTE: Don't turn on triac between 0-2% to prevent EMI due to misfiring
+    // NOTE: Don't turn on triac near 0% to prevent EMI due to misfiring
     if (g_fTriacAngleFactor >= (100.0 - (PERCENTAGE_CAP / 100.0)))
     {
       startTriacTimer();
@@ -159,29 +159,27 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 #ifdef MQTT_SET_POWER_BUDGET
   else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
-    if (bValidInt || length == 0)
+    if (bValidInt && iVal >=0)
     {
-      if (length > 0)
-        g_pvBoiler.SetCtrlSetPowerBudget(iVal);
-      else
-        MQTTPrintError();
+      g_pvBoiler.SetCtrlSetPowerBudget(iVal);
     }
     else
+    {
       MQTTPrintError();
+    }
   }
 #endif
 #ifdef MQTT_SET_POWER_PERCENTAGE
   else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
-    if (bValidInt || length == 0)
+    if (bValidInt && iVal >=0 && iVal <= 100)
     {
-      if (length > 0)
-        g_pvBoiler.SetCtrlSetPowerPercentage(iVal);
-      else
-        MQTTPrintError();
+      g_pvBoiler.SetCtrlSetPowerPercentage(iVal);
     }
     else
+    {
       MQTTPrintError();
+    }
   }
 #endif
 
