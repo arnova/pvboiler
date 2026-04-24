@@ -52,17 +52,6 @@ volatile bool g_bZeroCrossTimeUpdated = false;
 volatile float g_fTriacAngleFactor = 1.0; // Off
 
 
-// period_us: desired period in microseconds (100–10000)
-void startTriacTimer()
-{
-  // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-  // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  const uint32_t iTriacDelayTicks = ((g_fTriacAngleFactor * g_iZeroCrossTime) + g_iPhaseCorrectionTime) * 80;
-
-  timer1_write(iTriacDelayTicks);
-}
-
-
 // Interrupt generated when crossing zero in either direction
 void IRAM_ATTR ZeroCrossISR()
 {
@@ -93,7 +82,11 @@ void IRAM_ATTR ZeroCrossISR()
       // NOTE: Don't turn on triac near 0% to prevent excessive EMI due to misfiring
       if (g_fTriacAngleFactor <= 0.98)
       {
-        startTriacTimer();
+        // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+        // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+        const uint32_t iTriacDelayTicks = ((g_fTriacAngleFactor * g_iZeroCrossTime) + g_iPhaseCorrectionTime) * 80;
+
+        timer1_write(iTriacDelayTicks);
       }
     }
   }
@@ -113,7 +106,7 @@ void IRAM_ATTR ZeroCrossISR()
 
 
 // Timer interrupt for enabling triac after timer delay
-IRAM_ATTR void TriacTimerISR()
+void IRAM_ATTR TriacTimerISR()
 {
   digitalWrite(TRIAC_OUTPUT, HIGH); // On
   // FIXME: Need an additional short time to turn gate pulse off again?
