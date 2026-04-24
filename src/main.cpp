@@ -1,6 +1,6 @@
 /*
   ESP PV-Boiler - ESP Controlled PV Boiler
-  Last update: April 18, 2026
+  Last update: April 24, 2026
   (C) Copyright 2026 by Arno van Amersfoort
   Web                   : https://github.com/arnova/ctrl4dkn
   Email                 : a r n o DOT v a n DOT a m e r s f o o r t AT g m a i l DOT c o m
@@ -22,8 +22,13 @@
 */
 
 #include <Arduino.h>
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#else
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#endif
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
@@ -139,7 +144,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
   int32_t iVal;
   const bool bValidInt = BytesToInt32(payload, length, iVal);
 
-  if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/set/" MQTT_CONTROLLER_ON_OFF))
+  if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
   {
     if (bValidInt || length == 0)
     {
@@ -152,7 +157,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       MQTTPrintError();
   }
 #ifdef MQTT_SET_POWER_BUDGET
-  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_BUDGET))
+  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt || length == 0)
     {
@@ -166,7 +171,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
   }
 #endif
 #ifdef MQTT_SET_POWER_PERCENTAGE
-  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_PERCENTAGE))
+  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt || length == 0)
     {
@@ -185,11 +190,41 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 }
 
 
+void GetFriendlyName(const String& strName, String& strFriendly)
+{
+  bool bSpace = true;
+
+  for (uint8_t it = 0; it < strName.length(); it++)
+  {
+    if (strName[it] == '_')
+    {
+      strFriendly += ' ';
+      bSpace = true;
+    }
+    else
+    {
+      if (bSpace)
+      {
+        bSpace = false;
+        strFriendly += (char) toupper(strName[it]);
+      }
+      else
+      {
+        strFriendly += strName[it];
+      }
+    }
+  }
+}
+
+
 void MQTTPublishConfig(const char* strItem, CPVBoiler::ha_config_type_t HAConfigType)
 {
+  String strFriendlyName;
+  GetFriendlyName(strItem, strFriendlyName);
+
   JsonDocument root;
-  root["name"] = strItem;
-  root["unique_id"] = String("PvBoiler_") + strItem; // Optional
+  root["name"] = strFriendlyName;
+  root["unique_id"] = String(MQTT_PVBOILER_NAME "_") + strItem; // Optional
   root["retain"] = true;
   root["qos"] = 1;
 
@@ -200,7 +235,7 @@ void MQTTPublishConfig(const char* strItem, CPVBoiler::ha_config_type_t HAConfig
     case CPVBoiler::SWITCH:
     {
       root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["command_topic"] = String(MQTT_PVBOILER_NAME "/set/") + strItem;
+      root["command_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem + "/set";
       root["payload_on"] = "1";
       root["payload_off"] = "0";
       root["state_on"] = "1";
@@ -211,7 +246,7 @@ void MQTTPublishConfig(const char* strItem, CPVBoiler::ha_config_type_t HAConfig
     case CPVBoiler::NUMBER:
     {
       root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["command_topic"] = String(MQTT_PVBOILER_NAME "/set/") + strItem;
+      root["command_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem + "/set";
       root["min"] = "0.0000"; // FIXME: Need to make it configurable
       root["max"] = "10000.0000"; // FIXME: Need to make it configurable
       //root["step"] = "1.0000"; // FIXME: Need to make it configurable
@@ -312,16 +347,16 @@ bool MQTTReconnect()
   Serial.println("connected");
 
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/set/" MQTT_CONTROLLER_ON_OFF, 1);
+  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_CONTROLLER_ON_OFF "/set", 1);
   MQTTPublishConfig(MQTT_CONTROLLER_ON_OFF, CPVBoiler::SWITCH);
 
 #ifdef MQTT_SET_POWER_BUDGET
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_BUDGET, 1);
+  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set", 1);
   MQTTPublishConfig(MQTT_SET_POWER_BUDGET, CPVBoiler::NUMBER);
 #endif
 
 #ifdef MQTT_SET_POWER_PERCENTAGE
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/set/" MQTT_SET_POWER_PERCENTAGE, 1);
+  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set", 1);
   MQTTPublishConfig(MQTT_SET_POWER_PERCENTAGE, CPVBoiler::NUMBER);
 #endif
 
@@ -391,8 +426,8 @@ void SetupWifi()
 void setup()
 {
   // Outputs
-#ifdef LED_RED
-  pinMode(LED_RED, OUTPUT);
+#ifdef STATUS_LED
+  pinMode(STATUS_LED, OUTPUT);
 #endif
 
   pinMode(TRIAC_OUTPUT, OUTPUT);
@@ -429,8 +464,8 @@ void loop()
 
   if (WiFi.status() != WL_CONNECTED) // Check for wifi disconnects
   {
-#ifdef LED_RED
-    digitalWrite(LED_RED, LOW); // Always on: failure
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
 #endif
 
     if (WifiReconnectTimer > 5000)
@@ -446,8 +481,8 @@ void loop()
   }
   else if (!g_MQTTClient.connected()) // Check for MQTT disconnects
   {
-#ifdef LED_RED
-    digitalWrite(LED_RED, LOW); // Always on: failure
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
 #endif
 
     if (MQTTReconnectTimer > 5000)
@@ -459,15 +494,15 @@ void loop()
   else
   {
     // Indicate we're running:
-#ifdef LED_RED
+#ifdef STATUS_LED
     if (ledTimer > 2000)
     {
-      digitalWrite(LED_RED, HIGH); // Off
+      digitalWrite(STATUS_LED, HIGH); // Off
       ledTimer = 0;
     }
     else if (ledTimer > 1000)
     {
-      digitalWrite(LED_RED, LOW); // On
+      digitalWrite(STATUS_LED, LOW); // On
     }
 
 #endif

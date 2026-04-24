@@ -3,7 +3,7 @@
 
 #include "secrets.h"
 
-#define CONTROL_LOOP_TIME_MS                    100   // ms
+#define CONTROL_LOOP_TIME_MS                    200   // ms
 
 #define ZERO_CROSS_EDGE_MARGIN_US               100   // us
 
@@ -15,7 +15,7 @@
 #define PERCENTAGE_CAP                          2.0 // %
 
 // Enable this if you want to control using setting power percentage instead of providing power budget
-//#define POWER_PERCENTAGE_CONTROL
+#define POWER_PERCENTAGE_CONTROL
 
 // WiFi settings
 const char HOSTNAME[] = "pvboiler";
@@ -29,8 +29,8 @@ const char mqtt_server[] = "192.168.1.65";
 /**************************
  * Output i/o pin numbers *
  **************************/
-#define LED_RED 25          // Onboard LED
+#define STATUS_LED 2        // Onboard LED
+#define ZERO_CROSS_INPUT 5  // Input for zero-cross detection
 #define TRIAC_OUTPUT 13     // Output to optocoupler + triac
-#define ZERO_CROSS_INPUT 1  // Input for zero-cross detection
 
 #endif // SYSTEM_H

@@ -41,7 +41,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_pMQTTClient->publish(MQTT_PVBOILER_CTRL_PREFIX MQTT_SET_POWER_PERCENTAGE, strTemp, true);
+    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
   }
 #endif
 
@@ -78,7 +78,7 @@ void CPVBoiler::Update()
     m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
 
-  if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
+  if (/* m_iWatchdogRecoveryCounter > 0 || */ !m_bCtrlEnable)
   {
     if (m_iOutputPercentage > 0)
     {
@@ -89,12 +89,12 @@ void CPVBoiler::Update()
   else
   {
 #ifdef POWER_PERCENTAGE_CONTROL
-    if (m_iOutputPercentage < m_iPowerPercentage)
+    if (m_iPowerPercentage > m_iOutputPercentage)
     {
       m_iOutputPercentage++;
       m_bUpdateOutputPercentage = true;
     }
-    else if (m_iOutputPercentage > m_iPowerPercentage)
+    else if (m_iPowerPercentage < m_iOutputPercentage)
     {
       m_iOutputPercentage--;
       m_bUpdateOutputPercentage = true;

@@ -11,18 +11,18 @@
 #define MQTT_PVBOILER_NAME                          "pvboiler"
 
 // Control topics
-#define MQTT_CONTROLLER_ON_OFF                      "Controller Enable"
+#define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
 
 #ifdef POWER_PERCENTAGE_CONTROL
-#define MQTT_SET_POWER_PERCENTAGE                   "Power Percentage"
+#define MQTT_SET_POWER_PERCENTAGE                   "power_percentage"
 #else
-#define MQTT_SET_POWER_BUDGET                       "Power Budget"
+#define MQTT_SET_POWER_BUDGET                       "power_budget"
 #endif
 
 // Status topics
-#define MQTT_FW_VERSION                             "Firmware Version"
-#define MQTT_OUTPUT_POWER                           "Output Power"
-#define MQTT_OUTPUT_PERCENTAGE                      "Output Percentage"
+#define MQTT_FW_VERSION                             "firmware_version"
+#define MQTT_OUTPUT_POWER                           "output_power"
+#define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
 
 #define WATCHDOG_TIMEOUT_TIME                 900   // Seconds = 15 minutes
 #define WATCHDOG_RECOVERY_TIME                900   // Seconds = 15 minutes
@@ -67,9 +67,7 @@ class CPVBoiler
 
     void SetCtrlOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bUpdateCtrlEnable = true; };
     void SetCtrlSetPowerBudget(const uint16_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
-    void SetCtrlSetPowerPercentage(const uint8_t& iVal) { m_iOutputPercentage = iVal; m_bUpdateOutputPercentage = true; };
-
-    const uint16_t& GetPowerBudget() { return m_iPowerBudget; };
+    void SetCtrlSetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
 
   private:
     void Update();
