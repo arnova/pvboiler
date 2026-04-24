@@ -80,6 +80,22 @@ void IRAM_ATTR ZeroCrossISR()
       }
       g_iLastZeroCrossTime = iNow;
     }
+
+    // Immediately turn on triac with 100% power
+    if (g_fTriacAngleFactor == 0.0)
+    {
+      digitalWrite(TRIAC_OUTPUT, HIGH); // Always on
+    }
+    else
+    {
+      digitalWrite(TRIAC_OUTPUT, LOW); // Off
+
+      // NOTE: Don't turn on triac near 0% to prevent excessive EMI due to misfiring
+      if (g_fTriacAngleFactor <= 0.98)
+      {
+        startTriacTimer();
+      }
+    }
   }
   else // Falling edge
   {
@@ -91,22 +107,6 @@ void IRAM_ATTR ZeroCrossISR()
         // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
         g_iPhaseCorrectionTime = (iNow - g_iLastZeroCrossTime) / 2;
       }
-    }
-  }
-
-  // Immediately turn on triac with 100% power
-  if (g_fTriacAngleFactor == 0.0)
-  {
-    digitalWrite(TRIAC_OUTPUT, HIGH); // Always on
-  }
-  else
-  {
-    digitalWrite(TRIAC_OUTPUT, LOW); // Off
-
-    // NOTE: Don't turn on triac near 0% to prevent EMI due to misfiring
-    if (g_fTriacAngleFactor >= (100.0 - (PERCENTAGE_CAP / 100.0)))
-    {
-      startTriacTimer();
     }
   }
 }
