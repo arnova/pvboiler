@@ -7,7 +7,7 @@ CPVBoiler::CPVBoiler(PubSubClient& MQTTClient)
 }
 
 
-float CPVBoiler::GetTriacAngleFactor()
+const float& CPVBoiler::GetTriacAngleFactor() const
 {
   return triac_percentage_factor[m_iOutputPercentage];
 }

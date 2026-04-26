@@ -75,7 +75,8 @@ class CPVBoiler
 
     void loop();
 
-    float GetTriacAngleFactor();
+    const float& GetTriacAngleFactor() const;
+    const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
 
     bool MQTTPublishValues();
 

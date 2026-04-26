@@ -50,6 +50,8 @@ volatile uint32_t g_iPhaseCorrectionTime = 0;
 volatile uint32_t g_iZeroCrossTime = 0;
 volatile bool g_bZeroCrossTimeUpdated = false;
 volatile float g_fTriacAngleFactor = 1.0; // Off
+volatile uint8_t g_iOutputPercentage = 0;
+volatile uint8_t g_iSSRPeriodCount = 0;
 
 
 // Interrupt generated when crossing zero in either direction
@@ -60,7 +62,7 @@ void IRAM_ATTR ZeroCrossISR()
   if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
   {
     // filter noise
-    if (g_iLastZeroCrossTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US)
+    if (g_iLastZeroCrossTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US * 10)
     {
       if (g_iLastZeroCrossTime != 0)
       {
@@ -70,6 +72,38 @@ void IRAM_ATTR ZeroCrossISR()
       g_iLastZeroCrossTime = iNow;
     }
 
+#ifdef SSR_STYLE_MODE
+ // TODO
+    if (++g_iSSRPeriodCount >= SSR_PERIOD_COUNT) // FIXME
+    {
+      g_iSSRPeriodCount = 0;
+    }
+
+    // Immediately turn on triac with 100% power
+    if (g_iOutputPercentage == 100)
+    {
+      digitalWrite(TRIAC_OUTPUT, HIGH); // Always on
+    }
+    else if (g_iOutputPercentage == 0)
+    {
+      digitalWrite(TRIAC_OUTPUT, LOW); // Always off
+    }
+    else
+    {
+      if ((g_iSSRPeriodCount * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage) // FIXME
+      {
+        // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+        // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+        const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime - ZERO_CROSS_EDGE_MARGIN_US) * 80; // fixme: underflow
+
+        timer1_write(iTriacDelayTicks);
+      }
+      else
+      {
+        digitalWrite(TRIAC_OUTPUT, LOW); // Off
+      }
+    }
+#else
     // Immediately turn on triac with 100% power
     if (g_fTriacAngleFactor == 0.0)
     {
@@ -89,6 +123,7 @@ void IRAM_ATTR ZeroCrossISR()
         timer1_write(iTriacDelayTicks);
       }
     }
+#endif
   }
   else // Falling edge
   {
@@ -510,8 +545,10 @@ void loop()
 
     g_bZeroCrossTimeUpdated = false;
 
-    // Get updated angle factor for triac drive
-    g_fTriacAngleFactor = g_pvBoiler.GetTriacAngleFactor(); // FIXME: Perhaps handle this in timed loop?
+    // FIXME: Perhaps handle this in timed loop?
+    // Get updated values for triac drive
+    g_fTriacAngleFactor = g_pvBoiler.GetTriacAngleFactor();
+    g_iOutputPercentage = g_pvBoiler.GetOutputPercentage();
 
     interrupts(); // Leave critical section
   }
