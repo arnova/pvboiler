@@ -22,6 +22,8 @@
 
 #define SSR_PERIOD_COUNT                        20 // Sinussen / period
 
+#define GATE_PULSE_WIDTH                       100 // uS
+
 // WiFi settings
 const char HOSTNAME[] = "pvboiler";
 const char SSID[] = WIFI_SSID;          // Need to create + define in secrets.h
