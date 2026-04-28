@@ -74,19 +74,14 @@ void IRAM_ATTR ZeroCrossISR()
     }
 
 #ifdef SSR_STYLE_MODE
- // TODO
-    if (++g_iSSRPeriodCount >= SSR_PERIOD_COUNT) // FIXME
-    {
-      g_iSSRPeriodCount = 0;
-    }
-
     if (g_iOutputPercentage == 0)
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Always off
     }
     else
     {
-      if ((g_iSSRPeriodCount * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage) // FIXME
+      g_iSSRPeriodCount++;
+      if ((g_iSSRPeriodCount * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage)
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -98,6 +93,11 @@ void IRAM_ATTR ZeroCrossISR()
       else
       {
         digitalWrite(TRIAC_OUTPUT, LOW); // Off
+      }
+
+      if (g_iSSRPeriodCount >= SSR_PERIOD_COUNT)
+      {
+        g_iSSRPeriodCount = 0;
       }
     }
 #else
