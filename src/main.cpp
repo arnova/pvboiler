@@ -152,7 +152,7 @@ void IRAM_ATTR TriacTimerISR()
 }
 
 
-void MQTTPrintError(void)
+void MQTTPrintDataError(void)
 {
   Serial.println("ERROR: Invalid MQTT data for topic");
 }
@@ -166,7 +166,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
   Serial.print("data: ");
   for (unsigned int i = 0; i < length; i++)
   {
-    Serial.print((char)payload[i]);
+    Serial.print((char) payload[i]);
   }
   Serial.println();
 
@@ -181,12 +181,18 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     if (bValidInt || length == 0)
     {
       if (iVal == 0 || iVal == 1 || length == 0)
+      {
         g_pvBoiler.SetCtrlOnOff((iVal == 1 || length == 0) ? true : false);
+      }
       else
-        MQTTPrintError();
+      {
+        MQTTPrintDataError();
+      }
     }
     else
-      MQTTPrintError();
+    {
+      MQTTPrintDataError();
+    }
   }
 #ifdef MQTT_SET_POWER_BUDGET
   else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
@@ -197,7 +203,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      MQTTPrintError();
+      MQTTPrintDataError();
     }
   }
 #endif
@@ -210,7 +216,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      MQTTPrintError();
+      MQTTPrintDataError();
     }
   }
 #endif
