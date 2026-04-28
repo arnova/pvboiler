@@ -46,7 +46,7 @@ PubSubClient g_MQTTClient(g_wifiClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
-volatile uint32_t g_iPhaseCorrectionTime = 0;
+volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
 volatile uint32_t g_iZeroCrossTime = 0;
 volatile bool g_bZeroCrossTimeUpdated = false;
 volatile bool g_bTriacOn = false;
@@ -85,7 +85,7 @@ void IRAM_ATTR ZeroCrossISR()
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-        const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime - ZERO_CROSS_EDGE_MARGIN_US) * 80; // fixme: underflow
+        const uint32_t iTriacDelayTicks = g_iPhaseCorrectionTime * 80; // fixme: underflow
 
         g_bTriacOn = true;
         timer1_write(iTriacDelayTicks);
