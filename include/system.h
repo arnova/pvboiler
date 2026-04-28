@@ -22,7 +22,7 @@
 
 #define SSR_PERIOD_COUNT                        20 // Amount of (half) sinus / periods. Always use an even number!
 
-#define GATE_PULSE_WIDTH                       100 // uS
+#define GATE_PULSE_WIDTH                      1000 // uS
 
 // MQTT settings
 #define MQTT_MAX_SIZE 1024
