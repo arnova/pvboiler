@@ -34,6 +34,7 @@
 #include <ArduinoJson.h>
 
 #include "pvboiler.h"
+#include "mqttutil.h"
 #include "util.h"
 #include "system.h"
 
@@ -43,6 +44,7 @@
 // Globals
 WiFiClient g_wifiClient;
 PubSubClient g_MQTTClient(g_wifiClient);
+CMqttUtil g_MQTTUtil(g_MQTTClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
@@ -152,12 +154,6 @@ void IRAM_ATTR TriacTimerISR()
 }
 
 
-void MQTTPrintDataError(void)
-{
-  Serial.println("ERROR: Invalid MQTT data for topic");
-}
-
-
 void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 {
   Serial.println("-------new message from broker-----");
@@ -176,7 +172,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
   int32_t iVal;
   const bool bValidInt = BytesToInt32(payload, length, iVal);
 
-  if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
+  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
   {
     if (bValidInt || length == 0)
     {
@@ -186,16 +182,16 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       }
       else
       {
-        MQTTPrintDataError();
+        CMqttUtil::PrintDataError();
       }
     }
     else
     {
-      MQTTPrintDataError();
+      CMqttUtil::PrintDataError();
     }
   }
 #ifdef MQTT_SET_POWER_BUDGET
-  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt && iVal >=0)
     {
@@ -203,12 +199,12 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      MQTTPrintDataError();
+      CMqttUtil::PrintDataError();
     }
   }
 #endif
 #ifdef MQTT_SET_POWER_PERCENTAGE
-  else if (STRIEQUALS(topic, MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
@@ -216,7 +212,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      MQTTPrintDataError();
+      CMqttUtil::PrintDataError();
     }
   }
 #endif
@@ -226,178 +222,24 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 }
 
 
-void GetFriendlyName(const String& strName, String& strFriendly)
-{
-  bool bSpace = true;
-
-  for (uint8_t it = 0; it < strName.length(); it++)
-  {
-    if (strName[it] == '_')
-    {
-      strFriendly += ' ';
-      bSpace = true;
-    }
-    else
-    {
-      if (bSpace)
-      {
-        bSpace = false;
-        strFriendly += (char) toupper(strName[it]);
-      }
-      else
-      {
-        strFriendly += strName[it];
-      }
-    }
-  }
-}
-
-
-void MQTTPublishConfig(const char* strItem, CPVBoiler::ha_config_type_t HAConfigType)
-{
-  String strFriendlyName;
-  GetFriendlyName(strItem, strFriendlyName);
-
-  JsonDocument root;
-  root["name"] = strFriendlyName;
-  root["unique_id"] = String(MQTT_PVBOILER_NAME "_") + strItem; // Optional
-  root["retain"] = true;
-  root["qos"] = 1;
-
-//  root["value_template"] = "{{ value_json.state }}"; // Not used
-
-  switch(HAConfigType)
-  {
-    case CPVBoiler::SWITCH:
-    {
-      root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["command_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem + "/set";
-      root["payload_on"] = "1";
-      root["payload_off"] = "0";
-      root["state_on"] = "1";
-      root["state_off"] = "0";
-    }
-    break;
-
-    case CPVBoiler::NUMBER:
-    {
-      root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["command_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem + "/set";
-      root["min"] = "0.0000"; // FIXME: Need to make it configurable
-      root["max"] = "10000.0000"; // FIXME: Need to make it configurable
-      //root["step"] = "1.0000"; // FIXME: Need to make it configurable
-    }
-    break;
-
-    case CPVBoiler::BINARY_SENSOR:
-    {
-      root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["payload_on"] = "1";
-      root["payload_off"] = "0";
-    }
-    break;
-
-    case CPVBoiler::POWER_SENSOR:
-    {
-      root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["unit_of_meas"] = "W";
-      root["dev_cla"] = "power";
-    }
-    break;
-
-    case CPVBoiler::PERCENTAGE_SENSOR:
-    {
-      root["state_topic"] = String(MQTT_PVBOILER_NAME "/") + strItem;
-      root["unit_of_meas"] = "%";
-      root["dev_cla"] = "percentage";
-    }
-    break;
-  }
-
-  JsonObject device = root["device"].to<JsonObject>();
-  device["name"] = "PvBoiler";
-  device["model"] = "PvBoiler Controller";
-  device["manufacturer"] = "Arnova";
-  device["identifiers"] = "PvBoiler";
-
-  // Output to console
-  serializeJsonPretty(root, Serial);
-  Serial.println();
-
-  // Serialize JSON for MQTT
-  char message[MQTT_MAX_SIZE];
-  serializeJson(root, message);
-  Serial.println(message); //Prints it out on one line.
-
-  String strTopic = String("homeassistant/");
-  switch (HAConfigType)
-  {
-    case CPVBoiler::SWITCH:
-    {
-       strTopic += "switch";
-    }
-    break;
-
-    case CPVBoiler::NUMBER:
-    {
-       strTopic += "number";
-    }
-    break;
-
-    case CPVBoiler::BINARY_SENSOR:
-    {
-      strTopic += "binary_sensor";
-    }
-    break;
-
-    case CPVBoiler::POWER_SENSOR:
-    case CPVBoiler::PERCENTAGE_SENSOR:
-    {
-      strTopic += "sensor";
-    }
-    break;
-  }
-  strTopic += String("/" MQTT_PVBOILER_NAME "/") + strItem + "/config";
-  strTopic.toLowerCase();
-  strTopic.replace(' ', '_');
-
-  g_MQTTClient.publish(strTopic.c_str(), message, true);
-}
-
-
 bool MQTTReconnect()
 {
-  Serial.print("Attempting MQTT connection...");
-  // Create a random client ID
-  String clientId = "ESPBut-";
-  clientId += String(random(0xffff), HEX);
-  // Attempt to connect
-//    if (MQTTClient.connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
-  if (!g_MQTTClient.connect(clientId.c_str()))
-  {
-    Serial.print("failed, rc=");
-    Serial.print(g_MQTTClient.state());
+  if (!g_MQTTUtil.Reconnect())
     return false;
-  }
-
-  Serial.println("connected");
 
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_CONTROLLER_ON_OFF "/set", 1);
-  MQTTPublishConfig(MQTT_CONTROLLER_ON_OFF, CPVBoiler::SWITCH);
+  g_MQTTUtil.PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
 #ifdef MQTT_SET_POWER_BUDGET
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET "/set", 1);
-  MQTTPublishConfig(MQTT_SET_POWER_BUDGET, CPVBoiler::NUMBER);
+  g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
 #endif
 
 #ifdef MQTT_SET_POWER_PERCENTAGE
-  g_MQTTClient.subscribe(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set", 1);
-  MQTTPublishConfig(MQTT_SET_POWER_PERCENTAGE, CPVBoiler::NUMBER);
+  g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
 #endif
 
   // Publish our f/w version
-  g_MQTTClient.publish(MQTT_PVBOILER_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
+  g_MQTTClient.publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
 
   return true;
 }

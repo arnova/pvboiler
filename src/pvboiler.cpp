@@ -1,12 +1,6 @@
 #include "pvboiler.h"
 #include "util.h"
 
-CPVBoiler::CPVBoiler(PubSubClient& MQTTClient)
-{
-  m_pMQTTClient = &MQTTClient;
-}
-
-
 const float& CPVBoiler::GetTriacAngleFactor() const
 {
   return triac_percentage_factor[m_iOutputPercentage];
@@ -18,7 +12,7 @@ bool CPVBoiler::MQTTPublishValues()
   if (m_bUpdateCtrlEnable)
   {
     m_bUpdateCtrlEnable = false;
-    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
+    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
   }
 
 #ifdef MQTT_SET_POWER_BUDGET
@@ -29,7 +23,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerBudget);
-    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
+    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
   }
 #endif
 
@@ -41,7 +35,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
+    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
   }
 #endif
 
@@ -52,10 +46,10 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iOutputPercentage);
-    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
+    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
 
     snprintf(strTemp, 6, "%i", (BOILER_POWER * m_iOutputPercentage) / 100);
-    m_pMQTTClient->publish(MQTT_PVBOILER_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
+    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
   }
 
   return true;

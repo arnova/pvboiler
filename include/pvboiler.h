@@ -6,10 +6,6 @@
 
 #include "system.h"
 
-#define MQTT_MAX_SIZE 1024
-
-#define MQTT_PVBOILER_NAME                          "pvboiler"
-
 // Control topics
 #define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
 
@@ -62,16 +58,7 @@ const float triac_percentage_factor[101] =
 class CPVBoiler
 {
   public:
-    typedef enum ha_config_type_e
-    {
-      SWITCH,
-      NUMBER,
-      BINARY_SENSOR,
-      POWER_SENSOR,
-      PERCENTAGE_SENSOR
-    } ha_config_type_t;
-
-    CPVBoiler(PubSubClient& MQTTClient);
+    CPVBoiler(PubSubClient& MQTTClient) { m_pMQTTClient = &MQTTClient; }; // Constructor
 
     void loop();
 

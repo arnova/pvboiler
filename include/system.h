@@ -24,8 +24,17 @@
 
 #define GATE_PULSE_WIDTH                       100 // uS
 
+// MQTT settings
+#define MQTT_MAX_SIZE 1024
+#define MQTT_NAME                              "pvboiler"
+
+// (MQTT) home assistant settings
+#define HA_DEVICE_NAME                         "PvBoiler"
+#define HA_DEVICE_MODEL                        "PvBoiler Controller"
+#define HA_MANUFACTURER                        "Arnova"
+
 // WiFi settings
-const char HOSTNAME[] = "pvboiler";
+const char HOSTNAME[] = MQTT_NAME;
 const char SSID[] = WIFI_SSID;          // Need to create + define in secrets.h
 const char PASSWORD[] = WIFI_PASSWORD;  // Need to create + define in secrets.h
 
