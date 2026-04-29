@@ -12,7 +12,7 @@
 // Customize this for your boiler:
 #define BOILER_POWER                            2000  // Watt
 
-#define PERCENTAGE_CAP                          2.0 // %
+#define PERCENTAGE_CAP                          2.0f  // %
 
 // Enable this if you want to control using setting power percentage instead of providing power budget
 #define POWER_PERCENTAGE_CONTROL

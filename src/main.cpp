@@ -52,9 +52,9 @@ volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
 volatile uint32_t g_iZeroCrossTime = 0;
 volatile bool g_bZeroCrossTimeUpdated = false;
 volatile bool g_bTriacOn = false;
-volatile float g_fTriacAngleFactor = 1.0; // Off
+volatile float g_fTriacAngleFactor = 1.0f; // Off
 volatile uint8_t g_iOutputPercentage = 0;
-volatile uint8_t g_iSSRPeriodCount = 0;
+volatile uint8_t g_iSSRPeriodCounter = 0;
 
 
 // Interrupt generated when crossing zero in either direction
@@ -82,8 +82,8 @@ void IRAM_ATTR ZeroCrossISR()
     }
     else
     {
-      g_iSSRPeriodCount++;
-      if ((g_iSSRPeriodCount * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage)
+      g_iSSRPeriodCounter++;
+      if ((g_iSSRPeriodCounter * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage)
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -97,16 +97,16 @@ void IRAM_ATTR ZeroCrossISR()
         digitalWrite(TRIAC_OUTPUT, LOW); // Off
       }
 
-      if (g_iSSRPeriodCount >= SSR_PERIOD_COUNT)
+      if (g_iSSRPeriodCounter >= SSR_PERIOD_COUNT)
       {
-        g_iSSRPeriodCount = 0;
+        g_iSSRPeriodCounter = 0;
       }
     }
 #else
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
     // NOTE: Don't turn on triac near 0% to prevent excessive EMI due to misfiring
-    if (g_fTriacAngleFactor <= 0.98)
+    if (g_fTriacAngleFactor <= 0.98f)
     {
       // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
       // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
