@@ -58,20 +58,18 @@ bool CPVBoiler::MQTTPublishValues()
 
 void CPVBoiler::Update()
 {
-  // Handle watchdog
-  if (m_iWatchdogCounter < (WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
+#ifdef POWER_PERCENTAGE_CONTROL
+  if (m_iPowerPercentage > m_iOutputPercentage)
   {
-    m_iWatchdogCounter++;
-    if (m_iWatchdogRecoveryCounter > 0)
-    {
-      m_iWatchdogRecoveryCounter--;
-    }
+    m_iOutputPercentage++;
+    m_bUpdateOutputPercentage = true;
   }
-  else
+  else if (m_iPowerPercentage < m_iOutputPercentage)
   {
-    m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
+    m_iOutputPercentage--;
+    m_bUpdateOutputPercentage = true;
   }
-
+#else
   if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
   {
     if (!m_bCtrlEnable)
@@ -87,18 +85,6 @@ void CPVBoiler::Update()
   }
   else
   {
-#ifdef POWER_PERCENTAGE_CONTROL
-    if (m_iPowerPercentage > m_iOutputPercentage)
-    {
-      m_iOutputPercentage++;
-      m_bUpdateOutputPercentage = true;
-    }
-    else if (m_iPowerPercentage < m_iOutputPercentage)
-    {
-      m_iOutputPercentage--;
-      m_bUpdateOutputPercentage = true;
-    }
-#else
     // Simple algoritm where we, for now, simply check whether there's any power budget left or not
     if (m_iPowerBudget > POWER_BUDGET_MIN)
     {
@@ -113,7 +99,25 @@ void CPVBoiler::Update()
       m_iOutputPercentage--;
       m_bUpdateOutputPercentage = true;
     }
+  }
 #endif
+}
+
+
+void CPVBoiler::CheckWatchDog()
+{
+  // Handle watchdog
+  if (m_iWatchdogCounter < (WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
+  {
+    m_iWatchdogCounter++;
+    if (m_iWatchdogRecoveryCounter > 0)
+    {
+      m_iWatchdogRecoveryCounter--;
+    }
+  }
+  else
+  {
+    m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
 }
 
@@ -123,6 +127,7 @@ void CPVBoiler::loop()
   // Run timed control loop
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)
   {
+    CheckWatchDog();
     Update();
 
     m_loopTimer = 0;

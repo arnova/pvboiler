@@ -75,6 +75,7 @@ class CPVBoiler
 
   private:
     void Update();
+    void CheckWatchDog();
 
     PubSubClient* m_pMQTTClient;
     elapsedMillis m_loopTimer = 0;
