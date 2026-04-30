@@ -15,7 +15,7 @@
 #define PERCENTAGE_CAP                          2.0f  // %
 
 // Enable this if you want to control using setting power percentage instead of providing power budget
-#define POWER_PERCENTAGE_CONTROL
+//#define POWER_PERCENTAGE_CONTROL
 
 // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like SSR do
 #define SSR_STYLE_MODE

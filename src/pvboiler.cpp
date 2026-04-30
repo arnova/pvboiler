@@ -85,19 +85,14 @@ void CPVBoiler::Update()
   }
   else
   {
-    // Simple algoritm where we, for now, simply check whether there's any power budget left or not
     if (m_iPowerBudget > POWER_BUDGET_MIN)
     {
-      if (m_iOutputPercentage < 100)
+      const uint8_t iOutputPercentage = m_pid.UpdateValue((m_iPowerBudget * 100) / BOILER_POWER);
+      if (m_iOutputPercentage != iOutputPercentage)
       {
-        m_iOutputPercentage++;
+        m_iOutputPercentage = iOutputPercentage;
         m_bUpdateOutputPercentage = true;
       }
-    }
-    else if (m_iOutputPercentage > 0)
-    {
-      m_iOutputPercentage--;
-      m_bUpdateOutputPercentage = true;
     }
   }
 #endif
