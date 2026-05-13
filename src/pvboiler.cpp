@@ -85,14 +85,12 @@ void CPVBoiler::Update()
   }
   else
   {
-    if (m_iPowerBudget > POWER_BUDGET_MIN)
+    const int32_t iPowerBudget = (m_iPowerBudget > POWER_BUDGET_MIN) ? m_iPowerBudget : 0;
+    const uint8_t iOutputPercentage = m_pid.UpdateValue((iPowerBudget * 100) / BOILER_POWER);
+    if (m_iOutputPercentage != iOutputPercentage)
     {
-      const uint8_t iOutputPercentage = m_pid.UpdateValue((m_iPowerBudget * 100) / BOILER_POWER);
-      if (m_iOutputPercentage != iOutputPercentage)
-      {
-        m_iOutputPercentage = iOutputPercentage;
-        m_bUpdateOutputPercentage = true;
-      }
+      m_iOutputPercentage = iOutputPercentage;
+      m_bUpdateOutputPercentage = true;
     }
   }
 #endif
