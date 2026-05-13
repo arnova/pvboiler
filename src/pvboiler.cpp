@@ -86,7 +86,7 @@ void CPVBoiler::Update()
   else
   {
     const int32_t iPowerBudget = (m_iPowerBudget > POWER_BUDGET_MIN) ? m_iPowerBudget : 0;
-    const uint8_t iOutputPercentage = m_pid.UpdateValue((iPowerBudget * 100) / BOILER_POWER);
+    const uint8_t iOutputPercentage = m_pid.UpdateValue((iPowerBudget * -100) / BOILER_POWER);
     if (m_iOutputPercentage != iOutputPercentage)
     {
       m_iOutputPercentage = iOutputPercentage;
