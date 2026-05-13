@@ -10,7 +10,7 @@
 #define POWER_BUDGET_MIN                        10    // Watt
 
 // Customize this for your boiler:
-#define BOILER_POWER                            2000  // Watt
+#define BOILER_POWER                            2500  // Watt
 
 #define PERCENTAGE_CAP                          2.0f  // %
 

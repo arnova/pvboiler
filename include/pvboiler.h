@@ -71,7 +71,7 @@ class CPVBoiler
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 
     void SetCtrlOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bUpdateCtrlEnable = true; };
-    void SetCtrlSetPowerBudget(const uint16_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; m_pid.UpdateValue(m_iPowerBudget); };
+    void SetCtrlSetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
     void SetCtrlSetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
 
   private:
@@ -87,7 +87,7 @@ class CPVBoiler
     bool m_bCtrlEnable = true;
     bool m_bUpdateCtrlEnable = true;
 
-    uint32_t m_iPowerBudget = 0;
+    int32_t m_iPowerBudget = 0;
     bool m_bUpdatePowerBudget = true;
 
     uint8_t m_iPowerPercentage = 0;

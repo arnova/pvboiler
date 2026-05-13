@@ -193,7 +193,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 #ifdef MQTT_SET_POWER_BUDGET
   else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
-    if (bValidInt && iVal >=0)
+    if (bValidInt)
     {
       g_pvBoiler.SetCtrlSetPowerBudget(iVal);
     }
