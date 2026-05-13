@@ -39,7 +39,7 @@
 #include "system.h"
 
 // Version string:
-#define MY_VERSION "0.1"
+#define MY_VERSION "0.11"
 
 // Globals
 WiFiClient g_wifiClient;
@@ -237,6 +237,10 @@ bool MQTTReconnect()
 #ifdef MQTT_SET_POWER_PERCENTAGE
   g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
 #endif
+
+  g_MQTTUtil.PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
+
+  g_MQTTUtil.PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
 
   // Publish our f/w version
   g_MQTTClient.publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);

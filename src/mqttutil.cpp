@@ -36,7 +36,7 @@ void CMqttUtil::GetFriendlyName(const String& strName, String& strFriendly)
 }
 
 
-void CMqttUtil::PublishConfig(const char* strItem, const char* strTopicType, JsonDocument& root)
+void CMqttUtil::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   String strFriendlyItem;
   GetFriendlyName(strItem, strFriendlyItem);
@@ -62,7 +62,7 @@ void CMqttUtil::PublishConfig(const char* strItem, const char* strTopicType, Jso
   serializeJson(root, message);
   Serial.println(message); //Prints it out on one line.
 
-  String strTopic = String("homeassistant/") + strTopicType + m_strName + "/" + strItem + "/config";
+  String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 
   m_pMQTTClient->subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
   m_pMQTTClient->publish(strTopic.c_str(), message, true);
@@ -73,15 +73,14 @@ void CMqttUtil::PublishSwitchConfig(const char* strItem)
 {
   JsonDocument root;
 
-//  root["value_template"] = "{{ value_json.state }}"; // Not used
-
   root["command_topic"] = m_strName + "/" + strItem + "/set";
   root["payload_on"] = "1";
   root["payload_off"] = "0";
   root["state_on"] = "1";
   root["state_off"] = "0";
+//  root["value_template"] = "{{ value_json.state }}"; // Not used
 
-  PublishConfig(strItem, "switch", root);
+  PublishConfig(root, strItem, "switch");
 }
 
 
@@ -94,7 +93,7 @@ void CMqttUtil::PublishNumberConfig(const char* strItem, const char* strMin, con
   root["max"] = strMax;
   root["step"] = strStep;
 
-  PublishConfig(strItem, "number", root);
+  PublishConfig(root, strItem, "number");
 }
 
 
@@ -105,7 +104,7 @@ void CMqttUtil::PublishBinarySensorConfig(const char* strItem)
   root["payload_on"] = "1";
   root["payload_off"] = "0";
 
-  PublishConfig(strItem, "binary_sensor", root);
+  PublishConfig(root, strItem, "binary_sensor");
 }
 
 
@@ -113,10 +112,10 @@ void CMqttUtil::PublishSensorConfig(const char* strItem, const char* strUnit, co
 {
   JsonDocument root;
 
-  root["unit_of_meas"] = strUnit;
-  root["dev_cla"] = strCla;
+  root["unit_of_measurement"] = strUnit;
+  root["device_class"] = strCla;
 
-  PublishConfig(strItem, "sensor", root);
+  PublishConfig(root, strItem, "sensor");
 }
 
 

@@ -19,7 +19,7 @@ class CMqttUtil
     void PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla);
 
   private:
-    void PublishConfig(const char* strItem, const char* strTopicType, JsonDocument& root);
+    void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
 
     PubSubClient* m_pMQTTClient;
     const String m_strName = MQTT_NAME;
