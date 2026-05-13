@@ -3,8 +3,8 @@
 
 // PID settings
 #define PID_SET_POINT 0.0f // %
-#define PID_K_P 0.5f
-#define PID_K_I 0.1f
+#define PID_K_P 1.0f
+#define PID_K_I 0.05f
 #define PID_K_D 0.0f // Not used
 #define OUT_CLAMP_MIN 0.0f // Percent
 #define OUT_CLAMP_MAX 100.0f // Percent
