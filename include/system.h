@@ -29,8 +29,8 @@
 #define MQTT_NAME                              "pvboiler"
 
 // (MQTT) home assistant settings
-#define HA_DEVICE_NAME                         "PvBoiler"
-#define HA_DEVICE_MODEL                        "PvBoiler Controller"
+#define HA_DEVICE_NAME                         "PVBoiler"
+#define HA_DEVICE_MODEL                        "PVBoiler Controller"
 #define HA_MANUFACTURER                        "Arnova"
 
 // WiFi settings
