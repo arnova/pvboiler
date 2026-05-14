@@ -85,7 +85,19 @@ void CPVBoiler::Update()
   }
   else
   {
-    const uint8_t iOutputPercentage = m_pid.UpdateValue((-100.0f * m_iPowerBudget) / BOILER_POWER);
+    #define KP 0.1f // Proportional error gain
+    #define DEAD_BAND_POWER 10 // Watts
+
+    const float fStepPercentage = (KP * 100.0f * m_iPowerBudget) / BOILER_POWER;
+    int32_t iOutputPercentage = m_iOutputPercentage;
+    if (m_iPowerBudget > DEAD_BAND_POWER || m_iPowerBudget < -DEAD_BAND_POWER)
+      iOutputPercentage += fStepPercentage;
+
+    if (iOutputPercentage > 100)
+      iOutputPercentage = 100;
+    else if (iOutputPercentage < 0)
+      iOutputPercentage = 0;
+
     if (m_iOutputPercentage != iOutputPercentage)
     {
       m_iOutputPercentage = iOutputPercentage;
