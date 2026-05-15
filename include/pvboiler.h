@@ -4,7 +4,6 @@
 #include <elapsedMillis.h>
 #include <PubSubClient.h>
 
-#include "pid.h"
 #include "system.h"
 
 // Control topics
@@ -25,6 +24,9 @@
 #define WATCHDOG_RECOVERY_TIME                 60   // Seconds = 1 minute
 
 #define MQTT_UPDATE_TIME                        1   // Seconds
+
+#define KP 0.1f                                     // Proportional error gain
+#define DEAD_BAND_POWER 10                          // Watts
 
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
@@ -95,7 +97,5 @@ class CPVBoiler
 
     uint8_t m_iOutputPercentage = 0;
     bool m_bUpdateOutputPercentage = true;
-
-    CPid m_pid;
 };
 #endif // PVBOILER_H

@@ -85,9 +85,6 @@ void CPVBoiler::Update()
   }
   else
   {
-    #define KP 0.1f // Proportional error gain
-    #define DEAD_BAND_POWER 10 // Watts
-
     const float fStepPercentage = (KP * 100.0f * m_iPowerBudget) / BOILER_POWER;
     int32_t iOutputPercentage = m_iOutputPercentage;
     if (m_iPowerBudget > DEAD_BAND_POWER || m_iPowerBudget < -DEAD_BAND_POWER)
