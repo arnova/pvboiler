@@ -87,7 +87,7 @@ void IRAM_ATTR ZeroCrossISR()
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-        const uint32_t iTriacDelayTicks = g_iPhaseCorrectionTime * 80; // fixme: underflow
+        const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
 
         g_bTriacOn = true;
         timer1_write(iTriacDelayTicks);
@@ -110,7 +110,9 @@ void IRAM_ATTR ZeroCrossISR()
     {
       // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
       // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-      const uint32_t iTriacDelayTicks = ((g_fTriacAngleFactor * g_iZeroCrossTime) + g_iPhaseCorrectionTime) * 80;
+      const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not to close to zero cross
+
+      const uint32_t iTriacDelayTicks = (fDelay + g_iPhaseCorrectionTime) * 80;
 
       g_bTriacOn = true;
       timer1_write(iTriacDelayTicks);
