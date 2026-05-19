@@ -35,11 +35,9 @@
 
 #include "pvboiler.h"
 #include "mqttutil.h"
+#include "ssd1306.h"
 #include "util.h"
 #include "system.h"
-
-// Version string:
-#define MY_VERSION "0.11"
 
 // Globals
 WiFiClient g_wifiClient;

@@ -3,6 +3,9 @@
 
 #include "secrets.h"
 
+// Version string:
+#define MY_VERSION "0.11"
+
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
 #define ZERO_CROSS_EDGE_MARGIN_US               100.0f // us
