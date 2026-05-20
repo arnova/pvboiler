@@ -23,7 +23,7 @@
 // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like SSR does
 #define SSR_STYLE_MODE
 
-#define SSR_PERIOD_COUNT                        20 // Amount of (half) sinus / periods. Always use an even number!
+#define SSR_PERIOD_COUNT                        50 // (= 0.5s @ 50 Hz). Amount of (half) sinus / periods. Always use an even number!
 
 #define GATE_PULSE_WIDTH                        50 // uS
 
