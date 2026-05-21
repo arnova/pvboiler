@@ -1,6 +1,6 @@
 /*
   ESP PV-Boiler - ESP Controlled PV Boiler
-  Last update: April 24, 2026
+  Last update: May 21, 2026
   (C) Copyright 2026 by Arno van Amersfoort
   Web                   : https://github.com/arnova/ctrl4dkn
   Email                 : a r n o DOT v a n DOT a m e r s f o o r t AT g m a i l DOT c o m
@@ -63,15 +63,14 @@ void IRAM_ATTR ZeroCrossISR()
   if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
   {
     // filter noise
-    if (g_iLastZeroCrossTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US * 10)
+    if (iNow - g_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US * 10)
     {
-      if (g_iLastZeroCrossTime != 0)
-      {
-        g_iZeroCrossTime = iNow - g_iLastZeroCrossTime;
-        g_bZeroCrossTimeUpdated = true;
-      }
-      g_iLastZeroCrossTime = iNow;
+      return;
     }
+
+    g_iZeroCrossTime = iNow - g_iLastZeroCrossTime;
+    g_bZeroCrossTimeUpdated = true;
+    g_iLastZeroCrossTime = iNow;
 
 #ifdef SSR_STYLE_MODE
     if (g_iOutputPercentage == 0)
@@ -120,14 +119,13 @@ void IRAM_ATTR ZeroCrossISR()
   else // Falling edge
   {
     // filter noise
-    if (g_iPhaseCorrectionTime == 0 || iNow - g_iLastZeroCrossTime > ZERO_CROSS_EDGE_MARGIN_US)
+    if (iNow - g_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US)
     {
-      if (g_iLastZeroCrossTime != 0)
-      {
-        // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
-        g_iPhaseCorrectionTime = (iNow - g_iLastZeroCrossTime) / 2;
-      }
+      return;
     }
+
+    // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
+    g_iPhaseCorrectionTime = (iNow - g_iLastZeroCrossTime) / 2;
   }
 }
 
@@ -317,6 +315,8 @@ void setup()
 
   pinMode(ZERO_CROSS_INPUT, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
+
+  g_iLastZeroCrossTime = g_iZeroCrossTime = micros();
 
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
