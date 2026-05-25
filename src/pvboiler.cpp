@@ -1,6 +1,8 @@
 #include "pvboiler.h"
 #include "util.h"
 
+#define CONTROL_LOOP_TIME_MS                    200   // ms
+
 const float& CPVBoiler::GetTriacAngleFactor() const
 {
   return triac_percentage_factor[m_iOutputPercentage];
@@ -87,7 +89,7 @@ void CPVBoiler::Update()
   {
     const float fStepPercentage = (KP * 100.0f * m_iPowerBudget) / BOILER_POWER;
     int32_t iOutputPercentage = m_iOutputPercentage;
-    if (m_iPowerBudget > DEAD_BAND_POWER || m_iPowerBudget < -DEAD_BAND_POWER)
+    if (m_iPowerBudget > POWER_BUDGET_MARGIN || m_iPowerBudget < -POWER_BUDGET_MARGIN)
       iOutputPercentage += fStepPercentage;
 
     if (iOutputPercentage > 100)
@@ -107,6 +109,7 @@ void CPVBoiler::Update()
 
 void CPVBoiler::CheckWatchDog()
 {
+#ifdef WATCHDOG_TIMEOUT_TIME
   // Handle watchdog
   if (m_iWatchdogCounter < (WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
   {
@@ -120,6 +123,7 @@ void CPVBoiler::CheckWatchDog()
   {
     m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
+#endif
 }
 
 

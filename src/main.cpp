@@ -102,7 +102,7 @@ void IRAM_ATTR ZeroCrossISR()
 #else
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-    const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not to close to zero cross
+    const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
 
     // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
     if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= g_iZeroCrossTime)
@@ -327,7 +327,7 @@ void setup()
 
   SetupWifi();
 
-  g_MQTTClient.setServer(mqtt_server, MQTT_PORT);
+  g_MQTTClient.setServer(MQTT_SERVER, MQTT_PORT);
   g_MQTTClient.setBufferSize(MQTT_MAX_SIZE);
   g_MQTTClient.setCallback(MQTTCallback);
 

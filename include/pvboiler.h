@@ -20,14 +20,6 @@
 #define MQTT_OUTPUT_POWER                           "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
 
-#define WATCHDOG_TIMEOUT_TIME                 900   // Seconds = 15 minutes
-#define WATCHDOG_RECOVERY_TIME                 60   // Seconds = 1 minute
-
-#define MQTT_UPDATE_TIME                        1   // Seconds
-
-#define KP 0.1f                                     // Proportional error gain
-#define DEAD_BAND_POWER 10                          // Watts
-
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
 // Value = firing delay as fraction of half-period (0.0 = start, 1.0 = end)

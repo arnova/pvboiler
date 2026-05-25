@@ -6,29 +6,41 @@
 // Version string:
 #define MY_VERSION "0.11"
 
-#define CONTROL_LOOP_TIME_MS                    200   // ms
-
-#define ZERO_CROSS_EDGE_MARGIN_US               100.0f // us
-
-#define POWER_BUDGET_MIN                        10    // Watt
-
 // Customize this for your boiler:
 #define BOILER_POWER                            2500  // Watt
-
-#define PERCENTAGE_CAP                          2.0f  // %
 
 // Enable this if you want to control using setting power percentage instead of providing power budget
 //#define POWER_PERCENTAGE_CONTROL
 
-// Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like SSR does
+// Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
 #define SSR_STYLE_MODE
 
-#define SSR_PERIOD_COUNT                        50 // (= 0.5s @ 50 Hz). Amount of (half) sinus / periods. Always use an even number!
+// Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
+#define SSR_PERIOD_COUNT                        50 // (= 0.5s @ 50 Hz).
 
+// The amount of +/- margin for power budget
+#define POWER_BUDGET_MARGIN                     10   // Watt
+
+// Proportional error gain
+#define KP                                      0.1f
+
+// Minimum time for positive/negative zero crossing
+#define ZERO_CROSS_EDGE_MARGIN_US               100.0f // us
+
+// Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50 // uS
 
+// Watchdog timer settings. Comment WATCHDOG_TIMEOUT_TIME define to disable
+#define WATCHDOG_TIMEOUT_TIME                   900  // Seconds = 15 minutes
+#define WATCHDOG_RECOVERY_TIME                  60   // Seconds = 1 minute
+
+// Customize your MQTT server settings here
+#define MQTT_SERVER                             "192.168.1.65"
+#define MQTT_PORT                               1883
+
 // MQTT settings
-#define MQTT_MAX_SIZE 1024
+#define MQTT_UPDATE_TIME                        1     // Seconds
+#define MQTT_MAX_SIZE                           1024
 #define MQTT_NAME                              "pvboiler"
 
 // (MQTT) home assistant settings
@@ -40,10 +52,6 @@
 const char HOSTNAME[] = MQTT_NAME;
 const char SSID[] = WIFI_SSID;          // Need to create + define in secrets.h
 const char PASSWORD[] = WIFI_PASSWORD;  // Need to create + define in secrets.h
-
-// MQTT server settings
-const char mqtt_server[] = "192.168.1.65";
-#define MQTT_PORT 1883
 
 /**************************
  * Output i/o pin numbers *
