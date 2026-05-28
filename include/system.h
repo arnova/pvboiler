@@ -57,7 +57,7 @@ const char PASSWORD[] = WIFI_PASSWORD;  // Need to create + define in secrets.h
  * Output i/o pin numbers *
  **************************/
 #define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)
-#define ZERO_CROSS_INPUT 13 // Input for zero-cross detection (GPIO13 / D7 on NodeMCUv2)
-#define TRIAC_OUTPUT 14     // Output to optocoupler + triac (GPIO14 / D5  on NodeMCUv2)
+#define TRIAC_OUTPUT 13     // Output to optocoupler + triac (GPIO13 / D7  on NodeMCUv2)
+#define ZERO_CROSS_INPUT 14 // Input for zero-cross detection (GPIO14 / D5 on NodeMCUv2)
 
 #endif // SYSTEM_H
