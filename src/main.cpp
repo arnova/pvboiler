@@ -1,6 +1,6 @@
 /*
   ESP PV-Boiler - ESP Controlled PV Boiler
-  Last update: May 21, 2026
+  Last update: July 10, 2026
   (C) Copyright 2026 by Arno van Amersfoort
   Web                   : https://github.com/arnova/ctrl4dkn
   Email                 : a r n o DOT v a n DOT a m e r s f o o r t AT g m a i l DOT c o m
@@ -32,7 +32,10 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 
+#include "CommandParser.h"
+#include "PvBoilerCommandHandler.h"
 #include "pvboiler.h"
 #include "mqttutil.h"
 #include "ssd1306.h"
@@ -40,10 +43,20 @@
 #include "system.h"
 
 // Globals
+CPVBoilerCommandHandler g_commandHandler;
 WiFiClient g_wifiClient;
 PubSubClient g_MQTTClient(g_wifiClient);
 CMqttUtil g_MQTTUtil(g_MQTTClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
+WiFiServer g_socketServer(SOCKET_SERVER_PORT);
+WiFiClient g_socketServerClient;
+
+// FIXME: Need to be wrapped into a (settings) class:
+char g_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
+char g_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
+uint8_t g_ipAddr[4] = { 0 };
+uint8_t g_ipNetmask[4] = { 0 };
+uint8_t g_serverIpAddr[4] = { 0 };
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
 volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
@@ -53,6 +66,381 @@ volatile bool g_bTriacOn = false;
 volatile float g_fTriacAngleFactor = 1.0f; // Off
 volatile uint8_t g_iOutputPercentage = 0;
 volatile uint8_t g_iSSRPeriodCounter = 0;
+
+// Define print output
+void PrintStrN(const char *str)
+{
+  Serial.println(str); // Always print to uart
+
+  if (g_socketServerClient.connected())
+  {
+    g_socketServerClient.println(str);
+  }
+}
+
+
+void PrintStr(const char *str)
+{
+  Serial.print(str); // Always print to uart
+
+  if (g_socketServerClient.connected())
+  {
+    g_socketServerClient.print(str);
+  }
+}
+
+
+void PrintChar(const char c)
+{
+  Serial.print(c); // Always print to uart
+
+  if (g_socketServerClient.connected())
+  {
+    g_socketServerClient.print(c);
+  }
+}
+
+
+void PrintInt32(const int32_t i)
+{
+  Serial.print(i); // Always print to uart
+
+  if (g_socketServerClient.connected())
+  {
+    g_socketServerClient.print(i);
+  }
+}
+
+
+void PrintFloat(const float f)
+{
+  Serial.print(f); // Always print to uart
+
+  if (g_socketServerClient.connected())
+  {
+    g_socketServerClient.print(f);
+  }
+}
+
+
+void InitWifi(const bool bReconnect)
+{
+  if (bReconnect)
+  {
+    WiFi.disconnect();
+  }
+
+  if (strlen(g_strWifiSsid) == 0)
+    return;
+
+#ifdef WIFI_DEBUG
+  // We start by connecting to a WiFi network
+  PrintStrN("");
+  PrintStr("Connecting to ");
+  PrintStrN(g_strWifiSsid);
+#endif
+
+  // Check for dhcp ip
+  if (IPAddress(g_ipAddr) != IPAddress(0, 0, 0, 0))
+  {
+    // Static IP. NOTE: No gateway / dns
+    WiFi.config(g_ipAddr, 0, g_ipNetmask);
+  }
+  else
+  {
+    // DHCP IP
+    WiFi.config(0, 0, 0);
+  }
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(g_strWifiSsid, g_strWifiPassword);
+
+  // Initialize mDNS
+  if (!MDNS.begin(HOST_NAME))
+  {
+    PrintStrN("ERROR: Unable to start MDNS responder!");
+  }
+
+  // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
+  ArduinoOTA.setHostname(HOST_NAME);
+
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+
+  // Init the socket server
+  g_socketServer.begin();
+  g_socketServer.setNoDelay(true);
+
+#if 0
+  PrintStrN("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
+#endif
+}
+
+
+result_code_t CommandReboot()
+{
+  ESP.restart();
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandReset()
+{
+  // FIXME: Implementation
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandInfo()
+{
+  PrintStr("ssid=");
+  PrintStr(g_strWifiSsid);
+
+  PrintStr(" pass=");
+  PrintStr(g_strWifiPassword);
+
+  PrintStr(" ip=");
+  PrintInt32(g_ipAddr[0]);
+  PrintChar('.');
+  PrintInt32(g_ipAddr[1]);
+  PrintChar('.');
+  PrintInt32(g_ipAddr[2]);
+  PrintChar('.');
+  PrintInt32(g_ipAddr[3]);
+
+  PrintStr(" netmask=");
+  PrintInt32(g_ipNetmask[0]);
+  PrintChar('.');
+  PrintInt32(g_ipNetmask[1]);
+  PrintChar('.');
+  PrintInt32(g_ipNetmask[2]);
+  PrintChar('.');
+  PrintInt32(g_ipNetmask[3]);
+
+  PrintStr(" server=");
+  PrintInt32(g_serverIpAddr[0]);
+  PrintChar('.');
+  PrintInt32(g_serverIpAddr[1]);
+  PrintChar('.');
+  PrintInt32(g_serverIpAddr[2]);
+  PrintChar('.');
+  PrintInt32(g_serverIpAddr[3]);
+
+  PrintStr(" bprating=");
+  PrintInt32(g_pvBoiler.GetBoilerPowerRating());
+  PrintStr("W");
+
+  PrintStr(" pbmargin=");
+  PrintInt32(g_pvBoiler.GetPowerBudgetMargin());
+  PrintStr("W");
+
+  PrintStr(" ctrl_mode=");
+  PrintStr(g_pvBoiler.GetLogicMode() ? "percentage" : "budget");
+
+  PrintStr(" dstyle=");
+  PrintStr(g_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
+
+  PrintStr(" ssrpc=");
+  PrintInt32(g_pvBoiler.GetSSRPeriod());
+
+  PrintStr(" egain=");
+  PrintFloat(g_pvBoiler.GetErrorGain());
+
+  PrintStrN("");
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandStatus()
+{
+  PrintStr("on_off=");
+  PrintStr(g_pvBoiler.GetCtrlOnOff() ? "on" : "off");
+
+  PrintStr(" wifi_conn=");
+  PrintStr(WiFi.status() == WL_CONNECTED ? "1" : "0");
+
+  PrintStr(" wifi_ip=");
+  PrintStr(WiFi.localIP().toString().c_str());
+
+  PrintStr(" mqtt_conn=");
+  PrintStr(g_MQTTClient.connected() ? "1" : "0");
+
+  PrintStr(" angle_factor=");
+  PrintFloat(g_pvBoiler.GetTriacAngleFactor());
+
+  PrintStr(" out_perc=");
+  PrintInt32(g_pvBoiler.GetOutputPercentage());
+
+  PrintStr(" p_budget=");
+  PrintInt32(g_pvBoiler.GetPowerBudget());
+  PrintStr("W");
+
+  PrintStr(" p_percentage=");
+  PrintInt32(g_pvBoiler.GetPowerPercentage());
+  PrintStr("%");
+
+  PrintStrN("");
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetBPRating(const uint16_t& iPower)
+{
+  EEPROM.put(EEPROM_BP_RATING, iPower);
+  EEPROM.commit();
+
+  g_pvBoiler.SetBoilerPowerRating(iPower);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
+{
+  EEPROM.put(EEPROM_DIM_STYLE, dimStyle);
+  EEPROM.commit();
+
+  g_pvBoiler.SetDimStyle(dimStyle);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetPowerBudgetMargin(const uint16_t& iMargin)
+{
+  EEPROM.put(EEPROM_PB_MARGIN, iMargin);
+  EEPROM.commit();
+
+  g_pvBoiler.SetPowerBudgetMargin(iMargin);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetControlMode(const bool& bPercentage)
+{
+  EEPROM.put(EEPROM_CTRL_MODE, bPercentage ? 0x01 : 0x00);
+  EEPROM.commit();
+
+  g_pvBoiler.SetLogicMode(bPercentage);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetSSRPeriodCount(const uint8_t& iCount)
+{
+  EEPROM.put(EEPROM_SSR_PERIOD, iCount);
+  EEPROM.commit();
+
+  g_pvBoiler.SetSSRPeriod(iCount);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetErrorGain(const float& fGain)
+{
+  EEPROM.put(EEPROM_ERROR_GAIN, fGain);
+  EEPROM.commit();
+
+  g_pvBoiler.SetErrorGain(fGain);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetWifiSsid(const char* strSsid)
+{
+  memset(g_strWifiSsid, 0x00, WIFI_SSID_MAX_SIZE + 1);
+  strcpy(g_strWifiSsid, strSsid);
+
+  EEPROM.put(EEPROM_WIFI_SSID, g_strWifiSsid);
+  EEPROM.commit();
+
+  InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetWifiPassword(const char* strPassword)
+{
+  memset(g_strWifiPassword, 0x00, WIFI_PASSWORD_MAX_SIZE + 1);
+  strcpy(g_strWifiPassword, strPassword);
+
+  EEPROM.put(EEPROM_WIFI_PASSWORD, g_strWifiPassword);
+  EEPROM.commit();
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetIp(uint8_t* ipAddress)
+{
+  memcpy(g_ipAddr, ipAddress, sizeof(g_ipAddr));
+
+  EEPROM.put(EEPROM_IP_ADDR, g_ipAddr);
+  EEPROM.commit();
+
+  InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetNetMask(uint8_t* ipNetMask)
+{
+  memcpy(g_ipNetmask, ipNetMask, sizeof(g_ipNetmask));
+
+  EEPROM.put(EEPROM_IP_NETMASK, g_ipNetmask);
+  EEPROM.commit();
+
+  InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandSetServerIp(uint8_t* ipAddress)
+{
+  memcpy(g_serverIpAddr, ipAddress, sizeof(g_serverIpAddr));
+
+  EEPROM.put(EEPROM_SERVER_IP_ADDR, g_serverIpAddr);
+  EEPROM.commit();
+
+  g_MQTTClient.setServer(g_serverIpAddr, MQTT_PORT);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CommandRestartNet()
+{
+  InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
 
 
 // Interrupt generated when crossing zero in either direction
@@ -80,7 +468,7 @@ void IRAM_ATTR ZeroCrossISR()
     else
     {
       g_iSSRPeriodCounter++;
-      if ((g_iSSRPeriodCounter * 100) / SSR_PERIOD_COUNT <= g_iOutputPercentage)
+      if ((g_iSSRPeriodCounter * 100) / m_iSsrPeriodCount <= g_iOutputPercentage)
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -94,7 +482,7 @@ void IRAM_ATTR ZeroCrossISR()
         digitalWrite(TRIAC_OUTPUT, LOW); // Off
       }
 
-      if (g_iSSRPeriodCounter >= SSR_PERIOD_COUNT)
+      if (g_iSSRPeriodCounter >= m_iSsrPeriodCount)
       {
         g_iSSRPeriodCounter = 0;
       }
@@ -154,21 +542,21 @@ void IRAM_ATTR TriacTimerISR()
 
 void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 {
-  Serial.println("-------new message from broker-----");
-  Serial.print("topic: ");
-  Serial.println(topic);
-  Serial.print("data: ");
+  PrintStrN("-------new message from broker-----");
+  PrintStr("topic: ");
+  PrintStrN(topic);
+  PrintStr("data: ");
   for (unsigned int i = 0; i < length; i++)
   {
-    Serial.print((char) payload[i]);
+    PrintChar((char) payload[i]);
   }
-  Serial.println();
+  PrintStrN("");
 
   //float fVal;
   //const bool bValidFloat = BytesToFloat(payload, length, fVal);
 
   int32_t iVal;
-  const bool bValidInt = BytesToInt32(payload, length, iVal);
+  const bool bValidInt = bytes_to_int32(payload, length, &iVal);
 
   if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
   {
@@ -176,7 +564,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     {
       if (iVal == 0 || iVal == 1 || length == 0)
       {
-        g_pvBoiler.SetCtrlOnOff((iVal == 1 || length == 0) ? true : false);
+        g_pvBoiler.SetOnOff((iVal == 1 || length == 0) ? true : false);
       }
       else
       {
@@ -188,32 +576,28 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       CMqttUtil::PrintDataError();
     }
   }
-#ifdef MQTT_SET_POWER_BUDGET
-  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  else if (!g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
-      g_pvBoiler.SetCtrlSetPowerBudget(iVal);
+      g_pvBoiler.SetPowerBudget(iVal);
     }
     else
     {
       CMqttUtil::PrintDataError();
     }
   }
-#endif
-#ifdef MQTT_SET_POWER_PERCENTAGE
-  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+  else if (g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
-      g_pvBoiler.SetCtrlSetPowerPercentage(iVal);
+      g_pvBoiler.SetPowerPercentage(iVal);
     }
     else
     {
       CMqttUtil::PrintDataError();
     }
   }
-#endif
 
   // Got a message so network is still ok:
   g_pvBoiler.TriggerWatchdog();
@@ -222,19 +606,27 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 
 bool MQTTReconnect()
 {
-  if (!g_MQTTUtil.Reconnect())
+  if (IPAddress(g_serverIpAddr) == IPAddress(0, 0, 0, 0))
+  {
     return false;
+  }
+
+  if (!g_MQTTUtil.Reconnect())
+  {
+    return false;
+  }
 
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   g_MQTTUtil.PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-#ifdef MQTT_SET_POWER_BUDGET
-  g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
-#endif
-
-#ifdef MQTT_SET_POWER_PERCENTAGE
-  g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
-#endif
+  if (g_pvBoiler.GetLogicMode())
+  {
+    g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
+  }
+  else
+  {
+    g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
+  }
 
   g_MQTTUtil.PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
 
@@ -247,59 +639,62 @@ bool MQTTReconnect()
 }
 
 
-void SetupWifi()
+void LoadSettings()
 {
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(SSID);
-
-  WiFi.begin(SSID, PASSWORD);
-  while (WiFi.status() != WL_CONNECTED)
+  // Obtain our IP
+  EEPROM.get(EEPROM_IP_ADDR, g_ipAddr);
+  if (IPAddress(g_ipAddr) == IPAddress(255, 255, 255, 255))
   {
-    delay(1000);
-    Serial.print(".");
+    memset(g_ipAddr, 0x00, 4);
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  EEPROM.get(EEPROM_IP_NETMASK, g_ipNetmask);
 
-  // Initialize mDNS
-  if (!MDNS.begin(HOSTNAME))
+  EEPROM.get(EEPROM_SERVER_IP_ADDR, g_serverIpAddr);
+  if (IPAddress(g_serverIpAddr) == IPAddress(255, 255, 255, 255))
   {
-    Serial.println("Error setting up MDNS responder!");
-  }
-  else
-  {
-    Serial.println("mDNS responder started");
+    memset(g_serverIpAddr, 0x00, 4);
   }
 
-  // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
-  ArduinoOTA.setHostname(HOSTNAME);
+  EEPROM.get(EEPROM_WIFI_SSID, g_strWifiSsid);
+  EEPROM.get(EEPROM_WIFI_PASSWORD, g_strWifiPassword);
 
-  ArduinoOTA.onStart([]() {
-    Serial.println("Start");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  ArduinoOTA.begin();
+  uint16_t iVal16 = 0;
+  EEPROM.get(EEPROM_BP_RATING, iVal16);
+  if (iVal16 > BOILER_POWER_RATING_MAX)
+  {
+    iVal16 = BOILER_POWER_RATING_DEFAULT;
+  }
+  g_pvBoiler.SetBoilerPowerRating(iVal16);
 
-  randomSeed(micros());
+  EEPROM.get(EEPROM_PB_MARGIN, iVal16);
+  if (iVal16 > POWER_BUDGET_MARGIN_MAX)
+  {
+    iVal16 = POWER_BUDGET_MARGIN_DEFAULT;
+  }
+  g_pvBoiler.SetPowerBudgetMargin(iVal16);
+
+  uint8_t iVal8 = 0;
+  EEPROM.get(EEPROM_CTRL_MODE, iVal8);
+  g_pvBoiler.SetLogicMode(iVal8 != 0); // Percentage(true) or budget(false) ?
+
+  EEPROM.get(EEPROM_DIM_STYLE, iVal8);
+  g_pvBoiler.SetDimStyle((iVal8 != 0) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
+
+  EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
+  if (iVal8 > SSR_PERIOD_COUNT_MAX)
+  {
+    iVal8 = SSR_PERIOD_COUNT_DEFAULT;
+  }
+  g_pvBoiler.SetSSRPeriod(iVal8);
+
+  float fGain;
+  EEPROM.get(EEPROM_ERROR_GAIN, fGain);
+  if (fGain > ERROR_GAIN_MAX || fGain < ERROR_GAIN_MIN)
+  {
+    fGain = ERROR_GAIN_DEFAULT;
+  }
+  g_pvBoiler.SetErrorGain(fGain);
 }
 
 
@@ -322,52 +717,246 @@ void setup()
   timer1_attachInterrupt(TriacTimerISR);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
 
-  Serial.begin(9600);
+  EEPROM.begin(128); // Reserve room for eeprom settings
+
+  randomSeed(micros());
+
+  Serial.begin(BAUD_RATE);
   Serial.setTimeout(2000);
 
-  SetupWifi();
+  LoadSettings();
 
-  g_MQTTClient.setServer(MQTT_SERVER, MQTT_PORT);
-  g_MQTTClient.setBufferSize(MQTT_MAX_SIZE);
-  g_MQTTClient.setCallback(MQTTCallback);
+  delay(10);
+
+  InitWifi(false);
+
+  if (IPAddress(g_serverIpAddr) != IPAddress(0, 0, 0, 0))
+  {
+    g_MQTTClient.setServer(g_serverIpAddr, MQTT_PORT);
+    g_MQTTClient.setBufferSize(MQTT_MAX_SIZE);
+    g_MQTTClient.setCallback(MQTTCallback);
+  }
 
   // Allow the hardware to sort itself out
   delay(1500);
 
   MQTTReconnect();
+
+    // Have the terminal start with a newline
+  PrintStrN("");
+
+  // Print out version info
+  PrintStrN(VER_STR);
 }
 
 
-void loop()
+#if 0
+  //FIXME
+    case CMD_RESPONSE_SERVER:
+    {
+      g_heliumPurityMeter.SetResponseServerOK(true);
+    }
+    break;
+#endif
+
+
+
+void pollSerial(void)
+{
+  static uint8_t charCount = 0;
+  static char strCommand[CMD_BUF_SIZE] = { 0 };
+  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
+
+  if (Serial.available())
+  {
+    const char c = Serial.read();
+    if (c != 0)
+    {
+      if (c == '!') // Repeat the previous command but don't execute it yet
+      {
+        if (charCount == 0 && *strOldCommand)
+        {
+          strcpy(strCommand, strOldCommand);
+          charCount = strlen(strOldCommand);
+
+          if (g_commandHandler.GetLocalEchoEnabled())
+            Serial.print(strCommand);
+        }
+      }
+      else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
+      {
+        // Linefeed for local echo
+        if (g_commandHandler.GetLocalEchoEnabled())
+          Serial.println("");
+
+        // Don't check empty commands
+        if (charCount > 0)
+        {
+          strCommand[charCount] = '\0';
+
+          // Store in old buffer
+          strcpy(strOldCommand, strCommand);
+
+          // Reset counter for next round
+          charCount = 0;
+
+          // Parse uart command
+          g_commandHandler.ProcessCommand(strCommand);
+        }
+      }
+      else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
+      {
+        if (charCount > 0)
+        {
+          if (g_commandHandler.GetLocalEchoEnabled())
+          {
+            // Backspace
+            Serial.write(CH_BACKSPACE);
+            // Blank character
+            Serial.write(' ');
+            // And backspace again since the blank jumps forward
+            Serial.write(CH_BACKSPACE);
+          }
+          charCount--;
+        }
+      }
+      else if (c >= ' ' && c <= '~') // Limit allowed characters
+      {
+        // Don't overflow + skip leading spaces:
+        if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+        {
+          strCommand[charCount++] = c;
+
+          if (g_commandHandler.GetLocalEchoEnabled())
+            Serial.write(c);
+        }
+      }
+    }
+  }
+}
+
+
+void pollEthernet(void)
+{
+  static uint8_t charCount = 0;
+  static char strCommand[CMD_BUF_SIZE] = { 0 };
+  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
+
+  if (!g_socketServerClient || !g_socketServerClient.connected())
+  {
+    g_socketServerClient = g_socketServer.accept();
+#ifdef WIFI_DEBUG
+    if (g_socketServerClient)
+    {
+      PrintStr("Accepting connection from: ");
+      PrintStrN(g_socketServerClient.remoteIP().toString().c_str());
+    }
+#endif
+  }
+
+  if (g_socketServerClient && g_socketServerClient.connected())
+  {
+    if (g_socketServerClient.available())
+    {
+      const char c = g_socketServerClient.read();
+      if (c != 0)
+      {
+        if (c == '!') // Repeat the previous command but don't execute it yet
+        {
+          if (charCount == 0 && *strOldCommand)
+          {
+            strcpy(strCommand, strOldCommand);
+            charCount = strlen(strOldCommand);
+
+#if 0
+            if (commandHandler.GetLocalEchoEnabled())
+              g_socketServerClient.print(strCommand);
+#endif
+          }
+        }
+        else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
+        {
+#if 0
+          // Linefeed
+          g_socketServerClient.println("");
+#endif
+
+          // Don't check empty commands
+          if (charCount > 0)
+          {
+            strCommand[charCount] = '\0';
+
+            // Store in old buffer
+            strcpy(strOldCommand, strCommand);
+
+            // Reset counter for next round
+            charCount = 0;
+
+            // Parse client command
+            g_commandHandler.ProcessCommand(strCommand, &g_socketServerClient);
+          }
+        }
+        else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
+        {
+          if (charCount > 0)
+          {
+#if 0
+            if (g_commandHandler.GetLocalEchoEnabled())
+            {
+              // Backspace
+              g_socketServerClient.write(CH_BACKSPACE);
+              // Blank character
+              g_socketServerClient.write(' ');
+              // And backspace again since the blank jumps forward
+              g_socketServerClient.write(CH_BACKSPACE);
+            }
+#endif
+            charCount--;
+          }
+        }
+        else if (c >= ' ' && c <= '~') // Limit allowed characters
+        {
+          // Don't overflow + skip leading spaces:
+          if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+          {
+            strCommand[charCount++] = c;
+#if 0
+            g_socketServerClient.write(c);
+#endif
+          }
+        }
+      }
+    }
+  }
+}
+
+
+bool CheckNetwork()
 {
   static elapsedMillis MQTTReconnectTimer = 0;
   static elapsedMillis WifiReconnectTimer = 0;
   static elapsedMillis ledTimer = 0;
+  static bool bWifiConnected = false;
 
-  if (WiFi.status() != WL_CONNECTED) // Check for wifi disconnects
+  if (WiFi.status() == WL_CONNECTED)
   {
-#ifdef STATUS_LED
-    digitalWrite(STATUS_LED, LOW); // Always on: failure
-#endif
-
-    if (WifiReconnectTimer > 5000)
+    if (!bWifiConnected)
     {
-      Serial.print(millis());
-      Serial.println("Reconnecting to WiFi...");
-      WiFi.disconnect();
-      WiFi.reconnect();
-      MQTTReconnect();
+#ifdef WIFI_DEBUG
+      PrintStrN("");
+      PrintStrN("WiFi connected");
+      PrintStr("IP address: ");
+      PrintStrN(WiFi.localIP().toString().c_str());
+#endif
+      bWifiConnected = true;
       WifiReconnectTimer = 0;
+
+      MQTTReconnect();
       MQTTReconnectTimer = 0;
     }
-  }
-  else if (!g_MQTTClient.connected()) // Check for MQTT disconnects
-  {
-#ifdef STATUS_LED
-    digitalWrite(STATUS_LED, LOW); // Always on: failure
-#endif
 
-    if (MQTTReconnectTimer > 5000)
+    // Check for MQTT disconnects
+    if (!g_MQTTClient.connected() && MQTTReconnectTimer > 5000)
     {
       MQTTReconnect();
       MQTTReconnectTimer = 0;
@@ -375,6 +964,33 @@ void loop()
   }
   else
   {
+    bWifiConnected = false;
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
+#endif
+
+    if (WifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
+    {
+#ifdef WIFI_DEBUG
+      Serial.print(millis());
+      Serial.println(" - (Re)connecting to WiFi...");
+#endif
+      WiFi.disconnect();
+      WiFi.reconnect();
+      WifiReconnectTimer = 0;
+    }
+  }
+  
+  if (!bWifiConnected || !g_MQTTClient.connected())
+  {
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
+#endif
+  }
+  else
+  {
+    g_MQTTClient.loop();
+
     // Indicate we're running:
 #ifdef STATUS_LED
     if (ledTimer > 2000)
@@ -386,15 +1002,28 @@ void loop()
     {
       digitalWrite(STATUS_LED, LOW); // On
     }
-
 #endif
-
-    g_MQTTClient.loop();
-
-    // Handle OTA-updates
-    ArduinoOTA.handle();
   }
 
+  return bWifiConnected;
+}
+
+
+void loop()
+{
+  if (CheckNetwork())
+  {
+    // Handle OTA-updates
+    ArduinoOTA.handle();
+
+    // Poll ethernet for commands
+    pollEthernet();
+  }
+
+  // Poll serial for commands
+  pollSerial();
+
+  // FIXME: Remove this from loop()?
   if (g_bZeroCrossTimeUpdated)
   {
     noInterrupts(); // Enter critical section

@@ -17,8 +17,7 @@ bool CPVBoiler::MQTTPublishValues()
     m_pMQTTClient->publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
   }
 
-#ifdef MQTT_SET_POWER_BUDGET
-  if (m_bUpdatePowerBudget)
+  if (!m_bPowerPercControl && m_bUpdatePowerBudget)
   {
     m_bUpdatePowerBudget = false;
 
@@ -27,10 +26,8 @@ bool CPVBoiler::MQTTPublishValues()
     snprintf(strTemp, 6, "%i", m_iPowerBudget);
     m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
   }
-#endif
 
-#ifdef MQTT_SET_POWER_PERCENTAGE
-  if (m_bUpdatePowerPercentage)
+  if (m_bPowerPercControl && m_bUpdatePowerPercentage)
   {
     m_bUpdatePowerPercentage = false;
 
@@ -39,18 +36,17 @@ bool CPVBoiler::MQTTPublishValues()
     snprintf(strTemp, 6, "%i", m_iPowerPercentage);
     m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
   }
-#endif
 
   if (m_bUpdateOutputPercentage)
   {
     m_bUpdateOutputPercentage = false;
 
-    char strTemp[6];
+    char strTemp[7];
 
-    snprintf(strTemp, 6, "%i", m_iOutputPercentage);
+    snprintf(strTemp, 7, "%i", m_iOutputPercentage);
     m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
 
-    snprintf(strTemp, 6, "%i", (BOILER_POWER * m_iOutputPercentage) / 100);
+    snprintf(strTemp, 7, "%i", (m_iBoilerPowerRating * m_iOutputPercentage) / 100);
     m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
   }
 
@@ -60,19 +56,20 @@ bool CPVBoiler::MQTTPublishValues()
 
 void CPVBoiler::Update()
 {
-#ifdef POWER_PERCENTAGE_CONTROL
-  if (m_iPowerPercentage > m_iOutputPercentage)
+  if (m_bPowerPercControl)
   {
-    m_iOutputPercentage++;
-    m_bUpdateOutputPercentage = true;
+    if (m_iPowerPercentage > m_iOutputPercentage)
+    {
+      m_iOutputPercentage++;
+      m_bUpdateOutputPercentage = true;
+    }
+    else if (m_iPowerPercentage < m_iOutputPercentage)
+    {
+      m_iOutputPercentage--;
+      m_bUpdateOutputPercentage = true;
+    }
   }
-  else if (m_iPowerPercentage < m_iOutputPercentage)
-  {
-    m_iOutputPercentage--;
-    m_bUpdateOutputPercentage = true;
-  }
-#else
-  if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
+  else if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
   {
     if (!m_bCtrlEnable)
     {
@@ -87,9 +84,9 @@ void CPVBoiler::Update()
   }
   else
   {
-    const float fStepPercentage = (KP * 100.0f * m_iPowerBudget) / BOILER_POWER;
+    const float fStepPercentage = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
     int32_t iOutputPercentage = m_iOutputPercentage;
-    if (m_iPowerBudget > POWER_BUDGET_MARGIN || m_iPowerBudget < -POWER_BUDGET_MARGIN)
+    if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
       iOutputPercentage += fStepPercentage;
 
     if (iOutputPercentage > 100)
@@ -103,7 +100,6 @@ void CPVBoiler::Update()
       m_bUpdateOutputPercentage = true;
     }
   }
-#endif
 }
 
 

@@ -3,9 +3,16 @@
 
 #include "mqttutil.h"
 
+// Forward declare these
+void PrintStrN(const char *str);
+void PrintStr(const char *str);
+void PrintInt32(const int32_t i);
+void PrintChar(const char c);
+
+
 void CMqttUtil::PrintDataError(void)
 {
-  Serial.println("ERROR: Invalid MQTT data for topic");
+  PrintStrN("ERROR: Invalid MQTT data for topic");
 }
 
 
@@ -55,12 +62,12 @@ void CMqttUtil::PublishConfig(JsonDocument& root, const char* strItem, const cha
 
   // Output to console
   serializeJsonPretty(root, Serial);
-  Serial.println();
+  PrintStrN("");
 
   // Serialize JSON for MQTT
   char message[MQTT_MAX_SIZE];
   serializeJson(root, message);
-  Serial.println(message); //Prints it out on one line.
+  PrintStrN(message); //Prints it out on one line
 
   String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 
@@ -121,7 +128,7 @@ void CMqttUtil::PublishSensorConfig(const char* strItem, const char* strUnit, co
 
 bool CMqttUtil::Reconnect()
 {
-  Serial.print("Attempting MQTT connection...");
+  PrintStr("Attempting MQTT connection...");
   // Create a random client ID
   String clientId = "ESPBut-";
   clientId += String(random(0xffff), HEX);
@@ -129,12 +136,12 @@ bool CMqttUtil::Reconnect()
 //    if (MQTTClient.connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
   if (!m_pMQTTClient->connect(clientId.c_str()))
   {
-    Serial.print("failed, rc=");
-    Serial.print(m_pMQTTClient->state());
+    PrintStr("failed, rc=");
+    PrintInt32(m_pMQTTClient->state());
     return false;
   }
 
-  Serial.println("connected");
+  PrintStrN("connected");
 
   return true;
 }

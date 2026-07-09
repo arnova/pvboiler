@@ -5,15 +5,13 @@
 #include <PubSubClient.h>
 
 #include "system.h"
+#include "PvBoilerCommandHandler.h"
 
 // Control topics
 #define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
 
-#ifdef POWER_PERCENTAGE_CONTROL
 #define MQTT_SET_POWER_PERCENTAGE                   "power_percentage"
-#else
 #define MQTT_SET_POWER_BUDGET                       "power_budget"
-#endif
 
 // Status topics
 #define MQTT_FW_VERSION                             "firmware_version"
@@ -55,18 +53,43 @@ class CPVBoiler
   public:
     CPVBoiler(PubSubClient& MQTTClient) { m_pMQTTClient = &MQTTClient; }; // Constructor
 
-    void loop();
+    enum dim_style_e
+    {
+      DIM_STYLE_PHASE_CUT = 0,
+      DIM_STYLE_SSR
+    };
+    typedef enum dim_style_e dim_style_t;
 
-    const float& GetTriacAngleFactor() const;
-    const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
+    void loop();
 
     bool MQTTPublishValues();
 
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 
-    void SetCtrlOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bUpdateCtrlEnable = true; };
-    void SetCtrlSetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
-    void SetCtrlSetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
+    void SetOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bUpdateCtrlEnable = true; };
+    void SetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
+    void SetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
+
+    void SetBoilerPowerRating(const uint16_t& iPower) { m_iBoilerPowerRating = iPower; };
+    void SetPowerBudgetMargin(const uint16_t& iBudget) { m_iPowerBudgetMargin = iBudget; };
+    void SetLogicMode(const bool& bPercentage) { m_bPowerPercControl = bPercentage; };
+    void SetDimStyle(const dim_style_t& dimStyle) { m_dimStyle = dimStyle; };
+    void SetSSRPeriod(const uint8_t& iPeriod) { m_iSsrPeriodCount = iPeriod; };
+    void SetErrorGain(const float& fGain) { m_fErrorGain = fGain; };
+
+    const float& GetTriacAngleFactor() const;
+    const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
+
+    const bool& GetCtrlOnOff() { return m_bCtrlEnable; };
+    const int32_t& GetPowerBudget() { return m_iPowerBudget; };
+    const uint8_t& GetPowerPercentage() { return m_iPowerPercentage; };
+
+    const uint16_t& GetBoilerPowerRating() { return m_iBoilerPowerRating; };
+    const uint16_t& GetPowerBudgetMargin() { return m_iPowerBudgetMargin; };
+    const bool& GetLogicMode() { return m_bPowerPercControl; };
+    const dim_style_t& GetDimStyle() { return m_dimStyle; };
+    const uint8_t& GetSSRPeriod() { return m_iSsrPeriodCount; };
+    const float& GetErrorGain() { return m_fErrorGain; };
 
   private:
     void Update();
@@ -89,5 +112,19 @@ class CPVBoiler
 
     uint8_t m_iOutputPercentage = 0;
     bool m_bUpdateOutputPercentage = true;
+
+    uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
+    uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
+
+    // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
+    CPVBoiler::dim_style_t m_dimStyle = CPVBoiler::DIM_STYLE_PHASE_CUT;
+
+    // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
+    uint8_t m_iSsrPeriodCount = 50; // (= 0.5s @ 50 Hz).
+
+    // (Proportional) error gain
+    float m_fErrorGain = ERROR_GAIN_DEFAULT;
+
+    bool m_bPowerPercControl = false; // Enable this if you want to control using setting power percentage instead of providing power budget
 };
 #endif // PVBOILER_H
