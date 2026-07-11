@@ -1,6 +1,7 @@
 #include "PvBoilerCommandHandler.h"
 #include "pvboiler.h"
 #include "util.h"
+#include "Network.h"
 #include "system.h"
 
 #include <string.h>
@@ -9,14 +10,6 @@
 void PrintStrN(const char *str);
 void PrintStr(const char *str);
 void PrintChar(const char c);
-
-result_code_t CommandSetWifiSsid(const char* strSsid);
-result_code_t CommandSetWifiPassword(const char* strPassword);
-
-result_code_t CommandSetIp(uint8_t* ipAddress);
-result_code_t CommandSetNetMask(uint8_t* ipNetMask);
-result_code_t CommandSetServerIp(uint8_t* ipAddress);
-result_code_t CommandRestartNet();
 
 const char HELP_STR[] = "\r\n"
                         "help                   : This screen\r\n"
@@ -87,7 +80,7 @@ result_code_t CPVBoilerCommandHandler::CmdIpAddress(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  CommandSetIp(ipAddress);
+  m_network.SetIpAddr(ipAddress);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -103,7 +96,7 @@ result_code_t CPVBoilerCommandHandler::CmdNetMask(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  CommandSetNetMask(ipAddress);
+  m_network.SetNetMask(ipAddress);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -119,7 +112,7 @@ result_code_t CPVBoilerCommandHandler::CmdServerIp(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  CommandSetServerIp(ipAddress);
+  m_network.SetServerIp(ipAddress);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -136,7 +129,7 @@ result_code_t CPVBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
     return store_arg1_int32(resultCode, WIFI_SSID_MAX_SIZE);
   }
 
-  CommandSetWifiSsid(strArgs);
+  m_network.SetWifiSsid(strArgs);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -153,7 +146,7 @@ result_code_t CPVBoilerCommandHandler::CmdWifiPassword(const char *strArgs)
     return store_arg1_int32(resultCode, WIFI_PASSWORD_MAX_SIZE);
   }
 
-  CommandSetWifiPassword(strArgs);
+  m_network.SetWifiPassword(strArgs);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -165,7 +158,7 @@ result_code_t CPVBoilerCommandHandler::CmdRestartNet(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CommandRestartNet();
+  m_network.InitWifi(true);
 
   return pack_result_code(ERR_CODE_OK);
 }

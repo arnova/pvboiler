@@ -40,24 +40,16 @@
 #include "mqttutil.h"
 #include "ssd1306.h"
 #include "util.h"
+#include "Network.h"
 #include "system.h"
 
 // Globals
 WiFiClient g_wifiClient;
 PubSubClient g_MQTTClient(g_wifiClient);
 CMqttUtil g_MQTTUtil(g_MQTTClient);
+CNetwork g_network(g_MQTTClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
-CPVBoilerCommandHandler g_commandHandler(g_pvBoiler);
-
-WiFiServer g_socketServer(SOCKET_SERVER_PORT);
-WiFiClient g_socketServerClient;
-
-// FIXME: Need to be wrapped into a (settings) class:
-char g_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
-char g_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
-uint8_t g_ipAddr[4] = { 0 };
-uint8_t g_ipNetmask[4] = { 0 };
-uint8_t g_serverIpAddr[4] = { 0 };
+CPVBoilerCommandHandler g_commandHandler(g_pvBoiler, g_network);
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
 volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
@@ -73,9 +65,9 @@ void PrintStrN(const char *str)
 {
   Serial.println(str); // Always print to uart
 
-  if (g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient.println(str);
+    g_network.GetSocketServerClient().println(str);
   }
 }
 
@@ -84,9 +76,9 @@ void PrintStr(const char *str)
 {
   Serial.print(str); // Always print to uart
 
-  if (g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient.print(str);
+    g_network.GetSocketServerClient().print(str);
   }
 }
 
@@ -95,9 +87,9 @@ void PrintChar(const char c)
 {
   Serial.print(c); // Always print to uart
 
-  if (g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient.print(c);
+    g_network.GetSocketServerClient().print(c);
   }
 }
 
@@ -106,9 +98,9 @@ void PrintInt32(const int32_t i)
 {
   Serial.print(i); // Always print to uart
 
-  if (g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient.print(i);
+    g_network.GetSocketServerClient().print(i);
   }
 }
 
@@ -117,80 +109,10 @@ void PrintFloat(const float f)
 {
   Serial.print(f); // Always print to uart
 
-  if (g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient.print(f);
+    g_network.GetSocketServerClient().print(f);
   }
-}
-
-
-void InitWifi(const bool bReconnect)
-{
-  if (bReconnect)
-  {
-    WiFi.disconnect();
-  }
-
-  if (strlen(g_strWifiSsid) == 0)
-    return;
-
-#ifdef WIFI_DEBUG
-  // We start by connecting to a WiFi network
-  PrintStrN("");
-  PrintStr("Connecting to ");
-  PrintStrN(g_strWifiSsid);
-#endif
-
-  // Check for dhcp ip
-  if (IPAddress(g_ipAddr) != IPAddress(0, 0, 0, 0))
-  {
-    // Static IP. NOTE: No gateway / dns
-    WiFi.config(g_ipAddr, 0, g_ipNetmask);
-  }
-  else
-  {
-    // DHCP IP
-    WiFi.config(0, 0, 0);
-  }
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(g_strWifiSsid, g_strWifiPassword);
-
-  // Initialize mDNS
-  if (!MDNS.begin(HOST_NAME))
-  {
-    PrintStrN("ERROR: Unable to start MDNS responder!");
-  }
-
-  // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
-  ArduinoOTA.setHostname(HOST_NAME);
-
-  ArduinoOTA.onStart([]() {
-    Serial.println("Start");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  ArduinoOTA.begin();
-
-  // Init the socket server
-  g_socketServer.begin();
-  g_socketServer.setNoDelay(true);
-
-#if 0
-  PrintStrN("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
-#endif
 }
 
 
@@ -213,37 +135,37 @@ result_code_t CommandReset()
 result_code_t CommandInfo()
 {
   PrintStr("ssid=");
-  PrintStr(g_strWifiSsid);
+  PrintStr(g_network.GetWifiSsid());
 
   PrintStr(" pass=");
-  PrintStr(g_strWifiPassword);
+  PrintStr(g_network.GetWifiPassword());
 
   PrintStr(" ip=");
-  PrintInt32(g_ipAddr[0]);
+  PrintInt32(g_network.GetIpAddr()[0]);
   PrintChar('.');
-  PrintInt32(g_ipAddr[1]);
+  PrintInt32(g_network.GetIpAddr()[1]);
   PrintChar('.');
-  PrintInt32(g_ipAddr[2]);
+  PrintInt32(g_network.GetIpAddr()[2]);
   PrintChar('.');
-  PrintInt32(g_ipAddr[3]);
+  PrintInt32(g_network.GetIpAddr()[3]);
 
   PrintStr(" netmask=");
-  PrintInt32(g_ipNetmask[0]);
+  PrintInt32(g_network.GetNetMask()[0]);
   PrintChar('.');
-  PrintInt32(g_ipNetmask[1]);
+  PrintInt32(g_network.GetNetMask()[1]);
   PrintChar('.');
-  PrintInt32(g_ipNetmask[2]);
+  PrintInt32(g_network.GetNetMask()[2]);
   PrintChar('.');
-  PrintInt32(g_ipNetmask[3]);
+  PrintInt32(g_network.GetNetMask()[3]);
 
   PrintStr(" server=");
-  PrintInt32(g_serverIpAddr[0]);
+  PrintInt32(g_network.GetServerIp()[0]);
   PrintChar('.');
-  PrintInt32(g_serverIpAddr[1]);
+  PrintInt32(g_network.GetServerIp()[1]);
   PrintChar('.');
-  PrintInt32(g_serverIpAddr[2]);
+  PrintInt32(g_network.GetServerIp()[2]);
   PrintChar('.');
-  PrintInt32(g_serverIpAddr[3]);
+  PrintInt32(g_network.GetServerIp()[3]);
 
   PrintStr(" bprating=");
   PrintInt32(g_pvBoiler.GetBoilerPowerRating());
@@ -300,79 +222,6 @@ result_code_t CommandStatus()
   PrintStr("%");
 
   PrintStrN("");
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetWifiSsid(const char* strSsid)
-{
-  memset(g_strWifiSsid, 0x00, WIFI_SSID_MAX_SIZE + 1);
-  strcpy(g_strWifiSsid, strSsid);
-
-  EEPROM.put(EEPROM_WIFI_SSID, g_strWifiSsid);
-  EEPROM.commit();
-
-  InitWifi(true);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetWifiPassword(const char* strPassword)
-{
-  memset(g_strWifiPassword, 0x00, WIFI_PASSWORD_MAX_SIZE + 1);
-  strcpy(g_strWifiPassword, strPassword);
-
-  EEPROM.put(EEPROM_WIFI_PASSWORD, g_strWifiPassword);
-  EEPROM.commit();
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetIp(uint8_t* ipAddress)
-{
-  memcpy(g_ipAddr, ipAddress, sizeof(g_ipAddr));
-
-  EEPROM.put(EEPROM_IP_ADDR, g_ipAddr);
-  EEPROM.commit();
-
-  InitWifi(true);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetNetMask(uint8_t* ipNetMask)
-{
-  memcpy(g_ipNetmask, ipNetMask, sizeof(g_ipNetmask));
-
-  EEPROM.put(EEPROM_IP_NETMASK, g_ipNetmask);
-  EEPROM.commit();
-
-  InitWifi(true);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetServerIp(uint8_t* ipAddress)
-{
-  memcpy(g_serverIpAddr, ipAddress, sizeof(g_serverIpAddr));
-
-  EEPROM.put(EEPROM_SERVER_IP_ADDR, g_serverIpAddr);
-  EEPROM.commit();
-
-  g_MQTTClient.setServer(g_serverIpAddr, MQTT_PORT);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandRestartNet()
-{
-  InitWifi(true);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -541,7 +390,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 
 bool MQTTReconnect()
 {
-  if (IPAddress(g_serverIpAddr) == IPAddress(0, 0, 0, 0))
+  if (IPAddress(g_network.GetServerIp()) == IPAddress(0, 0, 0, 0))
   {
     return false;
   }
@@ -576,23 +425,7 @@ bool MQTTReconnect()
 
 void LoadSettings()
 {
-  // Obtain our IP
-  EEPROM.get(EEPROM_IP_ADDR, g_ipAddr);
-  if (IPAddress(g_ipAddr) == IPAddress(255, 255, 255, 255))
-  {
-    memset(g_ipAddr, 0x00, 4);
-  }
-
-  EEPROM.get(EEPROM_IP_NETMASK, g_ipNetmask);
-
-  EEPROM.get(EEPROM_SERVER_IP_ADDR, g_serverIpAddr);
-  if (IPAddress(g_serverIpAddr) == IPAddress(255, 255, 255, 255))
-  {
-    memset(g_serverIpAddr, 0x00, 4);
-  }
-
-  EEPROM.get(EEPROM_WIFI_SSID, g_strWifiSsid);
-  EEPROM.get(EEPROM_WIFI_PASSWORD, g_strWifiPassword);
+  g_network.LoadSettings();
 
   uint16_t iVal16 = 0;
   EEPROM.get(EEPROM_BP_RATING, iVal16);
@@ -663,11 +496,11 @@ void setup()
 
   delay(10);
 
-  InitWifi(false);
+  g_network.InitWifi(false);
 
-  if (IPAddress(g_serverIpAddr) != IPAddress(0, 0, 0, 0))
+  if (IPAddress(g_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
   {
-    g_MQTTClient.setServer(g_serverIpAddr, MQTT_PORT);
+    g_MQTTClient.setServer(g_network.GetServerIp(), MQTT_PORT);
     g_MQTTClient.setBufferSize(MQTT_MAX_SIZE);
     g_MQTTClient.setCallback(MQTTCallback);
   }
@@ -777,23 +610,23 @@ void pollEthernet(void)
   static char strCommand[CMD_BUF_SIZE] = { 0 };
   static char strOldCommand[CMD_BUF_SIZE] = { 0 };
 
-  if (!g_socketServerClient || !g_socketServerClient.connected())
+  if (!g_network.GetSocketServerClient() || !g_network.GetSocketServerClient().connected())
   {
-    g_socketServerClient = g_socketServer.accept();
+    g_network.GetSocketServerClient() = g_network.GetSocketServer().accept();
 #ifdef WIFI_DEBUG
-    if (g_socketServerClient)
+    if (g_network.GetSocketServerClient())
     {
       PrintStr("Accepting connection from: ");
-      PrintStrN(g_socketServerClient.remoteIP().toString().c_str());
+      PrintStrN(g_network.GetSocketServerClient().remoteIP().toString().c_str());
     }
 #endif
   }
 
-  if (g_socketServerClient && g_socketServerClient.connected())
+  if (g_network.GetSocketServerClient() && g_network.GetSocketServerClient().connected())
   {
-    if (g_socketServerClient.available())
+    if (g_network.GetSocketServerClient().available())
     {
-      const char c = g_socketServerClient.read();
+      const char c = g_network.GetSocketServerClient().read();
       if (c != 0)
       {
         if (c == '!') // Repeat the previous command but don't execute it yet
@@ -805,7 +638,7 @@ void pollEthernet(void)
 
 #if 0
             if (commandHandler.GetLocalEchoEnabled())
-              g_socketServerClient.print(strCommand);
+              g_network.GetSocketServerClient().print(strCommand);
 #endif
           }
         }
@@ -813,7 +646,7 @@ void pollEthernet(void)
         {
 #if 0
           // Linefeed
-          g_socketServerClient.println("");
+          g_network.GetSocketServerClient().println("");
 #endif
 
           // Don't check empty commands
@@ -828,7 +661,7 @@ void pollEthernet(void)
             charCount = 0;
 
             // Parse client command
-            g_commandHandler.ProcessCommand(strCommand, &g_socketServerClient);
+            g_commandHandler.ProcessCommand(strCommand, &g_network.GetSocketServerClient());
           }
         }
         else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)

@@ -9,16 +9,18 @@
 
 // Forward declare
 class CPVBoiler; 
+class CNetwork;
 
 class CPVBoilerCommandHandler : public CCommandHandler
 {
   public:
-    CPVBoilerCommandHandler(CPVBoiler& pvBoiler) : m_pvBoiler(pvBoiler) {};
+    CPVBoilerCommandHandler(CPVBoiler& pvBoiler, CNetwork& network) : m_pvBoiler(pvBoiler), m_network(network) {};
 
     result_code_t ProcessCommand(char *strCommand, WiFiClient* wifiClient = NULL);
 
   private:
     CPVBoiler& m_pvBoiler;
+    CNetwork& m_network;
 
     result_code_t CmdShowVersion(const char *strArgs);
     result_code_t CmdShowFWVersion(const char *strArgs);
