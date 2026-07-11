@@ -10,13 +10,6 @@ void PrintStrN(const char *str);
 void PrintStr(const char *str);
 void PrintChar(const char c);
 
-result_code_t CommandSetBPRating(const uint16_t& iPower);
-result_code_t CommandSetDimStyle(const CPVBoiler::dim_style_t& dimStyle);
-result_code_t CommandSetPowerBudgetMargin(const uint16_t& iMargin);
-result_code_t CommandSetControlMode(const bool& bPercentage);
-result_code_t CommandSetSSRPeriodCount(const uint8_t& iCount);
-result_code_t CommandSetErrorGain(const float& fGain);
-
 result_code_t CommandSetWifiSsid(const char* strSsid);
 result_code_t CommandSetWifiPassword(const char* strPassword);
 
@@ -35,7 +28,7 @@ const char HELP_STR[] = "\r\n"
                         "status                 : Show device status\r\n"
                         "bprating [p]           : Set boiler power rating to [p] Watt\r\n"
                         "pbmargin [p]           : Set power budget margin to [p] Watt\r\n"
-                        "ctrlmode [c]           : Set control mode to [c] (\"percentage\" or \"budget\")\r\n"
+                        "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
                         "dstyle [s]             : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
                         "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
                         "egain [g]              : Set error-gain value [g]\r\n"
@@ -189,7 +182,7 @@ result_code_t CPVBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CommandSetBPRating(iPower);
+  m_pvBoiler.SetBoilerPowerRating(iPower);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -206,21 +199,21 @@ result_code_t CPVBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CommandSetPowerBudgetMargin(iPower);
+  m_pvBoiler.SetPowerBudgetMargin(iPower);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdControlMode(const char *strArgs)
+result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "percentage"))
-    CommandSetControlMode(true);
+    m_pvBoiler.SetLogicMode(true);
   else if (STRIEQUALS(strArgs, "budget"))
-    CommandSetControlMode(false);
+    m_pvBoiler.SetLogicMode(false);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
@@ -234,9 +227,9 @@ result_code_t CPVBoilerCommandHandler::CmdDimStyle(const char *strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "phase-cut"))
-    CommandSetDimStyle(CPVBoiler::DIM_STYLE_PHASE_CUT);
+    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_PHASE_CUT);
   else if (STRIEQUALS(strArgs, "ssr"))
-    CommandSetDimStyle(CPVBoiler::DIM_STYLE_SSR);
+    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_SSR);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
@@ -255,7 +248,7 @@ result_code_t CPVBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CommandSetSSRPeriodCount(iCount);
+  m_pvBoiler.SetSsrPeriodCount(iCount);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -273,7 +266,7 @@ result_code_t CPVBoilerCommandHandler::CmdErrorGain(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CommandSetErrorGain(fGain);
+  m_pvBoiler.SetErrorGain(fGain);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -332,9 +325,9 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand, WiFiClie
   {
     result = CmdPowerBudgetMargin(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "ctrlmode"))
+  else if (STRIEQUALS(strCommand, "logicmode"))
   {
-    result = CmdControlMode(strArgs);
+    result = CmdLogicMode(strArgs);
   }
   else if (STRIEQUALS(strCommand, "dstyle"))
   {

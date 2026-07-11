@@ -43,11 +43,12 @@
 #include "system.h"
 
 // Globals
-CPVBoilerCommandHandler g_commandHandler;
 WiFiClient g_wifiClient;
 PubSubClient g_MQTTClient(g_wifiClient);
 CMqttUtil g_MQTTUtil(g_MQTTClient);
 CPVBoiler g_pvBoiler(g_MQTTClient);
+CPVBoilerCommandHandler g_commandHandler(g_pvBoiler);
+
 WiFiServer g_socketServer(SOCKET_SERVER_PORT);
 WiFiClient g_socketServerClient;
 
@@ -299,72 +300,6 @@ result_code_t CommandStatus()
   PrintStr("%");
 
   PrintStrN("");
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetBPRating(const uint16_t& iPower)
-{
-  EEPROM.put(EEPROM_BP_RATING, iPower);
-  EEPROM.commit();
-
-  g_pvBoiler.SetBoilerPowerRating(iPower);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
-{
-  EEPROM.put(EEPROM_DIM_STYLE, dimStyle);
-  EEPROM.commit();
-
-  g_pvBoiler.SetDimStyle(dimStyle);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetPowerBudgetMargin(const uint16_t& iMargin)
-{
-  EEPROM.put(EEPROM_PB_MARGIN, iMargin);
-  EEPROM.commit();
-
-  g_pvBoiler.SetPowerBudgetMargin(iMargin);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetControlMode(const bool& bPercentage)
-{
-  EEPROM.put(EEPROM_CTRL_MODE, bPercentage ? 0x01 : 0x00);
-  EEPROM.commit();
-
-  g_pvBoiler.SetLogicMode(bPercentage);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetSSRPeriodCount(const uint8_t& iCount)
-{
-  EEPROM.put(EEPROM_SSR_PERIOD, iCount);
-  EEPROM.commit();
-
-  g_pvBoiler.SetSSRPeriod(iCount);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandSetErrorGain(const float& fGain)
-{
-  EEPROM.put(EEPROM_ERROR_GAIN, fGain);
-  EEPROM.commit();
-
-  g_pvBoiler.SetErrorGain(fGain);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -686,7 +621,7 @@ void LoadSettings()
   {
     iVal8 = SSR_PERIOD_COUNT_DEFAULT;
   }
-  g_pvBoiler.SetSSRPeriod(iVal8);
+  g_pvBoiler.SetSsrPeriodCount(iVal8);
 
   float fGain;
   EEPROM.get(EEPROM_ERROR_GAIN, fGain);

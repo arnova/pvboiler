@@ -1,11 +1,67 @@
 #include "pvboiler.h"
 #include "util.h"
 
+#include <EEPROM.h>
+
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
 const float& CPVBoiler::GetTriacAngleFactor() const
 {
   return triac_percentage_factor[m_iOutputPercentage];
+}
+
+
+void CPVBoiler::SetBoilerPowerRating(const uint16_t& iPower)
+{
+  EEPROM.put(EEPROM_BP_RATING, iPower);
+  EEPROM.commit();
+
+  m_iBoilerPowerRating = iPower;
+}
+
+
+void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
+{
+  EEPROM.put(EEPROM_PB_MARGIN, iMargin);
+  EEPROM.commit();
+
+  m_iPowerBudgetMargin = iMargin;
+}
+
+
+void CPVBoiler::SetLogicMode(const bool& bPercentage)
+{
+  EEPROM.put(EEPROM_CTRL_MODE, bPercentage ? 0x01 : 0x00);
+  EEPROM.commit();
+
+  m_bPowerPercControl = bPercentage;
+}
+
+
+void CPVBoiler::SetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
+{
+  EEPROM.put(EEPROM_DIM_STYLE, dimStyle);
+  EEPROM.commit();
+
+  m_dimStyle = dimStyle;
+}
+
+
+void CPVBoiler::SetSsrPeriodCount(const uint8_t& iCount)
+{
+  EEPROM.put(EEPROM_SSR_PERIOD, iCount);
+  EEPROM.commit();
+
+  m_iSsrPeriodCount = iCount;
+}
+
+
+void CPVBoiler::SetErrorGain(const float& fGain)
+{
+  EEPROM.put(EEPROM_ERROR_GAIN, fGain);
+  EEPROM.commit();
+
+  m_fErrorGain = fGain;
 }
 
 

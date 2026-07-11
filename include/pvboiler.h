@@ -70,12 +70,12 @@ class CPVBoiler
     void SetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
     void SetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
 
-    void SetBoilerPowerRating(const uint16_t& iPower) { m_iBoilerPowerRating = iPower; };
-    void SetPowerBudgetMargin(const uint16_t& iBudget) { m_iPowerBudgetMargin = iBudget; };
-    void SetLogicMode(const bool& bPercentage) { m_bPowerPercControl = bPercentage; };
-    void SetDimStyle(const dim_style_t& dimStyle) { m_dimStyle = dimStyle; };
-    void SetSSRPeriod(const uint8_t& iPeriod) { m_iSsrPeriodCount = iPeriod; };
-    void SetErrorGain(const float& fGain) { m_fErrorGain = fGain; };
+    void SetBoilerPowerRating(const uint16_t& iPower);
+    void SetPowerBudgetMargin(const uint16_t& iBudget);
+    void SetLogicMode(const bool& bPercentage);
+    void SetDimStyle(const dim_style_t& dimStyle);
+    void SetSsrPeriodCount(const uint8_t& iPeriod);
+    void SetErrorGain(const float& fGain);
 
     const float& GetTriacAngleFactor() const;
     const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
