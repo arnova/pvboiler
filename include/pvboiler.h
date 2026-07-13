@@ -88,7 +88,7 @@ class CPVBoiler
     const uint16_t& GetPowerBudgetMargin() { return m_iPowerBudgetMargin; };
     const bool& GetLogicMode() { return m_bPowerPercControl; };
     const dim_style_t& GetDimStyle() { return m_dimStyle; };
-    const uint8_t& GetSSRPeriod() { return m_iSsrPeriodCount; };
+    const uint8_t& GetSsrPeriodCount() { return m_iSsrPeriodCount; };
     const float& GetErrorGain() { return m_fErrorGain; };
 
   private:

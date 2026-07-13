@@ -71,49 +71,52 @@ void IRAM_ATTR ZeroCrossISR()
     g_bZeroCrossTimeUpdated = true;
     g_iLastZeroCrossTime = iNow;
 
-#ifdef SSR_STYLE_MODE
-    if (g_iOutputPercentage == 0)
+    if (g_app.GetPvBoiler().GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
     {
-      digitalWrite(TRIAC_OUTPUT, LOW); // Always off
+      if (g_iOutputPercentage == 0)
+      {
+        digitalWrite(TRIAC_OUTPUT, LOW); // Always off
+      }
+      else
+      {
+        g_iSSRPeriodCounter++;
+        if ((g_iSSRPeriodCounter * 100) / g_app.GetPvBoiler().GetSsrPeriodCount() <= g_iOutputPercentage)
+        {
+          // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+          // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+          const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
+
+          g_bTriacOn = true;
+          timer1_write(iTriacDelayTicks);
+        }
+        else
+        {
+          digitalWrite(TRIAC_OUTPUT, LOW); // Off
+        }
+
+        if (g_iSSRPeriodCounter >= g_app.GetPvBoiler().GetSsrPeriodCount())
+        {
+          g_iSSRPeriodCounter = 0;
+        }
+      }
     }
     else
     {
-      g_iSSRPeriodCounter++;
-      if ((g_iSSRPeriodCounter * 100) / m_iSsrPeriodCount <= g_iOutputPercentage)
+      digitalWrite(TRIAC_OUTPUT, LOW); // Off
+
+      const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
+
+      // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
+      if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= g_iZeroCrossTime)
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-        const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
+        const uint32_t iTriacDelayTicks = (fDelay + g_iPhaseCorrectionTime) * 80;
 
         g_bTriacOn = true;
         timer1_write(iTriacDelayTicks);
       }
-      else
-      {
-        digitalWrite(TRIAC_OUTPUT, LOW); // Off
-      }
-
-      if (g_iSSRPeriodCounter >= m_iSsrPeriodCount)
-      {
-        g_iSSRPeriodCounter = 0;
-      }
     }
-#else
-    digitalWrite(TRIAC_OUTPUT, LOW); // Off
-
-    const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
-
-    // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-    if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= g_iZeroCrossTime)
-    {
-      // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-      // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-      const uint32_t iTriacDelayTicks = (fDelay + g_iPhaseCorrectionTime) * 80;
-
-      g_bTriacOn = true;
-      timer1_write(iTriacDelayTicks);
-    }
-#endif
   }
   else // Falling edge
   {

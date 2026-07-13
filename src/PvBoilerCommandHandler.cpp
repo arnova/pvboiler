@@ -18,7 +18,7 @@ const char HELP_STR[] = "\r\n"
                         "bprating [p]           : Set boiler power rating to [p] Watt\r\n"
                         "pbmargin [p]           : Set power budget margin to [p] Watt\r\n"
                         "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
-                        "dstyle [s]             : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
+                        "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
                         "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
                         "egain [g]              : Set error-gain value [g]\r\n"
                         "wssid [s]              : Set WiFi SSID to [s]\r\n"
@@ -209,11 +209,11 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" ctrl_mode=");
   CTermPrint::print(m_pvBoiler.GetLogicMode() ? "percentage" : "budget");
 
-  CTermPrint::print(" dstyle=");
+  CTermPrint::print(" dim_style=");
   CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
 
   CTermPrint::print(" ssrpc=");
-  CTermPrint::print(m_pvBoiler.GetSSRPeriod());
+  CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
   CTermPrint::print(" egain=");
   CTermPrint::print(m_pvBoiler.GetErrorGain());
@@ -246,12 +246,13 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   CTermPrint::print(" out_perc=");
   CTermPrint::print(m_pvBoiler.GetOutputPercentage());
+  CTermPrint::print("%");
 
-  CTermPrint::print(" p_budget=");
+  CTermPrint::print(" p_budget_set=");
   CTermPrint::print(m_pvBoiler.GetPowerBudget());
   CTermPrint::print("W");
 
-  CTermPrint::print(" p_percentage=");
+  CTermPrint::print(" p_perc_set=");
   CTermPrint::print(m_pvBoiler.GetPowerPercentage());
   CTermPrint::print("%");
 
@@ -430,7 +431,7 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand, WiFiClie
   {
     result = CmdLogicMode(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "dstyle"))
+  else if (STRIEQUALS(strCommand, "dimstyle"))
   {
     result = CmdDimStyle(strArgs);
   }
