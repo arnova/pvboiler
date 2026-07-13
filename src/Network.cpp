@@ -73,6 +73,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   }
 
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname(HOST_NAME);
   WiFi.begin(m_strWifiSsid, m_strWifiPassword);
 
   // Initialize mDNS
