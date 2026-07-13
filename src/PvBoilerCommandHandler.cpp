@@ -108,7 +108,7 @@ result_code_t CPVBoilerCommandHandler::CmdServerIp(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  m_network.SetServerIp(ipAddress);
+  m_network.SetMqttServerIp(ipAddress);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -155,6 +155,118 @@ result_code_t CPVBoilerCommandHandler::CmdRestartNet(const char *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
   m_network.InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  CTermPrint::print("ssid=");
+  CTermPrint::print(m_network.GetWifiSsid());
+
+  CTermPrint::print(" pass=");
+  CTermPrint::print(m_network.GetWifiPassword());
+
+  CTermPrint::print(" ip=");
+  CTermPrint::print(m_network.GetIpAddr()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetIpAddr()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetIpAddr()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetIpAddr()[3]);
+
+  CTermPrint::print(" netmask=");
+  CTermPrint::print(m_network.GetNetMask()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetNetMask()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetNetMask()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetNetMask()[3]);
+
+  CTermPrint::print(" server=");
+  CTermPrint::print(m_network.GetServerIp()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetServerIp()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetServerIp()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(m_network.GetServerIp()[3]);
+
+  CTermPrint::print(" bprating=");
+  CTermPrint::print(m_pvBoiler.GetBoilerPowerRating());
+  CTermPrint::print("W");
+
+  CTermPrint::print(" pbmargin=");
+  CTermPrint::print(m_pvBoiler.GetPowerBudgetMargin());
+  CTermPrint::print("W");
+
+  CTermPrint::print(" ctrl_mode=");
+  CTermPrint::print(m_pvBoiler.GetLogicMode() ? "percentage" : "budget");
+
+  CTermPrint::print(" dstyle=");
+  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
+
+  CTermPrint::print(" ssrpc=");
+  CTermPrint::print(m_pvBoiler.GetSSRPeriod());
+
+  CTermPrint::print(" egain=");
+  CTermPrint::print(m_pvBoiler.GetErrorGain());
+
+  CTermPrint::println("");
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  CTermPrint::print("on_off=");
+  CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "on" : "off");
+
+  CTermPrint::print(" wifi_conn=");
+  CTermPrint::print(WiFi.status() == WL_CONNECTED ? "1" : "0");
+
+  CTermPrint::print(" wifi_ip=");
+  CTermPrint::print(WiFi.localIP().toString().c_str());
+
+  CTermPrint::print(" mqtt_conn=");
+  CTermPrint::print(m_network.GetMqttClient().connected() ? "1" : "0");
+
+  CTermPrint::print(" angle_factor=");
+  CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
+
+  CTermPrint::print(" out_perc=");
+  CTermPrint::print(m_pvBoiler.GetOutputPercentage());
+
+  CTermPrint::print(" p_budget=");
+  CTermPrint::print(m_pvBoiler.GetPowerBudget());
+  CTermPrint::print("W");
+
+  CTermPrint::print(" p_percentage=");
+  CTermPrint::print(m_pvBoiler.GetPowerPercentage());
+  CTermPrint::print("%");
+
+  CTermPrint::println("");
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPVBoilerCommandHandler::CmdReset(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  // FIXME: Implementation
 
   return pack_result_code(ERR_CODE_OK);
 }

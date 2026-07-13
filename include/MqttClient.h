@@ -1,14 +1,14 @@
-#ifndef MQTTUTIL_H
-#define MQTTUTIL_H
+#ifndef MQTT_CLIENT_H
+#define MQTT_CLIENT_H
 
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
+
 #include "system.h"
 
-class CMqttUtil
+class CMqttClient : public PubSubClient
 {
   public:
-    CMqttUtil(PubSubClient& MQTTClient) { m_pMQTTClient = &MQTTClient; }; // Constructor
-
     static void PrintDataError(void);
     static void GetFriendlyName(const String& strName, String& strFriendly);
  
@@ -21,7 +21,6 @@ class CMqttUtil
   private:
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
 
-    PubSubClient* m_pMQTTClient;
     const String m_strName = MQTT_NAME;
 };
-#endif // MQTTUTIL_H
+#endif // MQTT_CLIENT_H

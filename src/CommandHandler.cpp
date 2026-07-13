@@ -1,15 +1,10 @@
 #include "CommandHandler.h"
 #include "util.h"
+#include "TermPrint.h"
 #include "system.h"
 
 #include <string.h>
 #include <Arduino.h>
-
-// Forward declare these
-result_code_t CommandReboot();
-result_code_t CommandReset();
-result_code_t CommandInfo();
-result_code_t CommandStatus();
 
 
 result_code_t CCommandHandler::CmdReboot(const char *strArgs)
@@ -17,40 +12,7 @@ result_code_t CCommandHandler::CmdReboot(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CommandReboot();
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CCommandHandler::CmdReset(const char *strArgs)
-{
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
-
-  CommandReset();
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CCommandHandler::CmdInfo(const char *strArgs)
-{
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
-
-  CommandInfo();
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CCommandHandler::CmdStatus(const char *strArgs)
-{
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
-
-  CommandStatus();
+  ESP.restart();
 
   return pack_result_code(ERR_CODE_OK);
 }

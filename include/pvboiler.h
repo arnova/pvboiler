@@ -2,9 +2,9 @@
 #define PVBOILER_H
 
 #include <elapsedMillis.h>
-#include <PubSubClient.h>
 
 #include "system.h"
+#include "Network.h"
 #include "PvBoilerCommandHandler.h"
 
 // Control topics
@@ -51,7 +51,7 @@ const float triac_percentage_factor[101] =
 class CPVBoiler
 {
   public:
-    CPVBoiler(PubSubClient& MQTTClient) { m_pMQTTClient = &MQTTClient; }; // Constructor
+    CPVBoiler(CNetwork& network) : m_network(network) {}; // Constructor
 
     enum dim_style_e
     {
@@ -95,7 +95,8 @@ class CPVBoiler
     void Update();
     void CheckWatchDog();
 
-    PubSubClient* m_pMQTTClient;
+    CNetwork& m_network;
+
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_MQTTTimer = 0;
     uint32_t m_iWatchdogCounter = 0;

@@ -26,12 +26,8 @@ class CCommandHandler
   protected:
     result_code_t CmdEchoOnOff(const char *strArgs);
     result_code_t CmdReboot(const char *strArgs);
-    result_code_t CmdReset(const char *strArgs);
-    result_code_t CmdInfo(const char *strArgs);
-    result_code_t CmdStatus(const char *strArgs);
 
   private:
-    WiFiClient* m_pWifiClient = NULL;
     bool m_bLocalEcho = true;
 };
 

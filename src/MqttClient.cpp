@@ -1,17 +1,17 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#include "mqttutil.h"
+#include "MqttClient.h"
 #include "TermPrint.h"
 
 
-void CMqttUtil::PrintDataError(void)
+void CMqttClient::PrintDataError(void)
 {
   CTermPrint::println("ERROR: Invalid MQTT data for topic");
 }
 
 
-void CMqttUtil::GetFriendlyName(const String& strName, String& strFriendly)
+void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
 {
   bool bSpace = true;
 
@@ -38,7 +38,7 @@ void CMqttUtil::GetFriendlyName(const String& strName, String& strFriendly)
 }
 
 
-void CMqttUtil::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   String strFriendlyItem;
   GetFriendlyName(strItem, strFriendlyItem);
@@ -66,12 +66,12 @@ void CMqttUtil::PublishConfig(JsonDocument& root, const char* strItem, const cha
 
   String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 
-  m_pMQTTClient->subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
-  m_pMQTTClient->publish(strTopic.c_str(), message, true);
+  subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
+  publish(strTopic.c_str(), message, true);
 }
 
 
-void CMqttUtil::PublishSwitchConfig(const char* strItem)
+void CMqttClient::PublishSwitchConfig(const char* strItem)
 {
   JsonDocument root;
 
@@ -86,7 +86,7 @@ void CMqttUtil::PublishSwitchConfig(const char* strItem)
 }
 
 
-void CMqttUtil::PublishNumberConfig(const char* strItem, const char* strMin, const char* strMax, const char* strStep)
+void CMqttClient::PublishNumberConfig(const char* strItem, const char* strMin, const char* strMax, const char* strStep)
 {
   JsonDocument root;
 
@@ -99,7 +99,7 @@ void CMqttUtil::PublishNumberConfig(const char* strItem, const char* strMin, con
 }
 
 
-void CMqttUtil::PublishBinarySensorConfig(const char* strItem)
+void CMqttClient::PublishBinarySensorConfig(const char* strItem)
 {
   JsonDocument root;
 
@@ -110,7 +110,7 @@ void CMqttUtil::PublishBinarySensorConfig(const char* strItem)
 }
 
 
-void CMqttUtil::PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla)
+void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla)
 {
   JsonDocument root;
 
@@ -121,18 +121,18 @@ void CMqttUtil::PublishSensorConfig(const char* strItem, const char* strUnit, co
 }
 
 
-bool CMqttUtil::Reconnect()
+bool CMqttClient::Reconnect()
 {
   CTermPrint::print("Attempting MQTT connection...");
   // Create a random client ID
   String clientId = "ESPBut-";
   clientId += String(random(0xffff), HEX);
   // Attempt to connect
-//    if (MQTTClient.connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
-  if (!m_pMQTTClient->connect(clientId.c_str()))
+//    if (connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
+  if (connect(clientId.c_str()))
   {
     CTermPrint::print("failed, rc=");
-    CTermPrint::print(m_pMQTTClient->state());
+    CTermPrint::print(state());
     return false;
   }
 

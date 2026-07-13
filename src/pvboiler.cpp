@@ -70,7 +70,7 @@ bool CPVBoiler::MQTTPublishValues()
   if (m_bUpdateCtrlEnable)
   {
     m_bUpdateCtrlEnable = false;
-    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
   }
 
   if (!m_bPowerPercControl && m_bUpdatePowerBudget)
@@ -80,7 +80,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerBudget);
-    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
   }
 
   if (m_bPowerPercControl && m_bUpdatePowerPercentage)
@@ -90,7 +90,7 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[6];
 
     snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
   }
 
   if (m_bUpdateOutputPercentage)
@@ -100,10 +100,10 @@ bool CPVBoiler::MQTTPublishValues()
     char strTemp[7];
 
     snprintf(strTemp, 7, "%i", m_iOutputPercentage);
-    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
 
     snprintf(strTemp, 7, "%i", (m_iBoilerPowerRating * m_iOutputPercentage) / 100);
-    m_pMQTTClient->publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
   }
 
   return true;
@@ -191,7 +191,7 @@ void CPVBoiler::loop()
   }
 
   // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_pMQTTClient->connected())
+  if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
   {
     MQTTPublishValues();
 

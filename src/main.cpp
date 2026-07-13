@@ -29,27 +29,23 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #endif
-#include <PubSubClient.h>
+
 #include <ArduinoOTA.h>
-#include <ArduinoJson.h>
 #include <EEPROM.h>
 
 #include "CommandParser.h"
 #include "PvBoilerCommandHandler.h"
 #include "pvboiler.h"
 #include "TermPrint.h"
-#include "mqttutil.h"
+#include "MqttClient.h"
 #include "ssd1306.h"
 #include "util.h"
 #include "Network.h"
 #include "system.h"
 
 // Globals
-WiFiClient g_wifiClient;
-PubSubClient g_MQTTClient(g_wifiClient);
-CMqttUtil g_MQTTUtil(g_MQTTClient);
-CNetwork g_network(g_MQTTClient);
-CPVBoiler g_pvBoiler(g_MQTTClient);
+CNetwork g_network;
+CPVBoiler g_pvBoiler(g_network);
 CPVBoilerCommandHandler g_commandHandler(g_pvBoiler, g_network);
 
 volatile uint32_t g_iLastZeroCrossTime = 0;
@@ -60,117 +56,6 @@ volatile bool g_bTriacOn = false;
 volatile float g_fTriacAngleFactor = 1.0f; // Off
 volatile uint8_t g_iOutputPercentage = 0;
 volatile uint8_t g_iSSRPeriodCounter = 0;
-
-
-result_code_t CommandReboot()
-{
-  ESP.restart();
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandReset()
-{
-  // FIXME: Implementation
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandInfo()
-{
-  CTermPrint::print("ssid=");
-  CTermPrint::print(g_network.GetWifiSsid());
-
-  CTermPrint::print(" pass=");
-  CTermPrint::print(g_network.GetWifiPassword());
-
-  CTermPrint::print(" ip=");
-  CTermPrint::print(g_network.GetIpAddr()[0]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetIpAddr()[1]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetIpAddr()[2]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetIpAddr()[3]);
-
-  CTermPrint::print(" netmask=");
-  CTermPrint::print(g_network.GetNetMask()[0]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetNetMask()[1]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetNetMask()[2]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetNetMask()[3]);
-
-  CTermPrint::print(" server=");
-  CTermPrint::print(g_network.GetServerIp()[0]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetServerIp()[1]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetServerIp()[2]);
-  CTermPrint::print('.');
-  CTermPrint::print(g_network.GetServerIp()[3]);
-
-  CTermPrint::print(" bprating=");
-  CTermPrint::print(g_pvBoiler.GetBoilerPowerRating());
-  CTermPrint::print("W");
-
-  CTermPrint::print(" pbmargin=");
-  CTermPrint::print(g_pvBoiler.GetPowerBudgetMargin());
-  CTermPrint::print("W");
-
-  CTermPrint::print(" ctrl_mode=");
-  CTermPrint::print(g_pvBoiler.GetLogicMode() ? "percentage" : "budget");
-
-  CTermPrint::print(" dstyle=");
-  CTermPrint::print(g_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
-
-  CTermPrint::print(" ssrpc=");
-  CTermPrint::print(g_pvBoiler.GetSSRPeriod());
-
-  CTermPrint::print(" egain=");
-  CTermPrint::print(g_pvBoiler.GetErrorGain());
-
-  CTermPrint::println("");
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CommandStatus()
-{
-  CTermPrint::print("on_off=");
-  CTermPrint::print(g_pvBoiler.GetCtrlOnOff() ? "on" : "off");
-
-  CTermPrint::print(" wifi_conn=");
-  CTermPrint::print(WiFi.status() == WL_CONNECTED ? "1" : "0");
-
-  CTermPrint::print(" wifi_ip=");
-  CTermPrint::print(WiFi.localIP().toString().c_str());
-
-  CTermPrint::print(" mqtt_conn=");
-  CTermPrint::print(g_MQTTClient.connected() ? "1" : "0");
-
-  CTermPrint::print(" angle_factor=");
-  CTermPrint::print(g_pvBoiler.GetTriacAngleFactor());
-
-  CTermPrint::print(" out_perc=");
-  CTermPrint::print(g_pvBoiler.GetOutputPercentage());
-
-  CTermPrint::print(" p_budget=");
-  CTermPrint::print(g_pvBoiler.GetPowerBudget());
-  CTermPrint::print("W");
-
-  CTermPrint::print(" p_percentage=");
-  CTermPrint::print(g_pvBoiler.GetPowerPercentage());
-  CTermPrint::print("%");
-
-  CTermPrint::println("");
-
-  return pack_result_code(ERR_CODE_OK);
-}
 
 
 // Interrupt generated when crossing zero in either direction
@@ -298,12 +183,12 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       }
       else
       {
-        CMqttUtil::PrintDataError();
+        CMqttClient::PrintDataError();
       }
     }
     else
     {
-      CMqttUtil::PrintDataError();
+      CMqttClient::PrintDataError();
     }
   }
   else if (!g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
@@ -314,7 +199,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      CMqttUtil::PrintDataError();
+      CMqttClient::PrintDataError();
     }
   }
   else if (g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
@@ -325,7 +210,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     }
     else
     {
-      CMqttUtil::PrintDataError();
+      CMqttClient::PrintDataError();
     }
   }
 
@@ -341,29 +226,29 @@ bool MQTTReconnect()
     return false;
   }
 
-  if (!g_MQTTUtil.Reconnect())
+  if (!g_network.GetMqttClient().Reconnect())
   {
     return false;
   }
 
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  g_MQTTUtil.PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
+  g_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
   if (g_pvBoiler.GetLogicMode())
   {
-    g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
+    g_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
   }
   else
   {
-    g_MQTTUtil.PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
+    g_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
   }
 
-  g_MQTTUtil.PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
+  g_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
 
-  g_MQTTUtil.PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
+  g_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
 
   // Publish our f/w version
-  g_MQTTClient.publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
+  g_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
 
   return true;
 }
@@ -446,9 +331,9 @@ void setup()
 
   if (IPAddress(g_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
   {
-    g_MQTTClient.setServer(g_network.GetServerIp(), MQTT_PORT);
-    g_MQTTClient.setBufferSize(MQTT_MAX_SIZE);
-    g_MQTTClient.setCallback(MQTTCallback);
+    g_network.GetMqttClient().setServer(g_network.GetServerIp(), MQTT_PORT);
+    g_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
+    g_network.GetMqttClient().setCallback(MQTTCallback);
   }
 
   // Allow the hardware to sort itself out
@@ -670,7 +555,7 @@ bool CheckNetwork()
     }
 
     // Check for MQTT disconnects
-    if (!g_MQTTClient.connected() && MQTTReconnectTimer > 5000)
+    if (!g_network.GetMqttClient().connected() && MQTTReconnectTimer > 5000)
     {
       MQTTReconnect();
       MQTTReconnectTimer = 0;
@@ -695,7 +580,7 @@ bool CheckNetwork()
     }
   }
   
-  if (!bWifiConnected || !g_MQTTClient.connected())
+  if (!bWifiConnected || !g_network.GetMqttClient().connected())
   {
 #ifdef STATUS_LED
     digitalWrite(STATUS_LED, LOW); // Always on: failure
@@ -703,7 +588,7 @@ bool CheckNetwork()
   }
   else
   {
-    g_MQTTClient.loop();
+    g_network.GetMqttClient().loop();
 
     // Indicate we're running:
 #ifdef STATUS_LED

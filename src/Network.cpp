@@ -6,13 +6,19 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #endif
-#include <PubSubClient.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 
 #include "Network.h"
+#include "MqttClient.h"
 #include "TermPrint.h"
 #include "util.h"
+
+
+CNetwork::CNetwork() : m_socketServer(SOCKET_SERVER_PORT)
+{
+  m_mqttClient.setClient(m_wifiClient);
+}
 
 
 void CNetwork::LoadSettings()
@@ -151,12 +157,12 @@ void CNetwork::SetNetMask(uint8_t* ipNetMask)
 }
 
 
-void CNetwork::SetServerIp(uint8_t* ipAddress)
+void CNetwork::SetMqttServerIp(uint8_t* ipAddress)
 {
   memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
 
   EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
   EEPROM.commit();
 
-  m_MQTTClient.setServer(m_serverIpAddr, MQTT_PORT);
+  m_mqttClient.setServer(m_serverIpAddr, MQTT_PORT);
 }

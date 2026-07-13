@@ -1,12 +1,19 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#else
+#include <WiFi.h>
+#endif
+
+#include "MqttClient.h"
 #include "system.h"
 
 class CNetwork
 {
   public:
-    CNetwork(PubSubClient& MQTTClient) : m_socketServer(SOCKET_SERVER_PORT), m_MQTTClient(MQTTClient) {};
+    CNetwork();
 
     void LoadSettings();
     void InitWifi(const bool bReconnect);
@@ -14,16 +21,17 @@ class CNetwork
     void SetWifiPassword(const char* strPassword);
     void SetIpAddr(uint8_t* ipAddress);
     void SetNetMask(uint8_t* ipNetMask);
-    void SetServerIp(uint8_t* ipAddress);
+    void SetMqttServerIp(uint8_t* ipAddress);
 
     const char* GetWifiSsid() { return m_strWifiSsid; };
     const char* GetWifiPassword() { return m_strWifiPassword; };
     const uint8_t* GetIpAddr() { return m_ipAddr; };
     const uint8_t* GetNetMask() { return m_ipNetmask; };
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
-    
+
     WiFiServer& GetSocketServer() { return m_socketServer; };
     WiFiClient& GetSocketServerClient() { return m_socketServerClient; };
+    CMqttClient& GetMqttClient() { return m_mqttClient; };
 
   private:
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
@@ -35,6 +43,7 @@ class CNetwork
     WiFiServer m_socketServer;
     WiFiClient m_socketServerClient;
 
-    PubSubClient& m_MQTTClient;
+    WiFiClient m_wifiClient;
+    CMqttClient m_mqttClient;
 };
 #endif // NETWORK_H
