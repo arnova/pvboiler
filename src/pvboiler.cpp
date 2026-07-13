@@ -203,18 +203,18 @@ void CPVBoiler::Update()
   else
   {
     const float fStepPercentage = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
-    int32_t iOutputPercentage = m_iOutputPercentage;
+    int32_t m_iOutputPercentage = m_iOutputPercentage;
     if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
-      iOutputPercentage += fStepPercentage;
+      m_iOutputPercentage += fStepPercentage;
 
-    if (iOutputPercentage > 100)
-      iOutputPercentage = 100;
-    else if (iOutputPercentage < 0)
-      iOutputPercentage = 0;
+    if (m_iOutputPercentage > 100)
+      m_iOutputPercentage = 100;
+    else if (m_iOutputPercentage < 0)
+      m_iOutputPercentage = 0;
 
-    if (m_iOutputPercentage != iOutputPercentage)
+    if (m_iOutputPercentage != m_iOutputPercentage)
     {
-      m_iOutputPercentage = iOutputPercentage;
+      m_iOutputPercentage = m_iOutputPercentage;
       m_bUpdateOutputPercentage = true;
     }
   }

@@ -41,13 +41,10 @@
 #include "ssd1306.h"
 #include "util.h"
 #include "Network.h"
+#include "App.h"
 #include "system.h"
 
-// Globals
-CNetwork g_network;
-CPVBoiler g_pvBoiler(g_network);
-CPVBoilerCommandHandler g_commandHandler(g_pvBoiler, g_network);
-
+CApp g_app;
 volatile uint32_t g_iLastZeroCrossTime = 0;
 volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
 volatile uint32_t g_iZeroCrossTime = 0;
@@ -178,7 +175,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     {
       if (iVal == 0 || iVal == 1 || length == 0)
       {
-        g_pvBoiler.SetOnOff((iVal == 1 || length == 0) ? true : false);
+        g_app.GetPvBoiler().SetOnOff((iVal == 1 || length == 0) ? true : false);
       }
       else
       {
@@ -190,22 +187,22 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (!g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  else if (!g_app.GetPvBoiler().GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
-      g_pvBoiler.SetPowerBudget(iVal);
+      g_app.GetPvBoiler().SetPowerBudget(iVal);
     }
     else
     {
       CMqttClient::PrintDataError();
     }
   }
-  else if (g_pvBoiler.GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+  else if (g_app.GetPvBoiler().GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
-      g_pvBoiler.SetPowerPercentage(iVal);
+      g_app.GetPvBoiler().SetPowerPercentage(iVal);
     }
     else
     {
@@ -214,42 +211,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
   }
 
   // Got a message so network is still ok:
-  g_pvBoiler.TriggerWatchdog();
-}
-
-
-bool MQTTReconnect()
-{
-  if (IPAddress(g_network.GetServerIp()) == IPAddress(0, 0, 0, 0))
-  {
-    return false;
-  }
-
-  if (!g_network.GetMqttClient().Reconnect())
-  {
-    return false;
-  }
-
-  // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  g_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
-
-  if (g_pvBoiler.GetLogicMode())
-  {
-    g_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
-  }
-  else
-  {
-    g_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
-  }
-
-  g_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
-
-  g_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
-
-  // Publish our f/w version
-  g_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
-
-  return true;
+  g_app.GetPvBoiler().TriggerWatchdog();
 }
 
 
@@ -279,24 +241,24 @@ void setup()
   Serial.begin(BAUD_RATE);
   Serial.setTimeout(2000);
 
-  g_network.LoadSettings();
-  g_pvBoiler.LoadSettings();
+  g_app.GetNetwork().LoadSettings();
+  g_app.GetPvBoiler().LoadSettings();
 
   delay(10);
 
-  g_network.InitWifi(false);
+  g_app.GetNetwork().InitWifi(false);
 
-  if (IPAddress(g_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
+  if (IPAddress(g_app.GetNetwork().GetServerIp()) != IPAddress(0, 0, 0, 0))
   {
-    g_network.GetMqttClient().setServer(g_network.GetServerIp(), MQTT_PORT);
-    g_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
-    g_network.GetMqttClient().setCallback(MQTTCallback);
+    g_app.GetNetwork().GetMqttClient().setServer(g_app.GetNetwork().GetServerIp(), MQTT_PORT);
+    g_app.GetNetwork().GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
+    g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
   }
 
   // Allow the hardware to sort itself out
   delay(1500);
 
-  MQTTReconnect();
+  g_app.MQTTReconnect();
 
     // Have the terminal start with a newline
   CTermPrint::println("");
@@ -316,269 +278,19 @@ void setup()
 #endif
 
 
-
-void pollSerial(void)
-{
-  static uint8_t charCount = 0;
-  static char strCommand[CMD_BUF_SIZE] = { 0 };
-  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
-
-  if (Serial.available())
-  {
-    const char c = Serial.read();
-    if (c != 0)
-    {
-      if (c == '!') // Repeat the previous command but don't execute it yet
-      {
-        if (charCount == 0 && *strOldCommand)
-        {
-          strcpy(strCommand, strOldCommand);
-          charCount = strlen(strOldCommand);
-
-          if (g_commandHandler.GetLocalEchoEnabled())
-            Serial.print(strCommand);
-        }
-      }
-      else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
-      {
-        // Linefeed for local echo
-        if (g_commandHandler.GetLocalEchoEnabled())
-          Serial.println("");
-
-        // Don't check empty commands
-        if (charCount > 0)
-        {
-          strCommand[charCount] = '\0';
-
-          // Store in old buffer
-          strcpy(strOldCommand, strCommand);
-
-          // Reset counter for next round
-          charCount = 0;
-
-          // Parse uart command
-          g_commandHandler.ProcessCommand(strCommand);
-        }
-      }
-      else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
-      {
-        if (charCount > 0)
-        {
-          if (g_commandHandler.GetLocalEchoEnabled())
-          {
-            // Backspace
-            Serial.write(CH_BACKSPACE);
-            // Blank character
-            Serial.write(' ');
-            // And backspace again since the blank jumps forward
-            Serial.write(CH_BACKSPACE);
-          }
-          charCount--;
-        }
-      }
-      else if (c >= ' ' && c <= '~') // Limit allowed characters
-      {
-        // Don't overflow + skip leading spaces:
-        if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
-        {
-          strCommand[charCount++] = c;
-
-          if (g_commandHandler.GetLocalEchoEnabled())
-            Serial.write(c);
-        }
-      }
-    }
-  }
-}
-
-
-void pollEthernet(void)
-{
-  static uint8_t charCount = 0;
-  static char strCommand[CMD_BUF_SIZE] = { 0 };
-  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
-
-  if (!g_network.GetSocketServerClient() || !g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient() = g_network.GetSocketServer().accept();
-#ifdef WIFI_DEBUG
-    if (g_network.GetSocketServerClient())
-    {
-      CTermPrint::print("Accepting connection from: ");
-      CTermPrint::println(g_network.GetSocketServerClient().remoteIP().toString().c_str());
-    }
-#endif
-  }
-
-  if (g_network.GetSocketServerClient() && g_network.GetSocketServerClient().connected())
-  {
-    if (g_network.GetSocketServerClient().available())
-    {
-      const char c = g_network.GetSocketServerClient().read();
-      if (c != 0)
-      {
-        if (c == '!') // Repeat the previous command but don't execute it yet
-        {
-          if (charCount == 0 && *strOldCommand)
-          {
-            strcpy(strCommand, strOldCommand);
-            charCount = strlen(strOldCommand);
-
-#if 0
-            if (commandHandler.GetLocalEchoEnabled())
-              g_network.GetSocketServerClient().print(strCommand);
-#endif
-          }
-        }
-        else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
-        {
-#if 0
-          // Linefeed
-          g_network.GetSocketServerClient().println("");
-#endif
-
-          // Don't check empty commands
-          if (charCount > 0)
-          {
-            strCommand[charCount] = '\0';
-
-            // Store in old buffer
-            strcpy(strOldCommand, strCommand);
-
-            // Reset counter for next round
-            charCount = 0;
-
-            // Parse client command
-            g_commandHandler.ProcessCommand(strCommand, &g_network.GetSocketServerClient());
-          }
-        }
-        else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
-        {
-          if (charCount > 0)
-          {
-#if 0
-            if (g_commandHandler.GetLocalEchoEnabled())
-            {
-              // Backspace
-              g_socketServerClient.write(CH_BACKSPACE);
-              // Blank character
-              g_socketServerClient.write(' ');
-              // And backspace again since the blank jumps forward
-              g_socketServerClient.write(CH_BACKSPACE);
-            }
-#endif
-            charCount--;
-          }
-        }
-        else if (c >= ' ' && c <= '~') // Limit allowed characters
-        {
-          // Don't overflow + skip leading spaces:
-          if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
-          {
-            strCommand[charCount++] = c;
-#if 0
-            g_socketServerClient.write(c);
-#endif
-          }
-        }
-      }
-    }
-  }
-}
-
-
-bool CheckNetwork()
-{
-  static elapsedMillis MQTTReconnectTimer = 0;
-  static elapsedMillis WifiReconnectTimer = 0;
-  static elapsedMillis ledTimer = 0;
-  static bool bWifiConnected = false;
-
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    bWifiConnected = true;
-
-    if (!bWifiConnected)
-    {
-#ifdef WIFI_DEBUG
-      CTermPrint::println("");
-      CTermPrint::println("WiFi connected");
-      CTermPrint::print("IP address: ");
-      CTermPrint::println(WiFi.localIP().toString().c_str());
-#endif
-      WifiReconnectTimer = 0;
-
-      MQTTReconnect();
-      MQTTReconnectTimer = 0;
-    }
-
-    // Check for MQTT disconnects
-    if (!g_network.GetMqttClient().connected() && MQTTReconnectTimer > 5000)
-    {
-      MQTTReconnect();
-      MQTTReconnectTimer = 0;
-    }
-  }
-  else
-  {
-    bWifiConnected = false;
-#ifdef STATUS_LED
-    digitalWrite(STATUS_LED, LOW); // Always on: failure
-#endif
-
-    if (WifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
-    {
-#ifdef WIFI_DEBUG
-      Serial.print(millis());
-      Serial.println(" - (Re)connecting to WiFi...");
-#endif
-      WiFi.disconnect();
-      WiFi.reconnect();
-      WifiReconnectTimer = 0;
-    }
-  }
-  
-  if (!bWifiConnected || !g_network.GetMqttClient().connected())
-  {
-#ifdef STATUS_LED
-    digitalWrite(STATUS_LED, LOW); // Always on: failure
-#endif
-  }
-  else
-  {
-    g_network.GetMqttClient().loop();
-
-    // Indicate we're running:
-#ifdef STATUS_LED
-    if (ledTimer > 2000)
-    {
-      digitalWrite(STATUS_LED, HIGH); // Off
-      ledTimer = 0;
-    }
-    else if (ledTimer > 1000)
-    {
-      digitalWrite(STATUS_LED, LOW); // On
-    }
-#endif
-  }
-
-  return bWifiConnected;
-}
-
-
 void loop()
 {
-  if (CheckNetwork())
+  if (g_app.CheckNetwork())
   {
     // Handle OTA-updates
     ArduinoOTA.handle();
 
     // Poll ethernet for commands
-    pollEthernet();
+    g_app.pollEthernet();
   }
 
   // Poll serial for commands
-  pollSerial();
+  g_app.pollSerial();
 
   // FIXME: Remove this from loop()?
   if (g_bZeroCrossTimeUpdated)
@@ -589,11 +301,11 @@ void loop()
 
     // FIXME: Perhaps handle this in timed loop?
     // Get updated values for triac drive
-    g_fTriacAngleFactor = g_pvBoiler.GetTriacAngleFactor();
-    g_iOutputPercentage = g_pvBoiler.GetOutputPercentage();
+    g_fTriacAngleFactor = g_app.GetPvBoiler().GetTriacAngleFactor();
+    g_iOutputPercentage = g_app.GetPvBoiler().GetOutputPercentage();
 
     interrupts(); // Leave critical section
   }
 
-  g_pvBoiler.loop();
+  g_app.GetPvBoiler().loop();
 }

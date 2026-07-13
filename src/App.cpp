@@ -1,0 +1,283 @@
+#include "TermPrint.h"
+#include "util.h"
+#include "App.h"
+
+
+bool CApp::MQTTReconnect()
+{
+  if (IPAddress(m_network.GetServerIp()) == IPAddress(0, 0, 0, 0))
+  {
+    return false;
+  }
+
+  if (!m_network.GetMqttClient().Reconnect())
+  {
+    return false;
+  }
+
+  // Publish MQTT config for eg. HA discovery and subscribe to control topics
+  m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
+
+  if (m_pvBoiler.GetLogicMode())
+  {
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
+  }
+  else
+  {
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
+  }
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
+
+  // Publish our f/w version
+  m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
+
+  return true;
+}
+
+
+void CApp::pollSerial(void)
+{
+  static uint8_t charCount = 0;
+  static char strCommand[CMD_BUF_SIZE] = { 0 };
+  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
+
+  if (Serial.available())
+  {
+    const char c = Serial.read();
+    if (c != 0)
+    {
+      if (c == '!') // Repeat the previous command but don't execute it yet
+      {
+        if (charCount == 0 && *strOldCommand)
+        {
+          strcpy(strCommand, strOldCommand);
+          charCount = strlen(strOldCommand);
+
+          if (m_commandHandler.GetLocalEchoEnabled())
+            Serial.print(strCommand);
+        }
+      }
+      else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
+      {
+        // Linefeed for local echo
+        if (m_commandHandler.GetLocalEchoEnabled())
+          Serial.println("");
+
+        // Don't check empty commands
+        if (charCount > 0)
+        {
+          strCommand[charCount] = '\0';
+
+          // Store in old buffer
+          strcpy(strOldCommand, strCommand);
+
+          // Reset counter for next round
+          charCount = 0;
+
+          // Parse uart command
+          m_commandHandler.ProcessCommand(strCommand);
+        }
+      }
+      else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
+      {
+        if (charCount > 0)
+        {
+          if (m_commandHandler.GetLocalEchoEnabled())
+          {
+            // Backspace
+            Serial.write(CH_BACKSPACE);
+            // Blank character
+            Serial.write(' ');
+            // And backspace again since the blank jumps forward
+            Serial.write(CH_BACKSPACE);
+          }
+          charCount--;
+        }
+      }
+      else if (c >= ' ' && c <= '~') // Limit allowed characters
+      {
+        // Don't overflow + skip leading spaces:
+        if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+        {
+          strCommand[charCount++] = c;
+
+          if (m_commandHandler.GetLocalEchoEnabled())
+            Serial.write(c);
+        }
+      }
+    }
+  }
+}
+
+
+void CApp::pollEthernet(void)
+{
+  static uint8_t charCount = 0;
+  static char strCommand[CMD_BUF_SIZE] = { 0 };
+  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
+
+  if (!m_network.GetSocketServerClient() || !m_network.GetSocketServerClient().connected())
+  {
+    m_network.GetSocketServerClient() = m_network.GetSocketServer().accept();
+#ifdef WIFI_DEBUG
+    if (m_network.GetSocketServerClient())
+    {
+      CTermPrint::print("Accepting connection from: ");
+      CTermPrint::println(m_network.GetSocketServerClient().remoteIP().toString().c_str());
+    }
+#endif
+  }
+
+  if (m_network.GetSocketServerClient() && m_network.GetSocketServerClient().connected())
+  {
+    if (m_network.GetSocketServerClient().available())
+    {
+      const char c = m_network.GetSocketServerClient().read();
+      if (c != 0)
+      {
+        if (c == '!') // Repeat the previous command but don't execute it yet
+        {
+          if (charCount == 0 && *strOldCommand)
+          {
+            strcpy(strCommand, strOldCommand);
+            charCount = strlen(strOldCommand);
+
+#if 0
+            if (commandHandler.GetLocalEchoEnabled())
+              m_network.GetSocketServerClient().print(strCommand);
+#endif
+          }
+        }
+        else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
+        {
+#if 0
+          // Linefeed
+          m_network.GetSocketServerClient().println("");
+#endif
+
+          // Don't check empty commands
+          if (charCount > 0)
+          {
+            strCommand[charCount] = '\0';
+
+            // Store in old buffer
+            strcpy(strOldCommand, strCommand);
+
+            // Reset counter for next round
+            charCount = 0;
+
+            // Parse client command
+            m_commandHandler.ProcessCommand(strCommand, &m_network.GetSocketServerClient());
+          }
+        }
+        else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
+        {
+          if (charCount > 0)
+          {
+#if 0
+            if (m_commandHandler.GetLocalEchoEnabled())
+            {
+              // Backspace
+              m_socketServerClient.write(CH_BACKSPACE);
+              // Blank character
+              m_socketServerClient.write(' ');
+              // And backspace again since the blank jumps forward
+              m_socketServerClient.write(CH_BACKSPACE);
+            }
+#endif
+            charCount--;
+          }
+        }
+        else if (c >= ' ' && c <= '~') // Limit allowed characters
+        {
+          // Don't overflow + skip leading spaces:
+          if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+          {
+            strCommand[charCount++] = c;
+#if 0
+            m_socketServerClient.write(c);
+#endif
+          }
+        }
+      }
+    }
+  }
+}
+
+
+bool CApp::CheckNetwork()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    m_bWifiConnected = true;
+
+    if (!m_bWifiConnected)
+    {
+#ifdef WIFI_DEBUG
+      CTermPrint::println("");
+      CTermPrint::println("WiFi connected");
+      CTermPrint::print("IP address: ");
+      CTermPrint::println(WiFi.localIP().toString().c_str());
+#endif
+      m_wifiReconnectTimer = 0;
+
+      MQTTReconnect();
+      m_mqttReconnectTimer = 0;
+    }
+
+    // Check for MQTT disconnects
+    if (!m_network.GetMqttClient().connected() && m_mqttReconnectTimer > 5000)
+    {
+      MQTTReconnect();
+      m_mqttReconnectTimer = 0;
+    }
+  }
+  else
+  {
+    m_bWifiConnected = false;
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
+#endif
+
+    if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
+    {
+#ifdef WIFI_DEBUG
+      Serial.print(millis());
+      Serial.println(" - (Re)connecting to WiFi...");
+#endif
+      WiFi.disconnect();
+      WiFi.reconnect();
+      m_wifiReconnectTimer = 0;
+    }
+  }
+  
+  if (!m_bWifiConnected || !m_network.GetMqttClient().connected())
+  {
+#ifdef STATUS_LED
+    digitalWrite(STATUS_LED, LOW); // Always on: failure
+#endif
+  }
+  else
+  {
+    m_network.GetMqttClient().loop();
+
+    // Indicate we're running:
+#ifdef STATUS_LED
+    if (m_ledTimer > 2000)
+    {
+      digitalWrite(STATUS_LED, HIGH); // Off
+      m_ledTimer = 0;
+    }
+    else if (m_ledTimer > 1000)
+    {
+      digitalWrite(STATUS_LED, LOW); // On
+    }
+#endif
+  }
+
+  return m_bWifiConnected;
+}
+
