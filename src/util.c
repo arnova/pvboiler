@@ -1,3 +1,14 @@
+/*
+  C Library to implement various handy functions
+
+  Written by       : Arno van Amersfoort
+  Language         : C99
+  Target compiler  : (Generic)
+  Dependencies     : (none)
+  Initial date     : August 27, 2019
+  Last modified    : July 13, 2025
+*/
+
 #include "util.h"
 
 #include <string.h>

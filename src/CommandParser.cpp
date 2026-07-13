@@ -336,122 +336,122 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
 
   if (resultCode.code == ERR_CODE_OK)
   {
-    strcat(strResult, "OK\r\n");
+    STRCAT_PSTR(strResult, "OK\r\n");
     return;
   }
 
   if (resultCode.code  == ERR_CODE_OK_AFTER_REBOOT)
   {
-    strcat(strResult, "OK (Will take effect after reboot)\r\n");
+    STRCAT_PSTR(strResult, "OK (Will take effect after reboot)\r\n");
     return;
   }
 
   // The rest of the codes are errors:
-  strcat(strResult, "ERROR: "); // Prefix
+  STRCAT_PSTR(strResult, "ERROR: "); // Prefix
 
   // Process value
   switch(resultCode.code)
   {
     case ERR_CODE_UNKNOWN:
-      strcat(strResult, "Unknown error");
+      STRCAT_PSTR(strResult, "Unknown error");
       break;
 
     case ERR_CODE_CMD_UNKNOWN:
-      strcat(strResult, "Unknown command");
+      STRCAT_PSTR(strResult, "Unknown command");
       break;
 
     case ERR_CODE_SUBCMD_MISSING:
-      strcat(strResult, "Missing sub command");
+      STRCAT_PSTR(strResult, "Missing sub command");
       break;
 
     case ERR_CODE_SUBCMD_UNKNOWN:
-      strcat(strResult, "Unknown sub command");
+      STRCAT_PSTR(strResult, "Unknown sub command");
       break;
 
     case ERR_CODE_CMD_NO_IMPLEMENT:
-      strcat(strResult, "Command not implemented");
+      STRCAT_PSTR(strResult, "Command not implemented");
       break;
 
     case ERR_CODE_CMD_SYNTAX:
-      strcat(strResult, "Command syntax error");
+      STRCAT_PSTR(strResult, "Command syntax error");
       break;
 
     case ERR_CODE_TOO_MANY_ARGS:
       strcat(strResult, resultCode.strArgNum);
-      strcat(strResult, " arguments required");
+      STRCAT_PSTR(strResult, " arguments required");
       break;
 
     case ERR_CODE_ARG_MISSING:
-      strcat(strResult, "Argument ");
+      STRCAT_PSTR(strResult, "Argument ");
       strcat(strResult, resultCode.strArgNum);
-      strcat(strResult, " missing");
+      STRCAT_PSTR(strResult, " missing");
       break;
 
     case ERR_CODE_ARG_VAL:
-      strcat(strResult, "Argument ");
+      STRCAT_PSTR(strResult, "Argument ");
       strcat(strResult, resultCode.strArgNum);
-      strcat(strResult, " invalid");
+      STRCAT_PSTR(strResult, " invalid");
       break;
 
     case ERR_CODE_ARG_FORMAT_MIN_NUMBER:
     case ERR_CODE_ARG_FORMAT_MAX_NUMBER:
-      strcat(strResult, "Numeric part of ");
+      STRCAT_PSTR(strResult, "Numeric part of ");
       // fall through
     case ERR_CODE_ARG_VAL_MIN:
       // fall through
     case ERR_CODE_ARG_VAL_MAX:
-      strcat(strResult, "argument ");
+      STRCAT_PSTR(strResult, "argument ");
       strcat(strResult, resultCode.strArgNum);
 
       if (resultCode.code == ERR_CODE_ARG_VAL_MIN || resultCode.code == ERR_CODE_ARG_FORMAT_MIN_NUMBER)
-        strcat(strResult, " min. value (");
+        STRCAT_PSTR(strResult, " min. value (");
       else
-        strcat(strResult, " max. value (");
+        STRCAT_PSTR(strResult, " max. value (");
 
       strcat(strResult, resultCode.strArg1);
-      strcat(strResult, ") exceeded");
+      STRCAT_PSTR(strResult, ") exceeded");
       break;
 
     case ERR_CODE_ARG_FORMAT:
-      strcat(strResult, "Argument ");
+      STRCAT_PSTR(strResult, "Argument ");
       strcat(strResult, resultCode.strArgNum);
-      strcat(strResult, " should consist of letter(s) followed by number(s)");
+      STRCAT_PSTR(strResult, " should consist of letter(s) followed by number(s)");
       break;
 
     case ERR_CODE_INVALID_IPV4:
-      strcat(strResult, "Invalid IPv4 address");
+      STRCAT_PSTR(strResult, "Invalid IPv4 address");
       break;
 
     case ERR_CODE_INVALID_PORT:
-      strcat(strResult, "Invalid port number");
+      STRCAT_PSTR(strResult, "Invalid port number");
     break;
 
     case ERR_CODE_ARG_STR_MAX:
-      strcat(strResult, "Maximum of ");
+      STRCAT_PSTR(strResult, "Maximum of ");
       strcat(strResult, resultCode.strArg1);
-      strcat(strResult, " characters exceeded in argument ");
+      STRCAT_PSTR(strResult, " characters exceeded in argument ");
       strcat(strResult, resultCode.strArgNum);
       break;
 
     case ERR_CODE_ARG_BIN_MAX:
-      strcat(strResult, "Maximum of ");
+      STRCAT_PSTR(strResult, "Maximum of ");
       strcat(strResult, resultCode.strArg1);
-      strcat(strResult, " binary bits exceeded in argument ");
+      STRCAT_PSTR(strResult, " binary bits exceeded in argument ");
       strcat(strResult, resultCode.strArgNum);
       break;
 
     case ERR_CODE_ARG_FORMAT_HEX:
-      strcat(strResult, "Hex format error in argument ");
+      STRCAT_PSTR(strResult, "Hex format error in argument ");
       strcat(strResult, resultCode.strArgNum);
       break;
 
     case ERR_CODE_ARG_FORMAT_BIN:
-      strcat(strResult, "Binary format error in argument ");
+      STRCAT_PSTR(strResult, "Binary format error in argument ");
       strcat(strResult, resultCode.strArgNum);
       break;
 
     case ERR_CODE_BUSY:
-      strcat(strResult, "Device busy");
+      STRCAT_PSTR(strResult, "Device busy");
       break;
 
     default:

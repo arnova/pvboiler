@@ -27,6 +27,12 @@ extern "C"{
 #define STREQUALS(a,b) (strcmp(a, b) == 0)
 #define STRIEQUALS(a,b) (strcasecmp(a, b) == 0)
 
+// PSTR specific defines. On Teensy & ESP32 these are null operations
+#define STREQUALS_PSTR(a,b) (strcmp_P(a, PSTR(b)) == 0)
+#define STRIEQUALS_PSTR(a,b) (strcasecmp_P(a, PSTR(b)) == 0)
+#define STRCPY_PSTR(a,b) (strcpy_P(a, PSTR(b)))
+#define STRCAT_PSTR(a,b) (strcat_P(a, PSTR(b)))
+
 // std::min/max equivalent function macro's
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -70,6 +76,7 @@ bool hexstr_to_uint64(const char *strHex, uint64_t *pValue);
 bool binstr_to_bytes(const char *strBin, uint8_t *pBuf, const size_t iBufSize);
 bool hexstr_to_bytes(const char *strHex, uint8_t *pBuf, const size_t iBufSize);
 char* bytes_to_ipstr(const uint8_t *bufIP, char* strIP);
+char* bytes_to_macstr(const uint8_t *bufMAC, char* strMAC);
 bool bytes_to_int32(const uint8_t* buf, const uint8_t iBufSize, int32_t* pValue);
 
 #ifdef __cplusplus

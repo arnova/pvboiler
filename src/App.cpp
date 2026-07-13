@@ -207,8 +207,8 @@ bool CApp::CheckNetwork()
     {
 #ifdef WIFI_DEBUG
       CTermPrint::println("");
-      CTermPrint::println("WiFi connected");
-      CTermPrint::print("IP address: ");
+      CTermPrint::println(PSTR("WiFi connected"));
+      CTermPrint::print(PSTR("IP address: "));
       CTermPrint::println(WiFi.localIP().toString().c_str());
 #endif
       m_wifiReconnectTimer = 0;
@@ -235,7 +235,7 @@ bool CApp::CheckNetwork()
     {
 #ifdef WIFI_DEBUG
       Serial.print(millis());
-      Serial.println(" - (Re)connecting to WiFi...");
+      Serial.println(PSTR(" - (Re)connecting to WiFi..."));
 #endif
       WiFi.disconnect();
       WiFi.reconnect();

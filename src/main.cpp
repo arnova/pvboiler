@@ -272,7 +272,7 @@ void setup()
   CTermPrint::println("");
 
   // Print out version info
-  CTermPrint::println(VER_STR);
+  CTermPrint::println(FPSTR(VER_STR_P));
 }
 
 

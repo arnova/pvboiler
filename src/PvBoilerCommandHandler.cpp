@@ -7,27 +7,27 @@
 
 #include <string.h>
 
-const char HELP_STR[] = "\r\n"
-                        "help                   : This screen\r\n"
-                        "!                      : Repeat previous command\r\n"
-                        "ver                    : Show device version\r\n"
-                        "reset                  : Reset controller\r\n"
-                        "reboot                 : Reboot controller\r\n"
-                        "info                   : Show device info\r\n"
-                        "status                 : Show device status\r\n"
-                        "bprating [p]           : Set boiler power rating to [p] Watt\r\n"
-                        "pbmargin [p]           : Set power budget margin to [p] Watt\r\n"
-                        "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
-                        "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
-                        "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
-                        "egain [g]              : Set error-gain value [g]\r\n"
-                        "wssid [s]              : Set WiFi SSID to [s]\r\n"
-                        "wpass [w]              : Set WiFi password to [w]\r\n"
-                        "ipaddr [ip]            : Use [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
-                        "netmask [mask]         : Use [mask] for device IP netmask\r\n"
-                        "serverip [ip]          : Set MQTT server IP address to [ip]\n\r"
-                        "restartnet             : Restart network functions\n\r"
-                        ;
+const char HELP_STR_P[] PROGMEM = "\r\n"
+                                  "help                   : This screen\r\n"
+                                  "!                      : Repeat previous command\r\n"
+                                  "ver                    : Show device version\r\n"
+                                  "reset                  : Reset controller\r\n"
+                                  "reboot                 : Reboot controller\r\n"
+                                  "info                   : Show device info\r\n"
+                                  "status                 : Show device status\r\n"
+                                  "bprating [p]           : Set boiler power rating to [p] Watt\r\n"
+                                  "pbmargin [p]           : Set power budget margin to [p] Watt\r\n"
+                                  "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
+                                  "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
+                                  "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
+                                  "egain [g]              : Set error-gain value [g]\r\n"
+                                  "wssid [s]              : Set WiFi SSID to [s]\r\n"
+                                  "wpass [w]              : Set WiFi password to [w]\r\n"
+                                  "ipaddr [ip]            : Use [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
+                                  "netmask [mask]         : Use [mask] for device IP netmask\r\n"
+                                  "serverip [ip]          : Set MQTT server IP address to [ip]\n\r"
+                                  "restartnet             : Restart network functions\n\r"
+                                  ;
 
 // Show copyright + firmware version
 result_code_t CPVBoilerCommandHandler::CmdShowVersion(const char *strArgs)
@@ -36,7 +36,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowVersion(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CTermPrint::println(VER_STR);
+  CTermPrint::println(FPSTR(VER_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -60,7 +60,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowHelp(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
-  CTermPrint::println(HELP_STR);
+  CTermPrint::println(FPSTR(HELP_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
 }
