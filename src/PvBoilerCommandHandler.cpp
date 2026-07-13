@@ -206,8 +206,8 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetPowerBudgetMargin());
   CTermPrint::print("W");
 
-  CTermPrint::print(" ctrl_mode=");
-  CTermPrint::print(m_pvBoiler.GetLogicMode() ? "percentage" : "budget");
+  CTermPrint::print(" logic_mode=");
+  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE ? "percentage" : "budget");
 
   CTermPrint::print(" dim_style=");
   CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
@@ -313,9 +313,9 @@ result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "percentage"))
-    m_pvBoiler.SetLogicMode(true);
+    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_PERCENTAGE);
   else if (STRIEQUALS(strArgs, "budget"))
-    m_pvBoiler.SetLogicMode(false);
+    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_BUDGET);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 

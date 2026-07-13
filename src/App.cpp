@@ -18,7 +18,7 @@ bool CApp::MQTTReconnect()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-  if (m_pvBoiler.GetLogicMode())
+  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
   }

@@ -190,7 +190,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (!g_app.GetPvBoiler().GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  else if (!g_app.GetPvBoiler().GetLogicMode() == CPVBoiler::LOGIC_MODE_BUDGET && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
@@ -201,7 +201,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (g_app.GetPvBoiler().GetLogicMode() && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+  else if (g_app.GetPvBoiler().GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {

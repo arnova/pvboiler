@@ -60,6 +60,13 @@ class CPVBoiler
     };
     typedef enum dim_style_e dim_style_t;
 
+    enum logic_mode_e
+    {
+      LOGIC_MODE_BUDGET = 0,
+      LOGIC_MODE_PERCENTAGE
+    };
+    typedef enum logic_mode_e logic_mode_t;
+
     void loop();
     bool MQTTPublishValues();
     void LoadSettings();
@@ -72,7 +79,7 @@ class CPVBoiler
 
     void SetBoilerPowerRating(const uint16_t& iPower);
     void SetPowerBudgetMargin(const uint16_t& iBudget);
-    void SetLogicMode(const bool& bPercentage);
+    void SetLogicMode(const logic_mode_t& logicMode);
     void SetDimStyle(const dim_style_t& dimStyle);
     void SetSsrPeriodCount(const uint8_t& iPeriod);
     void SetErrorGain(const float& fGain);
@@ -86,7 +93,7 @@ class CPVBoiler
 
     const uint16_t& GetBoilerPowerRating() { return m_iBoilerPowerRating; };
     const uint16_t& GetPowerBudgetMargin() { return m_iPowerBudgetMargin; };
-    const bool& GetLogicMode() { return m_bPowerPercControl; };
+    const logic_mode_t& GetLogicMode() { return m_logicMode; };
     const dim_style_t& GetDimStyle() { return m_dimStyle; };
     const uint8_t& GetSsrPeriodCount() { return m_iSsrPeriodCount; };
     const float& GetErrorGain() { return m_fErrorGain; };
@@ -126,6 +133,6 @@ class CPVBoiler
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;
 
-    bool m_bPowerPercControl = false; // Enable this if you want to control using setting power percentage instead of providing power budget
+    logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 };
 #endif // PVBOILER_H

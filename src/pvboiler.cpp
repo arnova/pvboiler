@@ -34,7 +34,7 @@ bool CPVBoiler::MQTTPublishValues()
     m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
   }
 
-  if (!m_bPowerPercControl && m_bUpdatePowerBudget)
+  if (m_logicMode == LOGIC_MODE_BUDGET && m_bUpdatePowerBudget)
   {
     m_bUpdatePowerBudget = false;
 
@@ -44,7 +44,7 @@ bool CPVBoiler::MQTTPublishValues()
     m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
   }
 
-  if (m_bPowerPercControl && m_bUpdatePowerPercentage)
+  if (m_logicMode == LOGIC_MODE_PERCENTAGE && m_bUpdatePowerPercentage)
   {
     m_bUpdatePowerPercentage = false;
 
@@ -90,10 +90,10 @@ void CPVBoiler::LoadSettings()
 
   uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  SetLogicMode(iVal8 != 0); // Percentage(true) or budget(false) ?
+  SetLogicMode((iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENTAGE : CPVBoiler::LOGIC_MODE_BUDGET);
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
-  SetDimStyle((iVal8 != 0) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
+  SetDimStyle((iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
   if (iVal8 > SSR_PERIOD_COUNT_MAX)
@@ -136,18 +136,18 @@ void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 }
 
 
-void CPVBoiler::SetLogicMode(const bool& bPercentage)
+void CPVBoiler::SetLogicMode(const CPVBoiler::logic_mode_t& logicMode)
 {
-  EEPROM.put(EEPROM_CTRL_MODE, bPercentage ? 0x01 : 0x00);
+  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPVBoiler::LOGIC_MODE_PERCENTAGE) ? 0x01 : 0x00);
   EEPROM.commit();
 
-  m_bPowerPercControl = bPercentage;
+  m_logicMode = logicMode;
 }
 
 
 void CPVBoiler::SetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
 {
-  EEPROM.put(EEPROM_DIM_STYLE, dimStyle);
+  EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPVBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
   EEPROM.commit();
 
   m_dimStyle = dimStyle;
@@ -174,7 +174,7 @@ void CPVBoiler::SetErrorGain(const float& fGain)
 
 void CPVBoiler::Update()
 {
-  if (m_bPowerPercControl)
+  if (m_logicMode == LOGIC_MODE_PERCENTAGE)
   {
     if (m_iPowerPercentage > m_iOutputPercentage)
     {
@@ -203,18 +203,18 @@ void CPVBoiler::Update()
   else
   {
     const float fStepPercentage = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
-    int32_t m_iOutputPercentage = m_iOutputPercentage;
+    int32_t iOutputPercentage = m_iOutputPercentage;
     if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
-      m_iOutputPercentage += fStepPercentage;
+      iOutputPercentage += fStepPercentage;
 
     if (m_iOutputPercentage > 100)
-      m_iOutputPercentage = 100;
+      iOutputPercentage = 100;
     else if (m_iOutputPercentage < 0)
-      m_iOutputPercentage = 0;
+      iOutputPercentage = 0;
 
-    if (m_iOutputPercentage != m_iOutputPercentage)
+    if (iOutputPercentage != m_iOutputPercentage)
     {
-      m_iOutputPercentage = m_iOutputPercentage;
+      m_iOutputPercentage = iOutputPercentage;
       m_bUpdateOutputPercentage = true;
     }
   }
