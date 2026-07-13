@@ -37,6 +37,7 @@
 #include "CommandParser.h"
 #include "PvBoilerCommandHandler.h"
 #include "pvboiler.h"
+#include "TermPrint.h"
 #include "mqttutil.h"
 #include "ssd1306.h"
 #include "util.h"
@@ -60,61 +61,6 @@ volatile float g_fTriacAngleFactor = 1.0f; // Off
 volatile uint8_t g_iOutputPercentage = 0;
 volatile uint8_t g_iSSRPeriodCounter = 0;
 
-// Define print output
-void PrintStrN(const char *str)
-{
-  Serial.println(str); // Always print to uart
-
-  if (g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient().println(str);
-  }
-}
-
-
-void PrintStr(const char *str)
-{
-  Serial.print(str); // Always print to uart
-
-  if (g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient().print(str);
-  }
-}
-
-
-void PrintChar(const char c)
-{
-  Serial.print(c); // Always print to uart
-
-  if (g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient().print(c);
-  }
-}
-
-
-void PrintInt32(const int32_t i)
-{
-  Serial.print(i); // Always print to uart
-
-  if (g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient().print(i);
-  }
-}
-
-
-void PrintFloat(const float f)
-{
-  Serial.print(f); // Always print to uart
-
-  if (g_network.GetSocketServerClient().connected())
-  {
-    g_network.GetSocketServerClient().print(f);
-  }
-}
-
 
 result_code_t CommandReboot()
 {
@@ -134,60 +80,60 @@ result_code_t CommandReset()
 
 result_code_t CommandInfo()
 {
-  PrintStr("ssid=");
-  PrintStr(g_network.GetWifiSsid());
+  CTermPrint::print("ssid=");
+  CTermPrint::print(g_network.GetWifiSsid());
 
-  PrintStr(" pass=");
-  PrintStr(g_network.GetWifiPassword());
+  CTermPrint::print(" pass=");
+  CTermPrint::print(g_network.GetWifiPassword());
 
-  PrintStr(" ip=");
-  PrintInt32(g_network.GetIpAddr()[0]);
-  PrintChar('.');
-  PrintInt32(g_network.GetIpAddr()[1]);
-  PrintChar('.');
-  PrintInt32(g_network.GetIpAddr()[2]);
-  PrintChar('.');
-  PrintInt32(g_network.GetIpAddr()[3]);
+  CTermPrint::print(" ip=");
+  CTermPrint::print(g_network.GetIpAddr()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetIpAddr()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetIpAddr()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetIpAddr()[3]);
 
-  PrintStr(" netmask=");
-  PrintInt32(g_network.GetNetMask()[0]);
-  PrintChar('.');
-  PrintInt32(g_network.GetNetMask()[1]);
-  PrintChar('.');
-  PrintInt32(g_network.GetNetMask()[2]);
-  PrintChar('.');
-  PrintInt32(g_network.GetNetMask()[3]);
+  CTermPrint::print(" netmask=");
+  CTermPrint::print(g_network.GetNetMask()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetNetMask()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetNetMask()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetNetMask()[3]);
 
-  PrintStr(" server=");
-  PrintInt32(g_network.GetServerIp()[0]);
-  PrintChar('.');
-  PrintInt32(g_network.GetServerIp()[1]);
-  PrintChar('.');
-  PrintInt32(g_network.GetServerIp()[2]);
-  PrintChar('.');
-  PrintInt32(g_network.GetServerIp()[3]);
+  CTermPrint::print(" server=");
+  CTermPrint::print(g_network.GetServerIp()[0]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetServerIp()[1]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetServerIp()[2]);
+  CTermPrint::print('.');
+  CTermPrint::print(g_network.GetServerIp()[3]);
 
-  PrintStr(" bprating=");
-  PrintInt32(g_pvBoiler.GetBoilerPowerRating());
-  PrintStr("W");
+  CTermPrint::print(" bprating=");
+  CTermPrint::print(g_pvBoiler.GetBoilerPowerRating());
+  CTermPrint::print("W");
 
-  PrintStr(" pbmargin=");
-  PrintInt32(g_pvBoiler.GetPowerBudgetMargin());
-  PrintStr("W");
+  CTermPrint::print(" pbmargin=");
+  CTermPrint::print(g_pvBoiler.GetPowerBudgetMargin());
+  CTermPrint::print("W");
 
-  PrintStr(" ctrl_mode=");
-  PrintStr(g_pvBoiler.GetLogicMode() ? "percentage" : "budget");
+  CTermPrint::print(" ctrl_mode=");
+  CTermPrint::print(g_pvBoiler.GetLogicMode() ? "percentage" : "budget");
 
-  PrintStr(" dstyle=");
-  PrintStr(g_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
+  CTermPrint::print(" dstyle=");
+  CTermPrint::print(g_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
 
-  PrintStr(" ssrpc=");
-  PrintInt32(g_pvBoiler.GetSSRPeriod());
+  CTermPrint::print(" ssrpc=");
+  CTermPrint::print(g_pvBoiler.GetSSRPeriod());
 
-  PrintStr(" egain=");
-  PrintFloat(g_pvBoiler.GetErrorGain());
+  CTermPrint::print(" egain=");
+  CTermPrint::print(g_pvBoiler.GetErrorGain());
 
-  PrintStrN("");
+  CTermPrint::println("");
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -195,33 +141,33 @@ result_code_t CommandInfo()
 
 result_code_t CommandStatus()
 {
-  PrintStr("on_off=");
-  PrintStr(g_pvBoiler.GetCtrlOnOff() ? "on" : "off");
+  CTermPrint::print("on_off=");
+  CTermPrint::print(g_pvBoiler.GetCtrlOnOff() ? "on" : "off");
 
-  PrintStr(" wifi_conn=");
-  PrintStr(WiFi.status() == WL_CONNECTED ? "1" : "0");
+  CTermPrint::print(" wifi_conn=");
+  CTermPrint::print(WiFi.status() == WL_CONNECTED ? "1" : "0");
 
-  PrintStr(" wifi_ip=");
-  PrintStr(WiFi.localIP().toString().c_str());
+  CTermPrint::print(" wifi_ip=");
+  CTermPrint::print(WiFi.localIP().toString().c_str());
 
-  PrintStr(" mqtt_conn=");
-  PrintStr(g_MQTTClient.connected() ? "1" : "0");
+  CTermPrint::print(" mqtt_conn=");
+  CTermPrint::print(g_MQTTClient.connected() ? "1" : "0");
 
-  PrintStr(" angle_factor=");
-  PrintFloat(g_pvBoiler.GetTriacAngleFactor());
+  CTermPrint::print(" angle_factor=");
+  CTermPrint::print(g_pvBoiler.GetTriacAngleFactor());
 
-  PrintStr(" out_perc=");
-  PrintInt32(g_pvBoiler.GetOutputPercentage());
+  CTermPrint::print(" out_perc=");
+  CTermPrint::print(g_pvBoiler.GetOutputPercentage());
 
-  PrintStr(" p_budget=");
-  PrintInt32(g_pvBoiler.GetPowerBudget());
-  PrintStr("W");
+  CTermPrint::print(" p_budget=");
+  CTermPrint::print(g_pvBoiler.GetPowerBudget());
+  CTermPrint::print("W");
 
-  PrintStr(" p_percentage=");
-  PrintInt32(g_pvBoiler.GetPowerPercentage());
-  PrintStr("%");
+  CTermPrint::print(" p_percentage=");
+  CTermPrint::print(g_pvBoiler.GetPowerPercentage());
+  CTermPrint::print("%");
 
-  PrintStrN("");
+  CTermPrint::println("");
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -326,15 +272,15 @@ void IRAM_ATTR TriacTimerISR()
 
 void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 {
-  PrintStrN("-------new message from broker-----");
-  PrintStr("topic: ");
-  PrintStrN(topic);
-  PrintStr("data: ");
+  CTermPrint::println("-------new message from broker-----");
+  CTermPrint::print("topic: ");
+  CTermPrint::println(topic);
+  CTermPrint::print("data: ");
   for (unsigned int i = 0; i < length; i++)
   {
-    PrintChar((char) payload[i]);
+    CTermPrint::print((char) payload[i]);
   }
-  PrintStrN("");
+  CTermPrint::println("");
 
   //float fVal;
   //const bool bValidFloat = BytesToFloat(payload, length, fVal);
@@ -511,10 +457,10 @@ void setup()
   MQTTReconnect();
 
     // Have the terminal start with a newline
-  PrintStrN("");
+  CTermPrint::println("");
 
   // Print out version info
-  PrintStrN(VER_STR);
+  CTermPrint::println(VER_STR);
 }
 
 
@@ -616,8 +562,8 @@ void pollEthernet(void)
 #ifdef WIFI_DEBUG
     if (g_network.GetSocketServerClient())
     {
-      PrintStr("Accepting connection from: ");
-      PrintStrN(g_network.GetSocketServerClient().remoteIP().toString().c_str());
+      CTermPrint::print("Accepting connection from: ");
+      CTermPrint::println(g_network.GetSocketServerClient().remoteIP().toString().c_str());
     }
 #endif
   }
@@ -711,10 +657,10 @@ bool CheckNetwork()
     if (!bWifiConnected)
     {
 #ifdef WIFI_DEBUG
-      PrintStrN("");
-      PrintStrN("WiFi connected");
-      PrintStr("IP address: ");
-      PrintStrN(WiFi.localIP().toString().c_str());
+      CTermPrint::println("");
+      CTermPrint::println("WiFi connected");
+      CTermPrint::print("IP address: ");
+      CTermPrint::println(WiFi.localIP().toString().c_str());
 #endif
       bWifiConnected = true;
       WifiReconnectTimer = 0;

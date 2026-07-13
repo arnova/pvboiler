@@ -11,11 +11,8 @@
 #include <EEPROM.h>
 
 #include "Network.h"
-
-// Forward declare
-void PrintStrN(const char *str);
-void PrintStr(const char *str);
-void PrintChar(const char c);
+#include "TermPrint.h"
+#include "util.h"
 
 
 void CNetwork::LoadSettings()
@@ -52,9 +49,9 @@ void CNetwork::InitWifi(const bool bReconnect)
 
 #ifdef WIFI_DEBUG
   // We start by connecting to a WiFi network
-  PrintStrN("");
-  PrintStr("Connecting to ");
-  PrintStrN(m_strWifiSsid);
+  CTermPrint::println("");
+  CTermPrint::print("Connecting to ");
+  CTermPrint::println(m_strWifiSsid);
 #endif
 
   // Check for dhcp ip
@@ -75,7 +72,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   // Initialize mDNS
   if (!MDNS.begin(HOST_NAME))
   {
-    PrintStrN("ERROR: Unable to start MDNS responder!");
+    CTermPrint::println("ERROR: Unable to start MDNS responder!");
   }
 
   // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
@@ -104,8 +101,8 @@ void CNetwork::InitWifi(const bool bReconnect)
   m_socketServer.begin();
   m_socketServer.setNoDelay(true);
 
-#if 0
-  PrintStrN("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
+#ifdef WIFI_DEBUG
+  CTermPrint::println("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 }
 

@@ -1,15 +1,11 @@
 #include "PvBoilerCommandHandler.h"
+#include "TermPrint.h"
 #include "pvboiler.h"
 #include "util.h"
 #include "Network.h"
 #include "system.h"
 
 #include <string.h>
-
-// Forward declare
-void PrintStrN(const char *str);
-void PrintStr(const char *str);
-void PrintChar(const char c);
 
 const char HELP_STR[] = "\r\n"
                         "help                   : This screen\r\n"
@@ -40,7 +36,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowVersion(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  PrintStrN(VER_STR);
+  CTermPrint::println(VER_STR);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -52,7 +48,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  PrintStrN(MY_VERSION);
+  CTermPrint::println(MY_VERSION);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -64,7 +60,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowHelp(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
-  PrintStrN(HELP_STR);
+  CTermPrint::println(HELP_STR);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -364,7 +360,7 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand, WiFiClie
   {
     char strResult[RESULT_BUF_SIZE];
     get_error_string(result, strResult, false);
-    PrintStr(strResult);
+    CTermPrint::print(strResult);
   }
 
   return result;
