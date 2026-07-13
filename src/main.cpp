@@ -57,7 +57,6 @@ volatile float g_fTriacAngleFactor = 1.0f; // Off
 volatile uint8_t g_iOutputPercentage = 0;
 volatile uint8_t g_iSSRPeriodCounter = 0;
 
-
 // Interrupt generated when crossing zero in either direction
 void IRAM_ATTR ZeroCrossISR()
 {
@@ -254,49 +253,6 @@ bool MQTTReconnect()
 }
 
 
-void LoadSettings()
-{
-  g_network.LoadSettings();
-
-  uint16_t iVal16 = 0;
-  EEPROM.get(EEPROM_BP_RATING, iVal16);
-  if (iVal16 > BOILER_POWER_RATING_MAX)
-  {
-    iVal16 = BOILER_POWER_RATING_DEFAULT;
-  }
-  g_pvBoiler.SetBoilerPowerRating(iVal16);
-
-  EEPROM.get(EEPROM_PB_MARGIN, iVal16);
-  if (iVal16 > POWER_BUDGET_MARGIN_MAX)
-  {
-    iVal16 = POWER_BUDGET_MARGIN_DEFAULT;
-  }
-  g_pvBoiler.SetPowerBudgetMargin(iVal16);
-
-  uint8_t iVal8 = 0;
-  EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  g_pvBoiler.SetLogicMode(iVal8 != 0); // Percentage(true) or budget(false) ?
-
-  EEPROM.get(EEPROM_DIM_STYLE, iVal8);
-  g_pvBoiler.SetDimStyle((iVal8 != 0) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
-
-  EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
-  if (iVal8 > SSR_PERIOD_COUNT_MAX)
-  {
-    iVal8 = SSR_PERIOD_COUNT_DEFAULT;
-  }
-  g_pvBoiler.SetSsrPeriodCount(iVal8);
-
-  float fGain;
-  EEPROM.get(EEPROM_ERROR_GAIN, fGain);
-  if (fGain > ERROR_GAIN_MAX || fGain < ERROR_GAIN_MIN)
-  {
-    fGain = ERROR_GAIN_DEFAULT;
-  }
-  g_pvBoiler.SetErrorGain(fGain);
-}
-
-
 void setup()
 {
   // Outputs
@@ -323,7 +279,8 @@ void setup()
   Serial.begin(BAUD_RATE);
   Serial.setTimeout(2000);
 
-  LoadSettings();
+  g_network.LoadSettings();
+  g_pvBoiler.LoadSettings();
 
   delay(10);
 

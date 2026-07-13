@@ -61,8 +61,8 @@ class CPVBoiler
     typedef enum dim_style_e dim_style_t;
 
     void loop();
-
     bool MQTTPublishValues();
+    void LoadSettings();
 
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 

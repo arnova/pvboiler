@@ -5,6 +5,113 @@
 
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
+void CPVBoiler::loop()
+{
+  // Run timed control loop
+  if (m_loopTimer > CONTROL_LOOP_TIME_MS)
+  {
+    CheckWatchDog();
+    Update();
+
+    m_loopTimer = 0;
+  }
+
+  // Publish new MQTT values (if any) when timer expires (and connected)
+  if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
+  {
+    MQTTPublishValues();
+
+    m_MQTTTimer = 0;
+  }
+}
+
+
+bool CPVBoiler::MQTTPublishValues()
+{
+  if (m_bUpdateCtrlEnable)
+  {
+    m_bUpdateCtrlEnable = false;
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
+  }
+
+  if (!m_bPowerPercControl && m_bUpdatePowerBudget)
+  {
+    m_bUpdatePowerBudget = false;
+
+    char strTemp[6];
+
+    snprintf(strTemp, 6, "%i", m_iPowerBudget);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
+  }
+
+  if (m_bPowerPercControl && m_bUpdatePowerPercentage)
+  {
+    m_bUpdatePowerPercentage = false;
+
+    char strTemp[6];
+
+    snprintf(strTemp, 6, "%i", m_iPowerPercentage);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
+  }
+
+  if (m_bUpdateOutputPercentage)
+  {
+    m_bUpdateOutputPercentage = false;
+
+    char strTemp[7];
+
+    snprintf(strTemp, 7, "%i", m_iOutputPercentage);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
+
+    snprintf(strTemp, 7, "%i", (m_iBoilerPowerRating * m_iOutputPercentage) / 100);
+    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
+  }
+
+  return true;
+}
+
+
+void CPVBoiler::LoadSettings()
+{
+  uint16_t iVal16 = 0;
+  EEPROM.get(EEPROM_BP_RATING, iVal16);
+  if (iVal16 > BOILER_POWER_RATING_MAX)
+  {
+    iVal16 = BOILER_POWER_RATING_DEFAULT;
+  }
+  SetBoilerPowerRating(iVal16);
+
+  EEPROM.get(EEPROM_PB_MARGIN, iVal16);
+  if (iVal16 > POWER_BUDGET_MARGIN_MAX)
+  {
+    iVal16 = POWER_BUDGET_MARGIN_DEFAULT;
+  }
+  SetPowerBudgetMargin(iVal16);
+
+  uint8_t iVal8 = 0;
+  EEPROM.get(EEPROM_CTRL_MODE, iVal8);
+  SetLogicMode(iVal8 != 0); // Percentage(true) or budget(false) ?
+
+  EEPROM.get(EEPROM_DIM_STYLE, iVal8);
+  SetDimStyle((iVal8 != 0) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
+
+  EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
+  if (iVal8 > SSR_PERIOD_COUNT_MAX)
+  {
+    iVal8 = SSR_PERIOD_COUNT_DEFAULT;
+  }
+  SetSsrPeriodCount(iVal8);
+
+  float fGain;
+  EEPROM.get(EEPROM_ERROR_GAIN, fGain);
+  if (fGain > ERROR_GAIN_MAX || fGain < ERROR_GAIN_MIN)
+  {
+    fGain = ERROR_GAIN_DEFAULT;
+  }
+  SetErrorGain(fGain);
+}
+
+
 const float& CPVBoiler::GetTriacAngleFactor() const
 {
   return triac_percentage_factor[m_iOutputPercentage];
@@ -62,51 +169,6 @@ void CPVBoiler::SetErrorGain(const float& fGain)
   EEPROM.commit();
 
   m_fErrorGain = fGain;
-}
-
-
-bool CPVBoiler::MQTTPublishValues()
-{
-  if (m_bUpdateCtrlEnable)
-  {
-    m_bUpdateCtrlEnable = false;
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
-  }
-
-  if (!m_bPowerPercControl && m_bUpdatePowerBudget)
-  {
-    m_bUpdatePowerBudget = false;
-
-    char strTemp[6];
-
-    snprintf(strTemp, 6, "%i", m_iPowerBudget);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
-  }
-
-  if (m_bPowerPercControl && m_bUpdatePowerPercentage)
-  {
-    m_bUpdatePowerPercentage = false;
-
-    char strTemp[6];
-
-    snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
-  }
-
-  if (m_bUpdateOutputPercentage)
-  {
-    m_bUpdateOutputPercentage = false;
-
-    char strTemp[7];
-
-    snprintf(strTemp, 7, "%i", m_iOutputPercentage);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
-
-    snprintf(strTemp, 7, "%i", (m_iBoilerPowerRating * m_iOutputPercentage) / 100);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
-  }
-
-  return true;
 }
 
 
@@ -176,25 +238,4 @@ void CPVBoiler::CheckWatchDog()
     m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
 #endif
-}
-
-
-void CPVBoiler::loop()
-{
-  // Run timed control loop
-  if (m_loopTimer > CONTROL_LOOP_TIME_MS)
-  {
-    CheckWatchDog();
-    Update();
-
-    m_loopTimer = 0;
-  }
-
-  // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
-  {
-    MQTTPublishValues();
-
-    m_MQTTTimer = 0;
-  }
 }
