@@ -1,14 +1,20 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "system.h"
+#include "MqttClient.h"
+
 #ifdef ESP8266
-#include <ESP8266WiFi.h>
-#else
-#include <WiFi.h>
+  #include <ESP8266WiFi.h>
+  using NetClient = WiFiClient;
+#elif defined(ESP32)
+  #include <WiFi.h>
+  using NetClient = WiFiClient;
+#elif defined(ARDUINO_TEENSY41)
+  #include <NativeEthernet.h>
+  using NetClient = EthernetClient;
 #endif
 
-#include "MqttClient.h"
-#include "system.h"
 
 class CNetwork
 {
@@ -29,8 +35,10 @@ class CNetwork
     const uint8_t* GetNetMask() { return m_ipNetmask; };
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
 
-    WiFiServer& GetSocketServer() { return m_socketServer; };
-    WiFiClient& GetSocketServerClient() { return m_socketServerClient; };
+#ifdef SOCKET_SERVER_PORT
+    WiFiClient& GetSocketServerClient();
+#endif
+
     CMqttClient& GetMqttClient() { return m_mqttClient; };
 
   private:
@@ -40,8 +48,10 @@ class CNetwork
     uint8_t m_ipNetmask[4] = { 0 };
     uint8_t m_serverIpAddr[4] = { 0 };
 
+#ifdef SOCKET_SERVER_PORT
     WiFiServer m_socketServer;
     WiFiClient m_socketServerClient;
+#endif
 
     WiFiClient m_wifiClient;
     CMqttClient m_mqttClient;

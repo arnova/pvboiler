@@ -119,23 +119,12 @@ void CApp::pollEthernet(void)
   static char strCommand[CMD_BUF_SIZE] = { 0 };
   static char strOldCommand[CMD_BUF_SIZE] = { 0 };
 
-  if (!m_network.GetSocketServerClient() || !m_network.GetSocketServerClient().connected())
+  WiFiClient& socketServerClient = m_network.GetSocketServerClient();
+  if (socketServerClient && socketServerClient.connected())
   {
-    m_network.GetSocketServerClient() = m_network.GetSocketServer().accept();
-#ifdef WIFI_DEBUG
-    if (m_network.GetSocketServerClient())
+    if (socketServerClient.available()) // Data available?
     {
-      CTermPrint::print("Accepting connection from: ");
-      CTermPrint::println(m_network.GetSocketServerClient().remoteIP().toString().c_str());
-    }
-#endif
-  }
-
-  if (m_network.GetSocketServerClient() && m_network.GetSocketServerClient().connected())
-  {
-    if (m_network.GetSocketServerClient().available())
-    {
-      const char c = m_network.GetSocketServerClient().read();
+      const char c = socketServerClient.read(); // Read data from socket
       if (c != 0)
       {
         if (c == '!') // Repeat the previous command but don't execute it yet
@@ -147,7 +136,7 @@ void CApp::pollEthernet(void)
 
 #if 0
             if (commandHandler.GetLocalEchoEnabled())
-              m_network.GetSocketServerClient().print(strCommand);
+              socketServerClient.print(strCommand);
 #endif
           }
         }
@@ -155,7 +144,7 @@ void CApp::pollEthernet(void)
         {
 #if 0
           // Linefeed
-          m_network.GetSocketServerClient().println("");
+          socketServerClient.println("");
 #endif
 
           // Don't check empty commands
@@ -170,7 +159,7 @@ void CApp::pollEthernet(void)
             charCount = 0;
 
             // Parse client command
-            m_commandHandler.ProcessCommand(strCommand, &m_network.GetSocketServerClient());
+            m_commandHandler.ProcessCommand(strCommand, &socketServerClient);
           }
         }
         else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
@@ -181,11 +170,11 @@ void CApp::pollEthernet(void)
             if (m_commandHandler.GetLocalEchoEnabled())
             {
               // Backspace
-              m_socketServerClient.write(CH_BACKSPACE);
+              socketServerClient.write(CH_BACKSPACE);
               // Blank character
-              m_socketServerClient.write(' ');
+              socketServerClient.write(' ');
               // And backspace again since the blank jumps forward
-              m_socketServerClient.write(CH_BACKSPACE);
+              socketServerClient.write(CH_BACKSPACE);
             }
 #endif
             charCount--;
@@ -198,7 +187,7 @@ void CApp::pollEthernet(void)
           {
             strCommand[charCount++] = c;
 #if 0
-            m_socketServerClient.write(c);
+            socketServerClient.write(c);
 #endif
           }
         }

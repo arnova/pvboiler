@@ -15,7 +15,10 @@
 #include "util.h"
 
 
-CNetwork::CNetwork() : m_socketServer(SOCKET_SERVER_PORT)
+CNetwork::CNetwork()
+#ifdef SOCKET_SERVER_PORT
+  : m_socketServer(SOCKET_SERVER_PORT)
+#endif
 {
   m_mqttClient.setClient(m_wifiClient);
 }
@@ -104,12 +107,14 @@ void CNetwork::InitWifi(const bool bReconnect)
   });
   ArduinoOTA.begin();
 
+#ifdef SOCKET_SERVER_PORT
   // Init the socket server
   m_socketServer.begin();
   m_socketServer.setNoDelay(true);
-
+  
 #ifdef WIFI_DEBUG
   CTermPrint::println("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
+#endif
 #endif
 }
 
@@ -167,3 +172,22 @@ void CNetwork::SetMqttServerIp(uint8_t* ipAddress)
 
   m_mqttClient.setServer(m_serverIpAddr, MQTT_PORT);
 }
+
+#ifdef SOCKET_SERVER_PORT
+WiFiClient& CNetwork::GetSocketServerClient()
+{
+  if (!m_socketServerClient || !m_socketServerClient.connected())
+  {
+    m_socketServerClient = m_socketServer.accept(); // Check for new client connections
+#ifdef WIFI_DEBUG
+    if (m_socketServerClient)
+    {
+      CTermPrint::print("Accepting connection from client: ");
+      CTermPrint::println(m_socketServerClient.remoteIP().toString().c_str());
+    }
+#endif
+  }
+
+  return m_socketServerClient;
+}
+#endif

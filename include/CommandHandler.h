@@ -3,13 +3,6 @@
 
 #include "CommandParser.h"
 
-#include <stdlib.h>
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
-#else
-#include <WiFi.h>
-#endif
-
 // Maximum byte size for arguments stored in m_bufArg1
 #define ARG_BUF_BYTE_SIZE 6
 

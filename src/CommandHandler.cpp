@@ -1,7 +1,7 @@
 #include "CommandHandler.h"
+#include "system.h"
 #include "util.h"
 #include "TermPrint.h"
-#include "system.h"
 
 #include <string.h>
 #include <Arduino.h>

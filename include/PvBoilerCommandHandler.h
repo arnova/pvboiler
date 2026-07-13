@@ -1,11 +1,19 @@
 #ifndef PVBOILER_COMMAND_HANDLER_H
 #define PVBOILER_COMMAND_HANDLER_H
 
-#include "CommandParser.h"
 #include "CommandHandler.h"
-//#include "pvboiler.h"
+#include "CommandParser.h"
 
-#include <stdlib.h>
+#ifdef ESP8266
+  #include <ESP8266WiFi.h>
+  using NetClient = WiFiClient;
+#elif defined(ESP32)
+  #include <WiFi.h>
+  using NetClient = WiFiClient;
+#elif defined(ARDUINO_TEENSY41)
+  #include <NativeEthernet.h>
+  using NetClient = EthernetClient;
+#endif
 
 // Forward declare
 class CPVBoiler; 
