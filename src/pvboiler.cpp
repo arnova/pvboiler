@@ -75,7 +75,7 @@ void CPVBoiler::LoadSettings()
 {
   uint16_t iVal16 = 0;
   EEPROM.get(EEPROM_BP_RATING, iVal16);
-  if (iVal16 > BOILER_POWER_RATING_MAX)
+  if (iVal16 < 100 || iVal16 > BOILER_POWER_RATING_MAX)
   {
     iVal16 = BOILER_POWER_RATING_DEFAULT;
   }
@@ -96,7 +96,7 @@ void CPVBoiler::LoadSettings()
   SetDimStyle((iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
-  if (iVal8 > SSR_PERIOD_COUNT_MAX)
+  if (iVal8 < 2 || iVal8 > SSR_PERIOD_COUNT_MAX)
   {
     iVal8 = SSR_PERIOD_COUNT_DEFAULT;
   }
@@ -104,7 +104,7 @@ void CPVBoiler::LoadSettings()
 
   float fGain;
   EEPROM.get(EEPROM_ERROR_GAIN, fGain);
-  if (fGain > ERROR_GAIN_MAX || fGain < ERROR_GAIN_MIN)
+  if (fGain < ERROR_GAIN_MIN || fGain > ERROR_GAIN_MAX)
   {
     fGain = ERROR_GAIN_DEFAULT;
   }
