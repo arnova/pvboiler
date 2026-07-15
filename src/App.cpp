@@ -244,8 +244,6 @@ bool CApp::CheckNetwork()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
-    m_bWifiConnected = true;
-
     if (!m_bWifiConnected)
     {
 #ifdef WIFI_DEBUG
@@ -254,6 +252,7 @@ bool CApp::CheckNetwork()
       CTermPrint::print(PSTR("IP address: "));
       CTermPrint::println(WiFi.localIP().toString().c_str());
 #endif
+      m_bWifiConnected = true;
       m_wifiReconnectTimer = 0;
 
       MQTTReconnect();
