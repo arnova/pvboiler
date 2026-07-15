@@ -113,7 +113,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   m_socketServer.setNoDelay(true);
   
 #ifdef WIFI_DEBUG
-  CTermPrint::println("Listing for socket connections on " STRINGIZE(SOCKET_SERVER_PORT));
+  CTermPrint::println("Listening for terminal connections on TCP port " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 #endif
 }
