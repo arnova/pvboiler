@@ -10,6 +10,104 @@ CApp::CApp() : m_network(), m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, 
 }
 
 
+void IRAM_ATTR CApp::ZeroCrossHandler()
+{
+  const uint32_t iNow = micros();
+
+  if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
+  {
+    // filter noise
+    if (iNow - m_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US * 10)
+    {
+      return;
+    }
+
+    m_iZeroCrossTime = iNow - m_iLastZeroCrossTime;
+    m_bZeroCrossTimeUpdated = true;
+    m_iLastZeroCrossTime = iNow;
+
+    if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
+    {
+      if (m_iOutputPercentage == 0)
+      {
+        digitalWrite(TRIAC_OUTPUT, LOW); // Always off
+      }
+      else
+      {
+        m_iSSRPeriodCounter++;
+        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_iOutputPercentage)
+        {
+          // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+          // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+          const uint32_t iTriacDelayTicks = (m_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
+
+          m_bTriacOn = true;
+          timer1_write(iTriacDelayTicks);
+        }
+        else
+        {
+          digitalWrite(TRIAC_OUTPUT, LOW); // Off
+        }
+
+        if (m_iSSRPeriodCounter >= m_pvBoiler.GetSsrPeriodCount())
+        {
+          m_iSSRPeriodCounter = 0;
+        }
+      }
+    }
+    else
+    {
+      digitalWrite(TRIAC_OUTPUT, LOW); // Off
+
+      const float fDelay = max((m_fTriacAngleFactor * m_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
+
+      // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
+      if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= m_iZeroCrossTime)
+      {
+        // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+        // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+        const uint32_t iTriacDelayTicks = (fDelay + m_iPhaseCorrectionTime) * 80;
+
+        m_bTriacOn = true;
+        timer1_write(iTriacDelayTicks);
+      }
+    }
+  }
+  else // Falling edge
+  {
+    // filter noise
+    if (iNow - m_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US)
+    {
+      return;
+    }
+
+    // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
+    m_iPhaseCorrectionTime = (iNow - m_iLastZeroCrossTime) / 2;
+  }
+}
+
+
+void IRAM_ATTR CApp::TriacPhaseHandler()
+{
+  if (m_bTriacOn)
+  {
+    digitalWrite(TRIAC_OUTPUT, HIGH); // On
+
+    // Setup timer to turn off trigger pulse after 100uS:
+    // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+    // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+    const uint32_t iTriacDelayTicks = GATE_PULSE_WIDTH * 80;
+
+    m_bTriacOn = false;
+    timer1_write(iTriacDelayTicks);
+  }
+  else
+  {
+    digitalWrite(TRIAC_OUTPUT, LOW); // Off
+  }
+}
+
+
 void CApp::Init()
 {
   m_network.LoadSettings();
@@ -24,6 +122,8 @@ void CApp::Init()
     m_network.GetMqttClient().setServer(m_network.GetServerIp(), MQTT_PORT);
     m_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
   }
+
+  m_iLastZeroCrossTime = m_iZeroCrossTime = micros();
 }
 
 
@@ -42,6 +142,21 @@ void CApp::Loop()
   pollSerial();
 
   m_pvBoiler.Loop();
+
+  // FIXME: Remove this from loop()?
+  if (m_bZeroCrossTimeUpdated)
+  {
+    noInterrupts(); // Enter critical section
+
+    m_bZeroCrossTimeUpdated = false;
+
+    // FIXME: Perhaps handle this in timed loop?
+    // Get updated values for triac drive
+    m_fTriacAngleFactor = m_pvBoiler.GetTriacAngleFactor();
+    m_iOutputPercentage = m_pvBoiler.GetOutputPercentage();
+
+    interrupts(); // Leave critical section
+  }
 }
 
 

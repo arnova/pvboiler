@@ -87,16 +87,16 @@ class CPVBoiler
     const float& GetTriacAngleFactor() const;
     const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
 
-    const bool& GetCtrlOnOff() { return m_bCtrlEnable; };
-    const int32_t& GetPowerBudget() { return m_iPowerBudget; };
-    const uint8_t& GetPowerPercentage() { return m_iPowerPercentage; };
+    const bool& GetCtrlOnOff() const { return m_bCtrlEnable; };
+    const int32_t& GetPowerBudget() const { return m_iPowerBudget; };
+    const uint8_t& GetPowerPercentage() const { return m_iPowerPercentage; };
 
-    const uint16_t& GetBoilerPowerRating() { return m_iBoilerPowerRating; };
-    const uint16_t& GetPowerBudgetMargin() { return m_iPowerBudgetMargin; };
-    const logic_mode_t& GetLogicMode() { return m_logicMode; };
-    const dim_style_t& GetDimStyle() { return m_dimStyle; };
-    const uint8_t& GetSsrPeriodCount() { return m_iSsrPeriodCount; };
-    const float& GetErrorGain() { return m_fErrorGain; };
+    const uint16_t& GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
+    const uint16_t& GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
+    const logic_mode_t& GetLogicMode() const { return m_logicMode; };
+    inline const dim_style_t& GetDimStyle() const { return m_dimStyle; };
+    inline const uint8_t& GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
+    const float& GetErrorGain() const { return m_fErrorGain; };
 
   private:
     void Update();

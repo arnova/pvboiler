@@ -48,112 +48,18 @@
 #include "system.h"
 
 CApp g_app;
-volatile uint32_t g_iLastZeroCrossTime = 0;
-volatile uint32_t g_iPhaseCorrectionTime = 300; // Default = 300 uS
-volatile uint32_t g_iZeroCrossTime = 0;
-volatile bool g_bZeroCrossTimeUpdated = false;
-volatile bool g_bTriacOn = false;
-volatile float g_fTriacAngleFactor = 1.0f; // Off
-volatile uint8_t g_iOutputPercentage = 0;
-volatile uint8_t g_iSSRPeriodCounter = 0;
 
 // Interrupt generated when crossing zero in either direction
 void IRAM_ATTR ZeroCrossISR()
 {
-  const uint32_t iNow = micros();
-
-  if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
-  {
-    // filter noise
-    if (iNow - g_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US * 10)
-    {
-      return;
-    }
-
-    g_iZeroCrossTime = iNow - g_iLastZeroCrossTime;
-    g_bZeroCrossTimeUpdated = true;
-    g_iLastZeroCrossTime = iNow;
-
-    if (g_app.GetPvBoiler().GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
-    {
-      if (g_iOutputPercentage == 0)
-      {
-        digitalWrite(TRIAC_OUTPUT, LOW); // Always off
-      }
-      else
-      {
-        g_iSSRPeriodCounter++;
-        if ((g_iSSRPeriodCounter * 100) / g_app.GetPvBoiler().GetSsrPeriodCount() <= g_iOutputPercentage)
-        {
-          // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-          // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-          const uint32_t iTriacDelayTicks = (g_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
-
-          g_bTriacOn = true;
-          timer1_write(iTriacDelayTicks);
-        }
-        else
-        {
-          digitalWrite(TRIAC_OUTPUT, LOW); // Off
-        }
-
-        if (g_iSSRPeriodCounter >= g_app.GetPvBoiler().GetSsrPeriodCount())
-        {
-          g_iSSRPeriodCounter = 0;
-        }
-      }
-    }
-    else
-    {
-      digitalWrite(TRIAC_OUTPUT, LOW); // Off
-
-      const float fDelay = max((g_fTriacAngleFactor * g_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
-
-      // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-      if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= g_iZeroCrossTime)
-      {
-        // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-        // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-        const uint32_t iTriacDelayTicks = (fDelay + g_iPhaseCorrectionTime) * 80;
-
-        g_bTriacOn = true;
-        timer1_write(iTriacDelayTicks);
-      }
-    }
-  }
-  else // Falling edge
-  {
-    // filter noise
-    if (iNow - g_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US)
-    {
-      return;
-    }
-
-    // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
-    g_iPhaseCorrectionTime = (iNow - g_iLastZeroCrossTime) / 2;
-  }
+  g_app.ZeroCrossHandler();
 }
 
 
 // Timer interrupt for triggering triac gate
 void IRAM_ATTR TriacTimerISR()
 {
-  if (g_bTriacOn)
-  {
-    digitalWrite(TRIAC_OUTPUT, HIGH); // On
-
-    // Setup timer to turn off trigger pulse after 100uS:
-    // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-    // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-    const uint32_t iTriacDelayTicks = GATE_PULSE_WIDTH * 80;
-
-    g_bTriacOn = false;
-    timer1_write(iTriacDelayTicks);
-  }
-  else
-  {
-    digitalWrite(TRIAC_OUTPUT, LOW); // Off
-  }
+  g_app.TriacPhaseHandler();
 }
 
 
@@ -245,8 +151,6 @@ void setup()
   // Setup the MQTT client callback
   g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
 
-  g_iLastZeroCrossTime = g_iZeroCrossTime = micros();
-
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
@@ -266,20 +170,5 @@ void setup()
 
 void loop()
 {
-  // FIXME: Remove this from loop()?
-  if (g_bZeroCrossTimeUpdated)
-  {
-    noInterrupts(); // Enter critical section
-
-    g_bZeroCrossTimeUpdated = false;
-
-    // FIXME: Perhaps handle this in timed loop?
-    // Get updated values for triac drive
-    g_fTriacAngleFactor = g_app.GetPvBoiler().GetTriacAngleFactor();
-    g_iOutputPercentage = g_app.GetPvBoiler().GetOutputPercentage();
-
-    interrupts(); // Leave critical section
-  }
-
   g_app.Loop();
 }
