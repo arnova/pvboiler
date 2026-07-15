@@ -118,10 +118,18 @@ const float& CPVBoiler::GetTriacAngleFactor() const
 }
 
 
+void CPVBoiler::EepromCommit()
+{
+  noInterrupts(); // Enter critical section
+  EEPROM.commit();
+  interrupts(); // Leave critical section
+}
+
+
 void CPVBoiler::SetBoilerPowerRating(const uint16_t& iPower)
 {
   EEPROM.put(EEPROM_BP_RATING, iPower);
-  EEPROM.commit();
+  EepromCommit();
 
   m_iBoilerPowerRating = iPower;
 }
@@ -130,7 +138,7 @@ void CPVBoiler::SetBoilerPowerRating(const uint16_t& iPower)
 void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 {
   EEPROM.put(EEPROM_PB_MARGIN, iMargin);
-  EEPROM.commit();
+  EepromCommit();
 
   m_iPowerBudgetMargin = iMargin;
 }
@@ -139,7 +147,7 @@ void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 void CPVBoiler::SetLogicMode(const CPVBoiler::logic_mode_t& logicMode)
 {
   EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPVBoiler::LOGIC_MODE_PERCENTAGE) ? 0x01 : 0x00);
-  EEPROM.commit();
+  EepromCommit();
 
   m_logicMode = logicMode;
 }
@@ -148,7 +156,7 @@ void CPVBoiler::SetLogicMode(const CPVBoiler::logic_mode_t& logicMode)
 void CPVBoiler::SetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
 {
   EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPVBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
-  EEPROM.commit();
+  EepromCommit();
 
   m_dimStyle = dimStyle;
 }
@@ -157,7 +165,7 @@ void CPVBoiler::SetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
 void CPVBoiler::SetSsrPeriodCount(const uint8_t& iCount)
 {
   EEPROM.put(EEPROM_SSR_PERIOD, iCount);
-  EEPROM.commit();
+  EepromCommit();
 
   m_iSsrPeriodCount = iCount;
 }
@@ -166,7 +174,7 @@ void CPVBoiler::SetSsrPeriodCount(const uint8_t& iCount)
 void CPVBoiler::SetErrorGain(const float& fGain)
 {
   EEPROM.put(EEPROM_ERROR_GAIN, fGain);
-  EEPROM.commit();
+  EepromCommit();
 
   m_fErrorGain = fGain;
 }

@@ -47,6 +47,7 @@
 #include "App.h"
 #include "system.h"
 
+// Application global instance
 CApp g_app;
 
 // Interrupt generated when crossing zero in either direction

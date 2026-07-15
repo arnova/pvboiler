@@ -127,13 +127,21 @@ void CNetwork::InitWifi(const bool bReconnect)
 }
 
 
+void CNetwork::EepromCommit()
+{
+  noInterrupts(); // Enter critical section
+  EEPROM.commit();
+  interrupts(); // Leave critical section
+}
+
+
 void CNetwork::SetWifiSsid(const char* strSsid)
 {
   memset(m_strWifiSsid, 0x00, WIFI_SSID_MAX_SIZE + 1);
   strcpy(m_strWifiSsid, strSsid);
 
   EEPROM.put(EEPROM_WIFI_SSID, m_strWifiSsid);
-  EEPROM.commit();
+  EepromCommit();
 
   InitWifi(true);
 }
@@ -145,7 +153,7 @@ void CNetwork::SetWifiPassword(const char* strPassword)
   strcpy(m_strWifiPassword, strPassword);
 
   EEPROM.put(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
-  EEPROM.commit();
+  EepromCommit();
 }
 
 
@@ -154,7 +162,7 @@ void CNetwork::SetIpAddr(uint8_t* ipAddress)
   memcpy(m_ipAddr, ipAddress, sizeof(m_ipAddr));
 
   EEPROM.put(EEPROM_IP_ADDR, m_ipAddr);
-  EEPROM.commit();
+  EepromCommit();
 
   InitWifi(true);
 }
@@ -165,7 +173,7 @@ void CNetwork::SetNetMask(uint8_t* ipNetMask)
   memcpy(m_ipNetmask, ipNetMask, sizeof(m_ipNetmask));
 
   EEPROM.put(EEPROM_IP_NETMASK, m_ipNetmask);
-  EEPROM.commit();
+  EepromCommit();
 
   InitWifi(true);
 }
@@ -176,7 +184,7 @@ void CNetwork::SetMqttServerIp(uint8_t* ipAddress)
   memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
 
   EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
-  EEPROM.commit();
+  EepromCommit();
 
   m_mqttClient.setServer(m_serverIpAddr, MQTT_PORT);
 }

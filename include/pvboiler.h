@@ -99,6 +99,8 @@ class CPVBoiler
     const float& GetErrorGain() const { return m_fErrorGain; };
 
   private:
+    static void EepromCommit();
+
     void Update();
     void CheckWatchDog();
 
