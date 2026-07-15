@@ -375,7 +375,7 @@ result_code_t CPVBoilerCommandHandler::CmdErrorGain(const char *strArgs)
 
 
 // Process provided string command
-result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand, WiFiClient* wifiClient /* = NULL */)
+result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
 {
   // Trim strCommand to remove leading/trailing space \n \r
   strtrim(strCommand, " \r\n");

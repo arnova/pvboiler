@@ -201,7 +201,8 @@ void CApp::pollEthernet(void)
             charCount = 0;
 
             // Parse client command
-            m_commandHandler.ProcessCommand(strCommand, &socketServerClient);
+            CTermPrint::SetSocketClient(socketServerClient);
+            m_commandHandler.ProcessCommand(strCommand);
           }
         }
         else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)

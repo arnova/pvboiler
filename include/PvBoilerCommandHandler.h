@@ -24,7 +24,7 @@ class CPVBoilerCommandHandler : public CCommandHandler
   public:
     CPVBoilerCommandHandler(CPVBoiler& pvBoiler, CNetwork& network) : m_pvBoiler(pvBoiler), m_network(network) {};
 
-    result_code_t ProcessCommand(char *strCommand, WiFiClient* wifiClient = NULL);
+    result_code_t ProcessCommand(char *strCommand);
 
   private:
     CPVBoiler& m_pvBoiler;
