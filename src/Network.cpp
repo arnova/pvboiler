@@ -154,6 +154,8 @@ void CNetwork::SetWifiPassword(const char* strPassword)
 
   EEPROM.put(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
   EepromCommit();
+
+  InitWifi(true);
 }
 
 
