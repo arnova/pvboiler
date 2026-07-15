@@ -244,8 +244,8 @@ void setup()
 
   randomSeed(micros());
 
-  Serial.begin(BAUD_RATE);
-  Serial.setTimeout(2000);
+  TERM_SERIAL.begin(BAUD_RATE);
+  TERM_SERIAL.setTimeout(2000);
 
   g_app.Init();
 

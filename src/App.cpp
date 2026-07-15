@@ -86,9 +86,9 @@ void CApp::pollSerial(void)
   static char strCommand[CMD_BUF_SIZE] = { 0 };
   static char strOldCommand[CMD_BUF_SIZE] = { 0 };
 
-  if (Serial.available())
+  if (TERM_SERIAL.available())
   {
-    const char c = Serial.read();
+    const char c = TERM_SERIAL.read();
     if (c != 0)
     {
       if (c == '!') // Repeat the previous command but don't execute it yet
@@ -99,14 +99,14 @@ void CApp::pollSerial(void)
           charCount = strlen(strOldCommand);
 
           if (m_commandHandler.GetLocalEchoEnabled())
-            Serial.print(strCommand);
+            TERM_SERIAL.print(strCommand);
         }
       }
       else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
       {
         // Linefeed for local echo
         if (m_commandHandler.GetLocalEchoEnabled())
-          Serial.println("");
+          TERM_SERIAL.println("");
 
         // Don't check empty commands
         if (charCount > 0)
@@ -130,11 +130,11 @@ void CApp::pollSerial(void)
           if (m_commandHandler.GetLocalEchoEnabled())
           {
             // Backspace
-            Serial.write(CH_BACKSPACE);
+            TERM_SERIAL.write(CH_BACKSPACE);
             // Blank character
-            Serial.write(' ');
+            TERM_SERIAL.write(' ');
             // And backspace again since the blank jumps forward
-            Serial.write(CH_BACKSPACE);
+            TERM_SERIAL.write(CH_BACKSPACE);
           }
           charCount--;
         }
@@ -147,7 +147,7 @@ void CApp::pollSerial(void)
           strCommand[charCount++] = c;
 
           if (m_commandHandler.GetLocalEchoEnabled())
-            Serial.write(c);
+            TERM_SERIAL.write(c);
         }
       }
     }
@@ -247,10 +247,9 @@ bool CApp::CheckNetwork()
     if (!m_bWifiConnected)
     {
 #ifdef WIFI_DEBUG
-      CTermPrint::println("");
-      CTermPrint::println(PSTR("WiFi connected"));
-      CTermPrint::print(PSTR("IP address: "));
-      CTermPrint::println(WiFi.localIP().toString().c_str());
+      TERM_SERIAL.println("");
+      TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
+      TERM_SERIAL.println(WiFi.localIP().toString().c_str());
 #endif
       m_bWifiConnected = true;
       m_wifiReconnectTimer = 0;
@@ -276,8 +275,9 @@ bool CApp::CheckNetwork()
     if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
     {
 #ifdef WIFI_DEBUG
-      Serial.print(millis());
-      Serial.println(PSTR(" - (Re)connecting to WiFi..."));
+      TERM_SERIAL.print(millis());
+      TERM_SERIAL.print(PSTR(" - (Re)connecting to WiFi network: "));
+      TERM_SERIAL.println(m_network.GetWifiSsid());
 #endif
       WiFi.disconnect();
       WiFi.reconnect();

@@ -59,7 +59,7 @@ void CNetwork::InitWifi(const bool bReconnect)
 #ifdef WIFI_DEBUG
   // We start by connecting to a WiFi network
   CTermPrint::println("");
-  CTermPrint::print("Connecting to ");
+  CTermPrint::print("Connecting to WiFi network: ");
   CTermPrint::println(m_strWifiSsid);
 #endif
 
@@ -89,21 +89,21 @@ void CNetwork::InitWifi(const bool bReconnect)
   ArduinoOTA.setHostname(HOST_NAME);
 
   ArduinoOTA.onStart([]() {
-    Serial.println("Start");
+    TERM_SERIAL.println("Start");
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
+    TERM_SERIAL.println("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    TERM_SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    TERM_SERIAL.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) TERM_SERIAL.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) TERM_SERIAL.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) TERM_SERIAL.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) TERM_SERIAL.println("Receive Failed");
+    else if (error == OTA_END_ERROR) TERM_SERIAL.println("End Failed");
   });
   ArduinoOTA.begin();
 
