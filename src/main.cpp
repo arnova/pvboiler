@@ -223,6 +223,10 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 
 void setup()
 {
+  EEPROM.begin(128); // Reserve room for eeprom settings
+
+  randomSeed(micros());
+
   // Outputs
 #ifdef STATUS_LED
   pinMode(STATUS_LED, OUTPUT);
@@ -232,17 +236,6 @@ void setup()
   digitalWrite(TRIAC_OUTPUT, LOW);
 
   pinMode(ZERO_CROSS_INPUT, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
-
-  g_iLastZeroCrossTime = g_iZeroCrossTime = micros();
-
-  timer1_isr_init();
-  timer1_attachInterrupt(TriacTimerISR);
-  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
-
-  EEPROM.begin(128); // Reserve room for eeprom settings
-
-  randomSeed(micros());
 
   TERM_SERIAL.begin(BAUD_RATE);
   TERM_SERIAL.setTimeout(2000);
@@ -252,10 +245,18 @@ void setup()
   // Setup the MQTT client callback
   g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
 
+  g_iLastZeroCrossTime = g_iZeroCrossTime = micros();
+
+  timer1_isr_init();
+  timer1_attachInterrupt(TriacTimerISR);
+  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
+
+  attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
+
     // Allow the hardware to sort itself out
   delay(1500);
 
-    // Have the terminal start with a newline
+  // Have the terminal start with a newline
   CTermPrint::println("");
 
   // Print out version info
