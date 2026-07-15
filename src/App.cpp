@@ -274,13 +274,7 @@ bool CApp::CheckNetwork()
 
     if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
     {
-#ifdef WIFI_DEBUG
-      TERM_SERIAL.print(millis());
-      TERM_SERIAL.print(PSTR(" - (Re)connecting to WiFi network: "));
-      TERM_SERIAL.println(m_network.GetWifiSsid());
-#endif
-      WiFi.disconnect();
-      WiFi.reconnect();
+      m_network.InitWifi(true);
       m_wifiReconnectTimer = 0;
     }
   }

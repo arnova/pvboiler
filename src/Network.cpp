@@ -51,6 +51,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   if (bReconnect)
   {
     WiFi.disconnect();
+    //WiFi.reconnect();
   }
 
   if (strlen(m_strWifiSsid) == 0)
@@ -59,7 +60,14 @@ void CNetwork::InitWifi(const bool bReconnect)
 #ifdef WIFI_DEBUG
   // We start by connecting to a WiFi network
   CTermPrint::println("");
-  CTermPrint::print("Connecting to WiFi network: ");
+  if (bReconnect)
+  {
+    CTermPrint::print(PSTR("Reconnecting to WiFi network: "));
+  }
+  else
+  {
+    CTermPrint::print(PSTR("Connecting to WiFi network: "));
+  }
   CTermPrint::println(m_strWifiSsid);
 #endif
 
