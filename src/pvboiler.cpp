@@ -5,7 +5,7 @@
 
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
-void CPVBoiler::loop()
+void CPVBoiler::Loop()
 {
   // Run timed control loop
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)

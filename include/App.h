@@ -5,15 +5,15 @@
 #include "system.h"
 #include "Network.h"
 #include "pvboiler.h"
+#include "ssd1306.h"
 
 class CApp
 {
   public:
-    CApp()
-      : m_network()
-      , m_pvBoiler(m_network)
-      , m_commandHandler(m_pvBoiler, m_network)
-    {}
+    CApp();
+
+    void Init();
+    void Loop();
 
     bool MQTTReconnect();
     void pollSerial();
@@ -28,6 +28,7 @@ class CApp
     CNetwork m_network;
     CPVBoiler m_pvBoiler;
     CPVBoilerCommandHandler m_commandHandler;
+    CSSD1306 m_display;
 
     elapsedMillis m_mqttReconnectTimer = 0;
     elapsedMillis m_wifiReconnectTimer = 0;

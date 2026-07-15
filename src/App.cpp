@@ -1,6 +1,48 @@
+#include <ArduinoOTA.h>
+
 #include "TermPrint.h"
 #include "util.h"
 #include "App.h"
+
+CApp::CApp() : m_network(), m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
+{
+  m_display.Init();
+}
+
+
+void CApp::Init()
+{
+  m_network.LoadSettings();
+  m_pvBoiler.LoadSettings();
+
+  delay(10);
+
+  m_network.InitWifi(false);
+
+  if (IPAddress(m_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
+  {
+    m_network.GetMqttClient().setServer(m_network.GetServerIp(), MQTT_PORT);
+    m_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
+  }
+}
+
+
+void CApp::Loop()
+{
+  if (CheckNetwork())
+  {
+    // Handle OTA-updates
+    ArduinoOTA.handle();
+
+    // Poll ethernet for commands
+    pollEthernet();
+  }
+
+  // Poll serial for commands
+  pollSerial();
+
+  m_pvBoiler.Loop();
+}
 
 
 bool CApp::MQTTReconnect()
@@ -269,4 +311,3 @@ bool CApp::CheckNetwork()
 
   return m_bWifiConnected;
 }
-

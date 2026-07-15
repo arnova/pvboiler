@@ -35,7 +35,6 @@
   using NetClient = EthernetClient;
 #endif
 
-#include <ArduinoOTA.h>
 #include <EEPROM.h>
 
 #include "CommandParser.h"
@@ -43,7 +42,6 @@
 #include "pvboiler.h"
 #include "TermPrint.h"
 #include "MqttClient.h"
-#include "ssd1306.h"
 #include "util.h"
 #include "Network.h"
 #include "App.h"
@@ -249,24 +247,13 @@ void setup()
   Serial.begin(BAUD_RATE);
   Serial.setTimeout(2000);
 
-  g_app.GetNetwork().LoadSettings();
-  g_app.GetPvBoiler().LoadSettings();
+  g_app.Init();
 
-  delay(10);
+  // Setup the MQTT client callback
+  g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
 
-  g_app.GetNetwork().InitWifi(false);
-
-  if (IPAddress(g_app.GetNetwork().GetServerIp()) != IPAddress(0, 0, 0, 0))
-  {
-    g_app.GetNetwork().GetMqttClient().setServer(g_app.GetNetwork().GetServerIp(), MQTT_PORT);
-    g_app.GetNetwork().GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
-    g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
-  }
-
-  // Allow the hardware to sort itself out
+    // Allow the hardware to sort itself out
   delay(1500);
-
-  g_app.MQTTReconnect();
 
     // Have the terminal start with a newline
   CTermPrint::println("");
@@ -276,30 +263,8 @@ void setup()
 }
 
 
-#if 0
-  //FIXME
-    case CMD_RESPONSE_SERVER:
-    {
-      g_heliumPurityMeter.SetResponseServerOK(true);
-    }
-    break;
-#endif
-
-
 void loop()
 {
-  if (g_app.CheckNetwork())
-  {
-    // Handle OTA-updates
-    ArduinoOTA.handle();
-
-    // Poll ethernet for commands
-    g_app.pollEthernet();
-  }
-
-  // Poll serial for commands
-  g_app.pollSerial();
-
   // FIXME: Remove this from loop()?
   if (g_bZeroCrossTimeUpdated)
   {
@@ -315,5 +280,5 @@ void loop()
     interrupts(); // Leave critical section
   }
 
-  g_app.GetPvBoiler().loop();
+  g_app.Loop();
 }
