@@ -79,36 +79,36 @@ void CPVBoiler::LoadSettings()
   {
     iVal16 = BOILER_POWER_RATING_DEFAULT;
   }
-  SetBoilerPowerRating(iVal16);
+  m_iBoilerPowerRating = iVal16;
 
   EEPROM.get(EEPROM_PB_MARGIN, iVal16);
   if (iVal16 > POWER_BUDGET_MARGIN_MAX)
   {
     iVal16 = POWER_BUDGET_MARGIN_DEFAULT;
   }
-  SetPowerBudgetMargin(iVal16);
+  m_iPowerBudgetMargin = iVal16;
 
   uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  SetLogicMode((iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENTAGE : CPVBoiler::LOGIC_MODE_BUDGET);
+  m_logicMode = (iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENTAGE : CPVBoiler::LOGIC_MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
-  SetDimStyle((iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT);
+  m_dimStyle = (iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT;
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
   if (iVal8 < 2 || iVal8 > SSR_PERIOD_COUNT_MAX)
   {
     iVal8 = SSR_PERIOD_COUNT_DEFAULT;
   }
-  SetSsrPeriodCount(iVal8);
+  m_iSsrPeriodCount = iVal8;
 
   float fGain;
   EEPROM.get(EEPROM_ERROR_GAIN, fGain);
-  if (fGain < ERROR_GAIN_MIN || fGain > ERROR_GAIN_MAX)
+  if (fGain < ERROR_GAIN_MIN || fGain > ERROR_GAIN_MAX || isnan(fGain))
   {
     fGain = ERROR_GAIN_DEFAULT;
   }
-  SetErrorGain(fGain);
+  m_fErrorGain = fGain;
 }
 
 
