@@ -125,11 +125,11 @@ bool CMqttClient::Reconnect()
 {
   CTermPrint::print("Attempting MQTT connection...");
   // Create a random client ID
-  String clientId = "ESPBut-";
+  String clientId = HOST_NAME "-";
   clientId += String(random(0xffff), HEX);
   // Attempt to connect
 //    if (connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
-  if (connect(clientId.c_str()))
+  if (!connect(clientId.c_str()))
   {
     CTermPrint::print("failed, rc=");
     CTermPrint::print(state());
