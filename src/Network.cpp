@@ -62,30 +62,32 @@ void CNetwork::InitWifi(const bool bReconnect)
   CTermPrint::println("");
   if (bReconnect)
   {
+    WiFi.begin();
+
     CTermPrint::print(PSTR("Reconnecting to WiFi network: "));
   }
   else
   {
+    // Check for dhcp ip
+    if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
+    {
+      // Static IP. NOTE: No gateway / dns
+      WiFi.config(m_ipAddr, 0, m_ipNetmask);
+    }
+    else
+    {
+      // DHCP IP
+      WiFi.config(0, 0, 0);
+    }
+
+    WiFi.mode(WIFI_STA);
+    WiFi.setHostname(HOST_NAME);
+    WiFi.begin(m_strWifiSsid, m_strWifiPassword);
+
     CTermPrint::print(PSTR("Connecting to WiFi network: "));
   }
   CTermPrint::println(m_strWifiSsid);
 #endif
-
-  // Check for dhcp ip
-  if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
-  {
-    // Static IP. NOTE: No gateway / dns
-    WiFi.config(m_ipAddr, 0, m_ipNetmask);
-  }
-  else
-  {
-    // DHCP IP
-    WiFi.config(0, 0, 0);
-  }
-
-  WiFi.mode(WIFI_STA);
-  WiFi.setHostname(HOST_NAME);
-  WiFi.begin(m_strWifiSsid, m_strWifiPassword);
 
   // Initialize mDNS
   if (!MDNS.begin(HOST_NAME))
@@ -121,7 +123,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   m_socketServer.setNoDelay(true);
   
 #ifdef WIFI_DEBUG
-  CTermPrint::println("Listening for terminal connections on TCP port " STRINGIZE(SOCKET_SERVER_PORT));
+  CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 #endif
 }
