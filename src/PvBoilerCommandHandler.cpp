@@ -241,20 +241,28 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(" mqtt_conn=");
   CTermPrint::print(m_network.GetMqttClient().connected() ? "1" : "0");
 
-  CTermPrint::print(" angle_factor=");
-  CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
+  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
+  {
+    CTermPrint::print(" p_perc_set=");
+    CTermPrint::print(m_pvBoiler.GetPowerPercentage());
+    CTermPrint::print("%");
+  }
+  else
+  {
+    CTermPrint::print(" p_budget_set=");
+    CTermPrint::print(m_pvBoiler.GetPowerBudget());
+    CTermPrint::print("W");
+  }
 
   CTermPrint::print(" out_perc=");
   CTermPrint::print(m_pvBoiler.GetOutputPercentage());
   CTermPrint::print("%");
 
-  CTermPrint::print(" p_budget_set=");
-  CTermPrint::print(m_pvBoiler.GetPowerBudget());
-  CTermPrint::print("W");
-
-  CTermPrint::print(" p_perc_set=");
-  CTermPrint::print(m_pvBoiler.GetPowerPercentage());
-  CTermPrint::print("%");
+  if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT)
+  {
+    CTermPrint::print(" angle_factor=");
+    CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
+  }
 
   CTermPrint::println("");
 
