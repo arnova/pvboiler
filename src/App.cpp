@@ -23,19 +23,19 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     }
 
     m_iZeroCrossTime = iNow - m_iLastZeroCrossTime;
-    m_bZeroCrossTimeUpdated = true;
+
     m_iLastZeroCrossTime = iNow;
 
     if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
     {
-      if (m_iOutputPercentage == 0)
+      if (m_pvBoiler.GetOutputPercentage() == 0)
       {
         digitalWrite(TRIAC_OUTPUT, LOW); // Always off
       }
       else
       {
         m_iSSRPeriodCounter++;
-        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_iOutputPercentage)
+        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_pvBoiler.GetOutputPercentage())
         {
           // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
           // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -59,7 +59,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-      const float fDelay = max((m_fTriacAngleFactor * m_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
+      const float fDelay = max((m_pvBoiler.GetTriacAngleFactor() * m_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
 
       // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
       if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= m_iZeroCrossTime)
@@ -142,21 +142,6 @@ void CApp::Loop()
   pollSerial();
 
   m_pvBoiler.Loop();
-
-  // FIXME: Remove this from loop()?
-  if (m_bZeroCrossTimeUpdated)
-  {
-    noInterrupts(); // Enter critical section
-
-    m_bZeroCrossTimeUpdated = false;
-
-    // FIXME: Perhaps handle this in timed loop?
-    // Get updated values for triac drive
-    m_fTriacAngleFactor = m_pvBoiler.GetTriacAngleFactor();
-    m_iOutputPercentage = m_pvBoiler.GetOutputPercentage();
-
-    interrupts(); // Leave critical section
-  }
 }
 
 

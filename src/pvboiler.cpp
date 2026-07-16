@@ -112,12 +112,6 @@ void CPVBoiler::LoadSettings()
 }
 
 
-const float& CPVBoiler::GetTriacAngleFactor() const
-{
-  return triac_percentage_factor[m_iOutputPercentage];
-}
-
-
 void CPVBoiler::EepromCommit()
 {
   noInterrupts(); // Enter critical section

@@ -84,8 +84,8 @@ class CPVBoiler
     void SetSsrPeriodCount(const uint8_t& iPeriod);
     void SetErrorGain(const float& fGain);
 
-    const float& GetTriacAngleFactor() const;
-    const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
+    inline const float& GetTriacAngleFactor() const { return triac_percentage_factor[m_iOutputPercentage]; };
+    inline const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
 
     const bool& GetCtrlOnOff() const { return m_bCtrlEnable; };
     const int32_t& GetPowerBudget() const { return m_iPowerBudget; };
