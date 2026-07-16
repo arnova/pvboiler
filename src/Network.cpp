@@ -50,6 +50,10 @@ void CNetwork::InitWifi(const bool bReconnect)
 {
   if (bReconnect)
   {
+#ifdef WIFI_DEBUG
+    CTermPrint::println("");
+    CTermPrint::println(PSTR("Disconnecting WiFi"));
+#endif
     WiFi.disconnect();
     //WiFi.reconnect();
   }
@@ -58,13 +62,14 @@ void CNetwork::InitWifi(const bool bReconnect)
     return;
 
 #ifdef WIFI_DEBUG
-  // We start by connecting to a WiFi network
   CTermPrint::println("");
+  CTermPrint::print(PSTR("(Re)connecting to WiFi network: "));
+  CTermPrint::println(m_strWifiSsid);
+#endif
+
   if (bReconnect)
   {
     WiFi.begin();
-
-    CTermPrint::print(PSTR("Reconnecting to WiFi network: "));
   }
   else
   {
@@ -84,38 +89,34 @@ void CNetwork::InitWifi(const bool bReconnect)
     WiFi.setHostname(HOST_NAME);
     WiFi.begin(m_strWifiSsid, m_strWifiPassword);
 
-    CTermPrint::print(PSTR("Connecting to WiFi network: "));
+    // Initialize mDNS
+    if (!MDNS.begin(HOST_NAME))
+    {
+      CTermPrint::println("ERROR: Unable to start MDNS responder!");
+    }
+
+    // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
+    ArduinoOTA.setHostname(HOST_NAME);
+
+    ArduinoOTA.onStart([]() {
+      TERM_SERIAL.println("Start");
+    });
+    ArduinoOTA.onEnd([]() {
+      TERM_SERIAL.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      TERM_SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+      TERM_SERIAL.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) TERM_SERIAL.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) TERM_SERIAL.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) TERM_SERIAL.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) TERM_SERIAL.println("Receive Failed");
+      else if (error == OTA_END_ERROR) TERM_SERIAL.println("End Failed");
+    });
+    ArduinoOTA.begin();
   }
-  CTermPrint::println(m_strWifiSsid);
-#endif
-
-  // Initialize mDNS
-  if (!MDNS.begin(HOST_NAME))
-  {
-    CTermPrint::println("ERROR: Unable to start MDNS responder!");
-  }
-
-  // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
-  ArduinoOTA.setHostname(HOST_NAME);
-
-  ArduinoOTA.onStart([]() {
-    TERM_SERIAL.println("Start");
-  });
-  ArduinoOTA.onEnd([]() {
-    TERM_SERIAL.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    TERM_SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    TERM_SERIAL.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) TERM_SERIAL.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) TERM_SERIAL.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) TERM_SERIAL.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) TERM_SERIAL.println("Receive Failed");
-    else if (error == OTA_END_ERROR) TERM_SERIAL.println("End Failed");
-  });
-  ArduinoOTA.begin();
 
 #ifdef SOCKET_SERVER_PORT
   // Init the socket server
