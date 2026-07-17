@@ -19,9 +19,10 @@ class CApp
     void IRAM_ATTR TriacPhaseHandler();
 
     bool MQTTReconnect();
-    void pollSerial();
-    void pollEthernet();
+    void PollSerial();
+    void PollEthernet();
     bool CheckNetwork();
+    void HandleDisplay();
 
     CNetwork& GetNetwork() { return m_network; };
     CPVBoiler& GetPvBoiler() { return m_pvBoiler; };
@@ -32,10 +33,12 @@ class CApp
     CPVBoiler m_pvBoiler;
     CPVBoilerCommandHandler m_commandHandler;
     CSSD1306 m_display;
+    uint8_t m_displayCount = 0;
 
     elapsedMillis m_mqttReconnectTimer = 0;
     elapsedMillis m_wifiReconnectTimer = 0;
     elapsedMillis m_ledTimer = 0;
+    elapsedMillis m_displayTimer = 0;
     bool m_bWifiConnected = false;
 
     volatile uint32_t m_iLastZeroCrossTime = 0;

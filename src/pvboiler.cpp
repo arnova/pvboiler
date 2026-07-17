@@ -60,10 +60,10 @@ bool CPVBoiler::MQTTPublishValues()
 
     char strTemp[7];
 
-    snprintf(strTemp, 7, "%i", m_iOutputPercentage);
+    snprintf(strTemp, 7, "%i", m_iCurrentPercentage);
     m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
 
-    snprintf(strTemp, 7, "%i", (m_iBoilerPowerRating * m_iOutputPercentage) / 100);
+    snprintf(strTemp, 7, "%i", GetCurrentPower());
     m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
   }
 
@@ -178,14 +178,14 @@ void CPVBoiler::Update()
 {
   if (m_logicMode == LOGIC_MODE_PERCENTAGE)
   {
-    if (m_iPowerPercentage > m_iOutputPercentage)
+    if (m_iPowerPercentage > m_iCurrentPercentage)
     {
-      m_iOutputPercentage++;
+      m_iCurrentPercentage++;
       m_bUpdateOutputPercentage = true;
     }
-    else if (m_iPowerPercentage < m_iOutputPercentage)
+    else if (m_iPowerPercentage < m_iCurrentPercentage)
     {
-      m_iOutputPercentage--;
+      m_iCurrentPercentage--;
       m_bUpdateOutputPercentage = true;
     }
   }
@@ -196,27 +196,27 @@ void CPVBoiler::Update()
       m_iWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
 
-    if (m_iOutputPercentage > 0)
+    if (m_iCurrentPercentage > 0)
     {
-      m_iOutputPercentage--; // Device off or watch-dog triggered: output to 0%
+      m_iCurrentPercentage--; // Device off or watch-dog triggered: output to 0%
       m_bUpdateOutputPercentage = true;
     }
   }
   else
   {
     const float fStepPercentage = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
-    int32_t iOutputPercentage = m_iOutputPercentage;
+    int32_t iOutputPercentage = m_iCurrentPercentage;
     if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
       iOutputPercentage += fStepPercentage;
 
-    if (m_iOutputPercentage > 100)
+    if (m_iCurrentPercentage > 100)
       iOutputPercentage = 100;
-    else if (m_iOutputPercentage < 0)
+    else if (m_iCurrentPercentage < 0)
       iOutputPercentage = 0;
 
-    if (iOutputPercentage != m_iOutputPercentage)
+    if (iOutputPercentage != m_iCurrentPercentage)
     {
-      m_iOutputPercentage = iOutputPercentage;
+      m_iCurrentPercentage = iOutputPercentage;
       m_bUpdateOutputPercentage = true;
     }
   }

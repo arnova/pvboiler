@@ -255,7 +255,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   }
 
   CTermPrint::print(" out_perc=");
-  CTermPrint::print(m_pvBoiler.GetOutputPercentage());
+  CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
   CTermPrint::print("%");
 
   if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT)

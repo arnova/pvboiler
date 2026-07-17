@@ -84,8 +84,9 @@ class CPVBoiler
     void SetSsrPeriodCount(const uint8_t& iPeriod);
     void SetErrorGain(const float& fGain);
 
-    inline const float& GetTriacAngleFactor() const { return triac_percentage_factor[m_iOutputPercentage]; };
-    inline const uint8_t& GetOutputPercentage() const { return m_iOutputPercentage; };
+    inline const float& GetTriacAngleFactor() const { return triac_percentage_factor[m_iCurrentPercentage]; };
+    inline const uint8_t& GetCurrentPercentage() const { return m_iCurrentPercentage; };
+    const uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
     const bool& GetCtrlOnOff() const { return m_bCtrlEnable; };
     const int32_t& GetPowerBudget() const { return m_iPowerBudget; };
@@ -120,7 +121,7 @@ class CPVBoiler
     uint8_t m_iPowerPercentage = 0;
     bool m_bUpdatePowerPercentage = true;
 
-    uint8_t m_iOutputPercentage = 0;
+    uint8_t m_iCurrentPercentage = 0;
     bool m_bUpdateOutputPercentage = true;
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt

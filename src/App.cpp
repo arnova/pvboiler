@@ -7,6 +7,9 @@
 CApp::CApp() : m_network(), m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
   m_display.Init();
+
+  m_display.WriteDisplayStr(DEVICE_NAME);
+  m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
 }
 
 
@@ -28,14 +31,14 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 
     if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
     {
-      if (m_pvBoiler.GetOutputPercentage() == 0)
+      if (m_pvBoiler.GetCurrentPercentage() == 0)
       {
         digitalWrite(TRIAC_OUTPUT, LOW); // Always off
       }
       else
       {
         m_iSSRPeriodCounter++;
-        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_pvBoiler.GetOutputPercentage())
+        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_pvBoiler.GetCurrentPercentage())
         {
           // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
           // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -108,43 +111,6 @@ void IRAM_ATTR CApp::TriacPhaseHandler()
 }
 
 
-void CApp::Init()
-{
-  m_network.LoadSettings();
-  m_pvBoiler.LoadSettings();
-
-  delay(10);
-
-  m_network.InitWifi(false);
-
-  if (IPAddress(m_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
-  {
-    m_network.GetMqttClient().setServer(m_network.GetServerIp(), MQTT_PORT);
-    m_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
-  }
-
-  m_iLastZeroCrossTime = m_iZeroCrossTime = micros();
-}
-
-
-void CApp::Loop()
-{
-  if (CheckNetwork())
-  {
-    // Handle OTA-updates
-    ArduinoOTA.handle();
-
-    // Poll ethernet for commands
-    pollEthernet();
-  }
-
-  // Poll serial for commands
-  pollSerial();
-
-  m_pvBoiler.Loop();
-}
-
-
 bool CApp::MQTTReconnect()
 {
   if (IPAddress(m_network.GetServerIp()) == IPAddress(0, 0, 0, 0))
@@ -180,7 +146,7 @@ bool CApp::MQTTReconnect()
 }
 
 
-void CApp::pollSerial(void)
+void CApp::PollSerial(void)
 {
   static uint8_t charCount = 0;
   static char strCommand[CMD_BUF_SIZE] = { 0 };
@@ -255,7 +221,7 @@ void CApp::pollSerial(void)
 }
 
 
-void CApp::pollEthernet(void)
+void CApp::PollEthernet(void)
 {
   static uint8_t charCount = 0;
   static char strCommand[CMD_BUF_SIZE] = { 0 };
@@ -378,7 +344,7 @@ bool CApp::CheckNetwork()
       m_wifiReconnectTimer = 0;
     }
   }
-  
+
   if (!m_bWifiConnected || !m_network.GetMqttClient().connected())
   {
 #ifdef STATUS_LED
@@ -404,4 +370,90 @@ bool CApp::CheckNetwork()
   }
 
   return m_bWifiConnected;
+}
+
+
+void CApp::Init()
+{
+  m_network.LoadSettings();
+  m_pvBoiler.LoadSettings();
+
+  delay(10);
+
+  m_network.InitWifi(false);
+
+  if (IPAddress(m_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
+  {
+    m_network.GetMqttClient().setServer(m_network.GetServerIp(), MQTT_PORT);
+    m_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
+  }
+
+  m_iLastZeroCrossTime = m_iZeroCrossTime = micros();
+}
+
+
+void CApp::HandleDisplay()
+{
+  if (m_displayTimer > 5000)
+  {
+    m_displayTimer = 0;
+    String strValue;
+
+    switch (m_displayCount)
+    {
+      case 0 : m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
+               m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+               break;
+
+      case 1 : strValue = WiFi.localIP().toString();
+               m_display.WriteDisplayStr(strValue.c_str(), 0, true);
+               if (!m_bWifiConnected)
+               {
+                 m_display.WriteDisplayStr("WiFi error", 1, false);
+               }
+               else if (!m_network.GetMqttClient().connected())
+               {
+                 m_display.WriteDisplayStr("MQTT error", 1, false);
+               }
+               else
+               {
+                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 1, false);
+               }
+               break;
+
+      case 2 : strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
+               m_display.WriteDisplayStr(strValue.c_str(), 0, true);
+               strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
+               m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+               break;
+
+      case 3 : m_display.WriteDisplayStr("", 0, true);
+               break;
+    }
+
+    if (++m_displayCount > 3)
+    {
+      m_displayCount = 0;
+    }
+  }
+}
+
+
+void CApp::Loop()
+{
+  if (CheckNetwork())
+  {
+    // Handle OTA-updates
+    ArduinoOTA.handle();
+
+    // Poll ethernet for commands
+    PollEthernet();
+  }
+
+  // Poll serial for commands
+  PollSerial();
+
+  m_pvBoiler.Loop();
+
+  HandleDisplay();
 }

@@ -53,7 +53,8 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // Misc. (home assistant) settings
 #define HOST_NAME                              "pvboiler"
 #define MQTT_NAME                              HOST_NAME
-#define HA_DEVICE_NAME                         "PVBoiler"
+#define DEVICE_NAME                            "PVBoiler"
+#define HA_DEVICE_NAME                         DEVICE_NAME
 #define HA_DEVICE_MODEL                        "PVBoiler Controller"
 #define HA_MANUFACTURER                        "Arnova"
 
