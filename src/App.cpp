@@ -134,10 +134,6 @@ void CApp::MqttPublish()
 
 void CApp::PollSerial(void)
 {
-  static uint8_t charCount = 0;
-  static char strCommand[CMD_BUF_SIZE] = { 0 };
-  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
-
   if (TERM_SERIAL.available())
   {
     const char c = TERM_SERIAL.read();
@@ -145,13 +141,13 @@ void CApp::PollSerial(void)
     {
       if (c == '!') // Repeat the previous command but don't execute it yet
       {
-        if (charCount == 0 && *strOldCommand)
+        if (m_termCharCount == 0 && *m_strTermOldCommand)
         {
-          strcpy(strCommand, strOldCommand);
-          charCount = strlen(strOldCommand);
+          strcpy(m_strTermCommand, m_strTermOldCommand);
+          m_termCharCount = strlen(m_strTermOldCommand);
 
           if (m_commandHandler.GetLocalEchoEnabled())
-            TERM_SERIAL.print(strCommand);
+            TERM_SERIAL.print(m_strTermCommand);
         }
       }
       else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
@@ -161,23 +157,23 @@ void CApp::PollSerial(void)
           TERM_SERIAL.println("");
 
         // Don't check empty commands
-        if (charCount > 0)
+        if (m_termCharCount > 0)
         {
-          strCommand[charCount] = '\0';
+          m_strTermCommand[m_termCharCount] = '\0';
 
           // Store in old buffer
-          strcpy(strOldCommand, strCommand);
+          strcpy(m_strTermOldCommand, m_strTermCommand);
 
           // Reset counter for next round
-          charCount = 0;
+          m_termCharCount = 0;
 
           // Parse uart command
-          m_commandHandler.ProcessCommand(strCommand);
+          m_commandHandler.ProcessCommand(m_strTermCommand);
         }
       }
       else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
       {
-        if (charCount > 0)
+        if (m_termCharCount > 0)
         {
           if (m_commandHandler.GetLocalEchoEnabled())
           {
@@ -188,15 +184,15 @@ void CApp::PollSerial(void)
             // And backspace again since the blank jumps forward
             TERM_SERIAL.write(CH_BACKSPACE);
           }
-          charCount--;
+          m_termCharCount--;
         }
       }
       else if (c >= ' ' && c <= '~') // Limit allowed characters
       {
         // Don't overflow + skip leading spaces:
-        if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+        if (m_termCharCount < (CMD_BUF_SIZE - 1) && !(m_termCharCount == 0 && c == ' '))
         {
-          strCommand[charCount++] = c;
+          m_strTermCommand[m_termCharCount++] = c;
 
           if (m_commandHandler.GetLocalEchoEnabled())
             TERM_SERIAL.write(c);
@@ -209,10 +205,6 @@ void CApp::PollSerial(void)
 
 void CApp::PollEthernet(void)
 {
-  static uint8_t charCount = 0;
-  static char strCommand[CMD_BUF_SIZE] = { 0 };
-  static char strOldCommand[CMD_BUF_SIZE] = { 0 };
-
   if (!m_network.IsConnected())
   {
     return;
@@ -228,10 +220,10 @@ void CApp::PollEthernet(void)
       {
         if (c == '!') // Repeat the previous command but don't execute it yet
         {
-          if (charCount == 0 && *strOldCommand)
+          if (m_termCharCount == 0 && *m_strTermOldCommand)
           {
-            strcpy(strCommand, strOldCommand);
-            charCount = strlen(strOldCommand);
+            strcpy(m_strTermCommand, m_strTermOldCommand);
+            m_termCharCount = strlen(m_strTermOldCommand);
 
 #if 0
             if (commandHandler.GetLocalEchoEnabled())
@@ -247,24 +239,24 @@ void CApp::PollEthernet(void)
 #endif
 
           // Don't check empty commands
-          if (charCount > 0)
+          if (m_termCharCount > 0)
           {
-            strCommand[charCount] = '\0';
+            m_strTermCommand[m_termCharCount] = '\0';
 
             // Store in old buffer
-            strcpy(strOldCommand, strCommand);
+            strcpy(m_strTermOldCommand, m_strTermCommand);
 
             // Reset counter for next round
-            charCount = 0;
+            m_termCharCount = 0;
 
             // Parse client command
             CTermPrint::SetSocketClient(socketServerClient);
-            m_commandHandler.ProcessCommand(strCommand);
+            m_commandHandler.ProcessCommand(m_strTermCommand);
           }
         }
         else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
         {
-          if (charCount > 0)
+          if (m_termCharCount > 0)
           {
 #if 0
             if (m_commandHandler.GetLocalEchoEnabled())
@@ -277,15 +269,15 @@ void CApp::PollEthernet(void)
               socketServerClient.write(CH_BACKSPACE);
             }
 #endif
-            charCount--;
+            m_termCharCount--;
           }
         }
         else if (c >= ' ' && c <= '~') // Limit allowed characters
         {
           // Don't overflow + skip leading spaces:
-          if (charCount < (CMD_BUF_SIZE - 1) && !(charCount == 0 && c == ' '))
+          if (m_termCharCount < (CMD_BUF_SIZE - 1) && !(m_termCharCount == 0 && c == ' '))
           {
-            strCommand[charCount++] = c;
+            m_strTermCommand[m_termCharCount++] = c;
 #if 0
             socketServerClient.write(c);
 #endif

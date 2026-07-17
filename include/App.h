@@ -43,5 +43,9 @@ class CApp
     volatile uint32_t m_iZeroCrossTime = 0;
     volatile bool m_bTriacOn = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;
+
+    uint8_t m_termCharCount = 0;
+    char m_strTermCommand[CMD_BUF_SIZE] = { 0 };
+    char m_strTermOldCommand[CMD_BUF_SIZE] = { 0 };
 };
 #endif // APP_H
