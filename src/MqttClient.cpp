@@ -148,7 +148,7 @@ bool CMqttClient::ServerConnect()
   if (!connect(clientId.c_str()))
   {
     CTermPrint::print("ERROR, rc=");
-    CTermPrint::print(state());
+    CTermPrint::println(state());
     return false;
   }
 
