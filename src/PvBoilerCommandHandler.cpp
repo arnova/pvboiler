@@ -233,13 +233,13 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "on" : "off");
 
   CTermPrint::print(" wifi_conn=");
-  CTermPrint::print(WiFi.status() == WL_CONNECTED ? "1" : "0");
+  CTermPrint::print(m_network.IsConnected() ? "1" : "0");
 
   CTermPrint::print(" wifi_ip=");
   CTermPrint::print(WiFi.localIP().toString().c_str());
 
   CTermPrint::print(" mqtt_conn=");
-  CTermPrint::print(m_network.GetMqttClient().connected() ? "1" : "0");
+  CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
 
   if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
   {

@@ -137,7 +137,7 @@ void CMqttClient::Init(const uint8_t* serverIp)
 }
 
 
-bool CMqttClient::Reconnect()
+bool CMqttClient::ServerConnect()
 {
   CTermPrint::print(String("Connecting to MQTT server: ") + IPAddress(m_serverIp).toString() + ":" + String(MQTT_PORT) + "...");
   // Create a random client ID

@@ -18,7 +18,7 @@ class CApp
     void IRAM_ATTR ZeroCrossHandler();
     void IRAM_ATTR TriacPhaseHandler();
 
-    bool MQTTReconnect();
+    void MqttPublish();
     void PollSerial();
     void PollEthernet();
     void HandleNetwork();
@@ -35,7 +35,6 @@ class CApp
     CSSD1306 m_display;
     uint8_t m_displayCount = 0;
 
-    elapsedMillis m_mqttReconnectTimer = 0;
     elapsedMillis m_ledTimer = 0;
     elapsedMillis m_displayTimer = 0;
 

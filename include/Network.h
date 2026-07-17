@@ -42,6 +42,8 @@ class CNetwork
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
 
     const bool& IsConnected() { return m_bWifiConnected; };
+    const bool IsMqttConnected() { return m_mqttClient.connected(); };
+    bool HandleMqttClient();
 
 #ifdef SOCKET_SERVER_PORT
     WiFiClient& GetSocketServerClient();
@@ -60,6 +62,7 @@ class CNetwork
 
     bool m_bWifiConnected = false;
     elapsedMillis m_wifiReconnectTimer = 0;
+    elapsedMillis m_mqttReconnectTimer = 0;
 
 #ifdef SOCKET_SERVER_PORT
     WiFiServer m_socketServer;

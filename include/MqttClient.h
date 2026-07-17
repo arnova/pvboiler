@@ -13,7 +13,7 @@ class CMqttClient : public PubSubClient
     static void GetFriendlyName(const String& strName, String& strFriendly);
 
     void Init(const uint8_t* serverIp);
-    bool Reconnect();
+    bool ServerConnect();
 
     void PublishSwitchConfig(const char* strItem);
     void PublishNumberConfig(const char* strItem, const char* strMin, const char* strMax, const char* strStep);

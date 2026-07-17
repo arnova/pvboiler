@@ -227,6 +227,30 @@ WiFiClient& CNetwork::GetSocketServerClient()
 #endif
 
 
+bool CNetwork::HandleMqttClient()
+{
+  // Handle MQTT client-server connection
+  if (m_bWifiConnected && !m_mqttClient.connected())
+  {
+    if (m_mqttReconnectTimer > 5000)
+    {
+      m_mqttReconnectTimer = 0;
+
+      if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) && m_mqttClient.ServerConnect())
+      {
+        return true; // Reconnected
+      }
+    }
+  }
+  else
+  {
+    m_mqttReconnectTimer = 0;
+  }
+
+  return false; // No reconnection
+}
+
+
 void CNetwork::Loop()
 {
   if (WiFi.status() == WL_CONNECTED)
@@ -251,4 +275,7 @@ void CNetwork::Loop()
       InitWifi(true);
     }
   }
+
+  // Always perform mqtt loop to detect connection failures
+  m_mqttClient.loop();
 }

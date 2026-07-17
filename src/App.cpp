@@ -111,18 +111,8 @@ void IRAM_ATTR CApp::TriacPhaseHandler()
 }
 
 
-bool CApp::MQTTReconnect()
+void CApp::MqttPublish()
 {
-  if (IPAddress(m_network.GetServerIp()) == IPAddress(0, 0, 0, 0))
-  {
-    return false;
-  }
-
-  if (!m_network.GetMqttClient().Reconnect())
-  {
-    return false;
-  }
-
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
@@ -141,8 +131,6 @@ bool CApp::MQTTReconnect()
 
   // Publish our f/w version
   m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
-
-  return true;
 }
 
 
@@ -310,24 +298,13 @@ void CApp::HandleNetwork()
 {
   m_network.Loop();
 
-  // Always perform mqtt loop to detect connection failures
-  m_network.GetMqttClient().loop();
-
-  // Handle MQTT client-server connection
-  if (m_network.IsConnected() && !m_network.GetMqttClient().connected())
+  if (m_network.HandleMqttClient())
   {
-    if (m_mqttReconnectTimer > 5000)
-    {
-      MQTTReconnect();
-      m_mqttReconnectTimer = 0;
-    }
-  }
-  else
-  {
-    m_mqttReconnectTimer = 0;
+    // MQTT (re)connection: publish values
+    MqttPublish();
   }
 
-  if (!m_network.IsConnected() || !m_network.GetMqttClient().connected())
+  if (!m_network.IsConnected() || !m_network.IsMqttConnected())
   {
 #ifdef STATUS_LED
     digitalWrite(STATUS_LED, LOW); // Always on: failure
@@ -386,7 +363,7 @@ void CApp::HandleDisplay()
                {
                  m_display.WriteDisplayStr("WiFi error", 0, true);
                }
-               else if (!m_network.GetMqttClient().connected())
+               else if (!m_network.IsMqttConnected())
                {
                  m_display.WriteDisplayStr("MQTT error", 0, true);
                }
