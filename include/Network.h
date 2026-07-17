@@ -61,8 +61,8 @@ class CNetwork
     uint8_t m_serverIpAddr[4] = { 0 };
 
     bool m_bWifiConnected = false;
-    elapsedMillis m_wifiReconnectTimer = 0;
-    elapsedMillis m_mqttReconnectTimer = 0;
+    elapsedMillis m_wifiTimeoutTimer = 0;
+    elapsedMillis m_mqttTimeoutTimer = 0;
 
 #ifdef SOCKET_SERVER_PORT
     WiFiServer m_socketServer;

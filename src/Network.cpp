@@ -48,7 +48,7 @@ void CNetwork::LoadSettings()
 
 void CNetwork::InitWifi(const bool bReconnect)
 {
-  m_wifiReconnectTimer = 0;
+  m_wifiTimeoutTimer = 0;
 
   if (bReconnect)
   {
@@ -232,9 +232,9 @@ bool CNetwork::HandleMqttClient()
   // Handle MQTT client-server connection
   if (m_bWifiConnected && !m_mqttClient.connected())
   {
-    if (m_mqttReconnectTimer > 5000)
+    if (m_mqttTimeoutTimer > 5000)
     {
-      m_mqttReconnectTimer = 0;
+      m_mqttTimeoutTimer = 0;
 
       if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) && m_mqttClient.ServerConnect())
       {
@@ -244,7 +244,7 @@ bool CNetwork::HandleMqttClient()
   }
   else
   {
-    m_mqttReconnectTimer = 0;
+    m_mqttTimeoutTimer = 0;
   }
 
   return false; // No reconnection
@@ -263,15 +263,14 @@ void CNetwork::Loop()
       TERM_SERIAL.println(WiFi.localIP().toString().c_str());
 #endif
       m_bWifiConnected = true;
-      m_wifiReconnectTimer = 0;
     }
+    m_wifiTimeoutTimer = 0;
   }
   else
   {
-    m_bWifiConnected = false;
-
-    if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
+    if (m_wifiTimeoutTimer > WIFI_CONNECT_TIMEOUT)
     {
+      m_bWifiConnected = false;
       InitWifi(true);
     }
   }
