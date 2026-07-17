@@ -15,14 +15,14 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "reboot                 : Reboot controller\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
-                                  "bprating [p]           : Set boiler power rating to [p] Watt\r\n"
-                                  "pbmargin [p]           : Set power budget margin to [p] Watt\r\n"
+                                  "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
+                                  "margin [p]             : For budget logic mode margin to [p] Watt\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
                                   "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
                                   "egain [g]              : Set error-gain value [g]\r\n"
-                                  "wssid [s]              : Set WiFi SSID to [s]\r\n"
-                                  "wpass [w]              : Set WiFi password to [w]\r\n"
+                                  "ssid [s]               : Set WiFi SSID to [s]\r\n"
+                                  "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Use [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
                                   "netmask [mask]         : Use [mask] for device IP netmask\r\n"
                                   "serverip [ip]          : Set MQTT server IP address to [ip]\n\r"
@@ -198,16 +198,16 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print('.');
   CTermPrint::print(m_network.GetServerIp()[3]);
 
-  CTermPrint::print(" bprating=");
+  CTermPrint::print(" logic_mode=");
+  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE ? "percentage" : "budget");
+
+  CTermPrint::print(" boiler=");
   CTermPrint::print(m_pvBoiler.GetBoilerPowerRating());
   CTermPrint::print("W");
 
-  CTermPrint::print(" pbmargin=");
+  CTermPrint::print(" margin=");
   CTermPrint::print(m_pvBoiler.GetPowerBudgetMargin());
   CTermPrint::print("W");
-
-  CTermPrint::print(" logic_mode=");
-  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE ? "percentage" : "budget");
 
   CTermPrint::print(" dim_style=");
   CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
@@ -243,18 +243,22 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
   {
-    CTermPrint::print(" p_perc_set=");
+    CTermPrint::print(" perc_set=");
     CTermPrint::print(m_pvBoiler.GetPowerPercentage());
     CTermPrint::print("%");
   }
   else
   {
-    CTermPrint::print(" p_budget_set=");
+    CTermPrint::print(" budget_set=");
     CTermPrint::print(m_pvBoiler.GetPowerBudget());
     CTermPrint::print("W");
   }
 
-  CTermPrint::print(" out_perc=");
+  CTermPrint::print(" power_out=");
+  CTermPrint::print(m_pvBoiler.GetCurrentPower());
+  CTermPrint::print("W");
+
+  CTermPrint::print(" perc_out=");
   CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
   CTermPrint::print("%");
 
@@ -427,11 +431,11 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdStatus(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "bprating"))
+  else if (STRIEQUALS(strCommand, "boiler"))
   {
     result = CmdBoilerPowerRating(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "pbmargin"))
+  else if (STRIEQUALS(strCommand, "margin"))
   {
     result = CmdPowerBudgetMargin(strArgs);
   }
@@ -451,11 +455,11 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdErrorGain(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "wssid"))
+  else if (STRIEQUALS(strCommand, "ssid"))
   {
     result = CmdWifiSsid(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "wpass"))
+  else if (STRIEQUALS(strCommand, "pass"))
   {
     result = CmdWifiPassword(strArgs);
   }
