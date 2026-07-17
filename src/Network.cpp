@@ -62,6 +62,8 @@ void CNetwork::InitWifi(const bool bReconnect)
       m_socketServerClient.stop();
     }
 
+    m_socketServer.stop();
+
     MDNS.end(); // Need to deinit MDNS (and init again below else it may stop working)
 
     WiFi.disconnect();
@@ -91,37 +93,6 @@ void CNetwork::InitWifi(const bool bReconnect)
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(HOST_NAME);
   WiFi.begin(m_strWifiSsid, m_strWifiPassword);
-
-  // Initialize mDNS
-  if (!MDNS.begin(HOST_NAME))
-  {
-    CTermPrint::println("ERROR: Unable to start MDNS responder!");
-  }
-
-  if (!bReconnect)
-  {
-    // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
-    ArduinoOTA.setHostname(HOST_NAME);
-
-    ArduinoOTA.onStart([]() {
-      TERM_SERIAL.println("Start");
-    });
-    ArduinoOTA.onEnd([]() {
-      TERM_SERIAL.println("\nEnd");
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      TERM_SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-      TERM_SERIAL.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) TERM_SERIAL.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) TERM_SERIAL.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) TERM_SERIAL.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) TERM_SERIAL.println("Receive Failed");
-      else if (error == OTA_END_ERROR) TERM_SERIAL.println("End Failed");
-    });
-    ArduinoOTA.begin();
-  }
 
 #ifdef SOCKET_SERVER_PORT
   // Init the socket server
@@ -257,12 +228,41 @@ void CNetwork::Loop()
   {
     if (!m_bWifiConnected)
     {
+      // Initialize mDNS
+      if (!MDNS.begin(HOST_NAME))
+      {
+        CTermPrint::println("ERROR: Unable to start MDNS responder!");
+      }
+
+      // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
+      ArduinoOTA.setHostname(HOST_NAME);
+
+      ArduinoOTA.onStart([]() {
+        TERM_SERIAL.println("Start");
+      });
+      ArduinoOTA.onEnd([]() {
+        TERM_SERIAL.println("\nEnd");
+      });
+      ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        TERM_SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
+      });
+      ArduinoOTA.onError([](ota_error_t error) {
+        TERM_SERIAL.printf("Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) TERM_SERIAL.println("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR) TERM_SERIAL.println("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR) TERM_SERIAL.println("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR) TERM_SERIAL.println("Receive Failed");
+        else if (error == OTA_END_ERROR) TERM_SERIAL.println("End Failed");
+      });
+      ArduinoOTA.begin();
+
+      m_bWifiConnected = true;
+
 #ifdef WIFI_DEBUG
       TERM_SERIAL.println("");
       TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
       TERM_SERIAL.println(WiFi.localIP().toString().c_str());
 #endif
-      m_bWifiConnected = true;
     }
     m_wifiTimeoutTimer = 0;
   }
