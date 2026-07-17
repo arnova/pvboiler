@@ -7,7 +7,9 @@
 
 void CMqttClient::PrintDataError(void)
 {
+#ifdef MQTT_DEBUG
   CTermPrint::println("ERROR: Invalid MQTT data for topic");
+#endif
 }
 
 
@@ -56,13 +58,18 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   device["identifiers"] = HA_DEVICE_NAME;
 
   // Output to console
-  serializeJsonPretty(root, Serial);
+#ifdef MQTT_DEBUG
+  serializeJsonPretty(root, TERM_SERIAL);
   CTermPrint::println("");
+#endif
 
   // Serialize JSON for MQTT
   char message[MQTT_MAX_SIZE];
   serializeJson(root, message);
+
+#ifdef MQTT_DEBUG
   CTermPrint::println(message); //Prints it out on one line
+#endif
 
   String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 

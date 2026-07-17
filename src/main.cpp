@@ -66,6 +66,7 @@ void IRAM_ATTR TriacTimerISR()
 
 void MQTTCallback(char* topic, byte *payload, const unsigned int length)
 {
+#ifdef MQTT_DEBUG
   CTermPrint::println("-------new message from broker-----");
   CTermPrint::print("topic: ");
   CTermPrint::println(topic);
@@ -75,7 +76,7 @@ void MQTTCallback(char* topic, byte *payload, const unsigned int length)
     CTermPrint::print((char) payload[i]);
   }
   CTermPrint::println("");
-
+#endif
   //float fVal;
   //const bool bValidFloat = BytesToFloat(payload, length, fVal);
 

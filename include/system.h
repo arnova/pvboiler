@@ -36,8 +36,9 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define WATCHDOG_TIMEOUT_TIME                   900  // Seconds = 15 minutes
 #define WATCHDOG_RECOVERY_TIME                  60   // Seconds = 1 minute
 
-// Enable below for additional wifi debug messages
+// Enable below for additional wifi / mqtt debug messages
 #define WIFI_DEBUG
+//#define MQTT_DEBUG
 
 // Wifi connect timeout
 #define WIFI_CONNECT_TIMEOUT                    10000 // ms
