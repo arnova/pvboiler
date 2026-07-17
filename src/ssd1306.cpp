@@ -20,7 +20,7 @@ void CSSD1306::Init()
 {
   // Init display
   g_u8g2.begin();
-  g_u8g2.setFont(u8g2_font_helvB14_tf);
+  g_u8g2.setFont(u8g2_font_helvB12_tf);
 }
 
 
