@@ -49,6 +49,7 @@ void CNetwork::LoadSettings()
 void CNetwork::InitWifi(const bool bReconnect)
 {
   m_wifiTimeoutTimer = 0;
+  m_bWifiConnected = false;
 
   if (bReconnect)
   {
@@ -274,7 +275,6 @@ void CNetwork::Loop()
   {
     if (m_wifiTimeoutTimer > WIFI_CONNECT_TIMEOUT)
     {
-      m_bWifiConnected = false;
       InitWifi(true);
     }
   }
