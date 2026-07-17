@@ -94,17 +94,6 @@ void CNetwork::InitWifi(const bool bReconnect)
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(HOST_NAME);
   WiFi.begin(m_strWifiSsid, m_strWifiPassword);
-
-#ifdef SOCKET_SERVER_PORT
-  // Init the socket server
-  m_socketServer.begin();
-  m_socketServer.setNoDelay(true);
-
-#ifdef WIFI_DEBUG
-  if (!bReconnect)
-    CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
-#endif
-#endif
 }
 
 
@@ -263,6 +252,16 @@ void CNetwork::Loop()
       TERM_SERIAL.println("");
       TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
       TERM_SERIAL.println(WiFi.localIP().toString().c_str());
+#endif
+
+#ifdef SOCKET_SERVER_PORT
+      // Init the socket server
+      m_socketServer.begin();
+      m_socketServer.setNoDelay(true);
+
+#ifdef WIFI_DEBUG
+      CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
+#endif
 #endif
     }
 
