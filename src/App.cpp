@@ -306,26 +306,17 @@ void CApp::PollEthernet(void)
 }
 
 
-bool CApp::CheckNetwork()
+void CApp::HandleNetwork()
 {
-  if (WiFi.status() == WL_CONNECTED)
+  m_network.Loop();
+
+  // Always perform mqtt loop to detect connection failures
+  m_network.GetMqttClient().loop();
+
+  // Handle MQTT client-server connection
+  if (m_network.IsConnected() && !m_network.GetMqttClient().connected())
   {
-    if (!m_bWifiConnected)
-    {
-#ifdef WIFI_DEBUG
-      TERM_SERIAL.println("");
-      TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
-      TERM_SERIAL.println(WiFi.localIP().toString().c_str());
-#endif
-      m_bWifiConnected = true;
-      m_wifiReconnectTimer = 0;
-
-      MQTTReconnect();
-      m_mqttReconnectTimer = 0;
-    }
-
-    // Check for MQTT disconnects
-    if (!m_network.GetMqttClient().connected() && m_mqttReconnectTimer > 5000)
+    if (m_mqttReconnectTimer > 5000)
     {
       MQTTReconnect();
       m_mqttReconnectTimer = 0;
@@ -333,19 +324,10 @@ bool CApp::CheckNetwork()
   }
   else
   {
-    m_bWifiConnected = false;
-#ifdef STATUS_LED
-    digitalWrite(STATUS_LED, LOW); // Always on: failure
-#endif
-
-    if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
-    {
-      m_network.InitWifi(true);
-      m_wifiReconnectTimer = 0;
-    }
+    m_mqttReconnectTimer = 0;
   }
 
-  if (!m_bWifiConnected || !m_network.GetMqttClient().connected())
+  if (!m_network.IsConnected() || !m_network.GetMqttClient().connected())
   {
 #ifdef STATUS_LED
     digitalWrite(STATUS_LED, LOW); // Always on: failure
@@ -353,8 +335,6 @@ bool CApp::CheckNetwork()
   }
   else
   {
-    m_network.GetMqttClient().loop();
-
     // Indicate we're running:
 #ifdef STATUS_LED
     if (m_ledTimer > 2000)
@@ -368,8 +348,6 @@ bool CApp::CheckNetwork()
     }
 #endif
   }
-
-  return m_bWifiConnected;
 }
 
 
@@ -384,8 +362,7 @@ void CApp::Init()
 
   if (IPAddress(m_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
   {
-    m_network.GetMqttClient().setServer(m_network.GetServerIp(), MQTT_PORT);
-    m_network.GetMqttClient().setBufferSize(MQTT_MAX_SIZE);
+    m_network.MqttClientInit();
   }
 
   m_iLastZeroCrossTime = m_iZeroCrossTime = micros();
@@ -405,20 +382,20 @@ void CApp::HandleDisplay()
                m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
                break;
 
-      case 1 : strValue = WiFi.localIP().toString();
-               m_display.WriteDisplayStr(strValue.c_str(), 0, true);
-               if (!m_bWifiConnected)
+      case 1 : if (!m_network.IsConnected())
                {
-                 m_display.WriteDisplayStr("WiFi error", 1, false);
+                 m_display.WriteDisplayStr("WiFi error", 0, true);
                }
                else if (!m_network.GetMqttClient().connected())
                {
-                 m_display.WriteDisplayStr("MQTT error", 1, false);
+                 m_display.WriteDisplayStr("MQTT error", 0, true);
                }
                else
                {
-                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 1, false);
+                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
                }
+               strValue = WiFi.localIP().toString();
+               m_display.WriteDisplayStr(strValue.c_str(), 1, false);
                break;
 
       case 2 : strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
@@ -441,7 +418,9 @@ void CApp::HandleDisplay()
 
 void CApp::Loop()
 {
-  if (CheckNetwork())
+  HandleNetwork();
+
+  if (m_network.IsConnected())
   {
     // Handle OTA-updates
     ArduinoOTA.handle();

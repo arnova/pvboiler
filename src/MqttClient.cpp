@@ -128,9 +128,18 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, 
 }
 
 
+void CMqttClient::Init(const uint8_t* serverIp)
+{
+  memcpy(m_serverIp, serverIp, 4);
+
+  setBufferSize(MQTT_MAX_SIZE);
+  setServer(m_serverIp, MQTT_PORT);
+}
+
+
 bool CMqttClient::Reconnect()
 {
-  CTermPrint::print("Attempting MQTT connection...");
+  CTermPrint::print(String("Connecting to MQTT server: ") + IPAddress(m_serverIp).toString() + ":" + String(MQTT_PORT) + "...");
   // Create a random client ID
   String clientId = HOST_NAME "-";
   clientId += String(random(0xffff), HEX);
@@ -138,12 +147,12 @@ bool CMqttClient::Reconnect()
 //    if (connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
   if (!connect(clientId.c_str()))
   {
-    CTermPrint::print("failed, rc=");
+    CTermPrint::print("ERROR, rc=");
     CTermPrint::print(state());
     return false;
   }
 
-  CTermPrint::println("connected");
+  CTermPrint::println("OK");
 
   return true;
 }

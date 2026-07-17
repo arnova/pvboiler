@@ -21,7 +21,7 @@ class CApp
     bool MQTTReconnect();
     void PollSerial();
     void PollEthernet();
-    bool CheckNetwork();
+    void HandleNetwork();
     void HandleDisplay();
 
     CNetwork& GetNetwork() { return m_network; };
@@ -36,10 +36,8 @@ class CApp
     uint8_t m_displayCount = 0;
 
     elapsedMillis m_mqttReconnectTimer = 0;
-    elapsedMillis m_wifiReconnectTimer = 0;
     elapsedMillis m_ledTimer = 0;
     elapsedMillis m_displayTimer = 0;
-    bool m_bWifiConnected = false;
 
     volatile uint32_t m_iLastZeroCrossTime = 0;
     volatile uint32_t m_iPhaseCorrectionTime = 300; // Default = 300 uS

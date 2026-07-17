@@ -48,14 +48,23 @@ void CNetwork::LoadSettings()
 
 void CNetwork::InitWifi(const bool bReconnect)
 {
+  m_wifiReconnectTimer = 0;
+
   if (bReconnect)
   {
 #ifdef WIFI_DEBUG
-    CTermPrint::println("");
-    CTermPrint::println(PSTR("Disconnecting WiFi"));
+    //CTermPrint::println("");
+    //CTermPrint::println(PSTR("Disconnecting WiFi"));
 #endif
+
+    if (m_socketServerClient)
+    {
+      m_socketServerClient.stop();
+    }
+
+    MDNS.end(); // Need to deinit MDNS (and init again below else it may stop working)
+
     WiFi.disconnect();
-    //WiFi.reconnect();
   }
 
   if (strlen(m_strWifiSsid) == 0)
@@ -67,34 +76,30 @@ void CNetwork::InitWifi(const bool bReconnect)
   CTermPrint::println(m_strWifiSsid);
 #endif
 
-  if (bReconnect)
+  // Check for dhcp ip
+  if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
   {
-    WiFi.begin();
+    // Static IP. NOTE: No gateway / dns
+    WiFi.config(m_ipAddr, 0, m_ipNetmask);
   }
   else
   {
-    // Check for dhcp ip
-    if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
-    {
-      // Static IP. NOTE: No gateway / dns
-      WiFi.config(m_ipAddr, 0, m_ipNetmask);
-    }
-    else
-    {
-      // DHCP IP
-      WiFi.config(0, 0, 0);
-    }
+    // DHCP IP
+    WiFi.config(0, 0, 0);
+  }
 
-    WiFi.mode(WIFI_STA);
-    WiFi.setHostname(HOST_NAME);
-    WiFi.begin(m_strWifiSsid, m_strWifiPassword);
+  WiFi.mode(WIFI_STA);
+  WiFi.setHostname(HOST_NAME);
+  WiFi.begin(m_strWifiSsid, m_strWifiPassword);
 
-    // Initialize mDNS
-    if (!MDNS.begin(HOST_NAME))
-    {
-      CTermPrint::println("ERROR: Unable to start MDNS responder!");
-    }
+  // Initialize mDNS
+  if (!MDNS.begin(HOST_NAME))
+  {
+    CTermPrint::println("ERROR: Unable to start MDNS responder!");
+  }
 
+  if (!bReconnect)
+  {
     // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
     ArduinoOTA.setHostname(HOST_NAME);
 
@@ -122,9 +127,10 @@ void CNetwork::InitWifi(const bool bReconnect)
   // Init the socket server
   m_socketServer.begin();
   m_socketServer.setNoDelay(true);
-  
+
 #ifdef WIFI_DEBUG
-  CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
+  if (!bReconnect)
+    CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 #endif
 }
@@ -162,7 +168,7 @@ void CNetwork::SetWifiPassword(const char* strPassword)
 }
 
 
-void CNetwork::SetIpAddr(uint8_t* ipAddress)
+void CNetwork::SetIpAddr(const uint8_t* ipAddress)
 {
   memcpy(m_ipAddr, ipAddress, sizeof(m_ipAddr));
 
@@ -173,7 +179,7 @@ void CNetwork::SetIpAddr(uint8_t* ipAddress)
 }
 
 
-void CNetwork::SetNetMask(uint8_t* ipNetMask)
+void CNetwork::SetNetMask(const uint8_t* ipNetMask)
 {
   memcpy(m_ipNetmask, ipNetMask, sizeof(m_ipNetmask));
 
@@ -184,15 +190,22 @@ void CNetwork::SetNetMask(uint8_t* ipNetMask)
 }
 
 
-void CNetwork::SetMqttServerIp(uint8_t* ipAddress)
+void CNetwork::MqttClientInit()
+{
+  m_mqttClient.Init(m_serverIpAddr);
+}
+
+
+void CNetwork::MqttUpdateServerIp(const uint8_t* ipAddress)
 {
   memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
 
   EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
   EepromCommit();
 
-  m_mqttClient.setServer(m_serverIpAddr, MQTT_PORT);
+  MqttClientInit();
 }
+
 
 #ifdef SOCKET_SERVER_PORT
 WiFiClient& CNetwork::GetSocketServerClient()
@@ -212,3 +225,30 @@ WiFiClient& CNetwork::GetSocketServerClient()
   return m_socketServerClient;
 }
 #endif
+
+
+void CNetwork::Loop()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (!m_bWifiConnected)
+    {
+#ifdef WIFI_DEBUG
+      TERM_SERIAL.println("");
+      TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
+      TERM_SERIAL.println(WiFi.localIP().toString().c_str());
+#endif
+      m_bWifiConnected = true;
+      m_wifiReconnectTimer = 0;
+    }
+  }
+  else
+  {
+    m_bWifiConnected = false;
+
+    if (m_wifiReconnectTimer > WIFI_CONNECT_TIMEOUT)
+    {
+      InitWifi(true);
+    }
+  }
+}

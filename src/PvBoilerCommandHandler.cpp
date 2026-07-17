@@ -108,7 +108,7 @@ result_code_t CPVBoilerCommandHandler::CmdServerIp(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  m_network.SetMqttServerIp(ipAddress);
+  m_network.MqttUpdateServerIp(ipAddress);
 
   return pack_result_code(ERR_CODE_OK);
 }

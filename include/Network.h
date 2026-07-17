@@ -4,6 +4,8 @@
 #include "system.h"
 #include "MqttClient.h"
 
+#include <elapsedMillis.h>
+
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
   using NetClient = WiFiClient;
@@ -21,19 +23,25 @@ class CNetwork
   public:
     CNetwork();
 
+    void Loop();
+
     void LoadSettings();
     void InitWifi(const bool bReconnect);
     void SetWifiSsid(const char* strSsid);
     void SetWifiPassword(const char* strPassword);
-    void SetIpAddr(uint8_t* ipAddress);
-    void SetNetMask(uint8_t* ipNetMask);
-    void SetMqttServerIp(uint8_t* ipAddress);
+    void SetIpAddr(const uint8_t* ipAddress);
+    void SetNetMask(const uint8_t* ipNetMask);
+
+    void MqttClientInit();
+    void MqttUpdateServerIp(const uint8_t* ipAddress);
 
     const char* GetWifiSsid() { return m_strWifiSsid; };
     const char* GetWifiPassword() { return m_strWifiPassword; };
     const uint8_t* GetIpAddr() { return m_ipAddr; };
     const uint8_t* GetNetMask() { return m_ipNetmask; };
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
+
+    const bool& IsConnected() { return m_bWifiConnected; };
 
 #ifdef SOCKET_SERVER_PORT
     WiFiClient& GetSocketServerClient();
@@ -49,6 +57,9 @@ class CNetwork
     uint8_t m_ipAddr[4] = { 0 };
     uint8_t m_ipNetmask[4] = { 0 };
     uint8_t m_serverIpAddr[4] = { 0 };
+
+    bool m_bWifiConnected = false;
+    elapsedMillis m_wifiReconnectTimer = 0;
 
 #ifdef SOCKET_SERVER_PORT
     WiFiServer m_socketServer;
