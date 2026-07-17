@@ -22,28 +22,10 @@
 */
 
 #include <Arduino.h>
-#ifdef ESP8266
-  #include <ESP8266WiFi.h>
-  #include <ESP8266mDNS.h>
-  using NetClient = WiFiClient;
-#elif defined(ESP32)
-  #include <WiFi.h>
-  #include <ESPmDNS.h>
-  using NetClient = WiFiClient;
-#elif defined(ARDUINO_TEENSY41)
-  #include <NativeEthernet.h>
-  using NetClient = EthernetClient;
-#endif
-
 #include <EEPROM.h>
 
-#include "CommandParser.h"
-#include "PvBoilerCommandHandler.h"
-#include "pvboiler.h"
 #include "TermPrint.h"
-#include "MqttClient.h"
 #include "util.h"
-#include "Network.h"
 #include "App.h"
 #include "system.h"
 
