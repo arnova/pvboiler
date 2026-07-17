@@ -264,6 +264,10 @@ void CNetwork::Loop()
       TERM_SERIAL.println(WiFi.localIP().toString().c_str());
 #endif
     }
+
+    // Handle OTA-updates
+    ArduinoOTA.handle();
+
     m_wifiTimeoutTimer = 0;
   }
   else

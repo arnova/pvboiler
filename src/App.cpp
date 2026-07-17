@@ -1,5 +1,3 @@
-#include <ArduinoOTA.h>
-
 #include "TermPrint.h"
 #include "util.h"
 #include "App.h"
@@ -215,6 +213,11 @@ void CApp::PollEthernet(void)
   static char strCommand[CMD_BUF_SIZE] = { 0 };
   static char strOldCommand[CMD_BUF_SIZE] = { 0 };
 
+  if (!m_network.IsConnected())
+  {
+    return;
+  }
+
   WiFiClient& socketServerClient = m_network.GetSocketServerClient();
   if (socketServerClient && socketServerClient.connected())
   {
@@ -397,14 +400,8 @@ void CApp::Loop()
 {
   HandleNetwork();
 
-  if (m_network.IsConnected())
-  {
-    // Handle OTA-updates
-    ArduinoOTA.handle();
-
-    // Poll ethernet for commands
-    PollEthernet();
-  }
+  // Poll ethernet for commands
+  PollEthernet();
 
   // Poll serial for commands
   PollSerial();
