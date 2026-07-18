@@ -19,7 +19,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
                                   "margin [p]             : For budget logic mode margin to [p] Watt\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
-                                  "ssrpc [p]              : When using SSR dim style use SSR period count [p]\r\n"
+                                  "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
                                   "egain [g]              : Set error-gain value [g]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
@@ -216,7 +216,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" dim_style=");
   CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
 
-  CTermPrint::print(" ssrpc=");
+  CTermPrint::print(" ssr_period=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
   CTermPrint::print(" egain=");
@@ -328,9 +328,9 @@ result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "percentage"))
+  if (STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
     m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_PERCENTAGE);
-  else if (STRIEQUALS(strArgs, "budget"))
+  else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
     m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_BUDGET);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
@@ -344,9 +344,9 @@ result_code_t CPVBoilerCommandHandler::CmdDimStyle(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "phase-cut"))
+  if (STRIEQUALS(strArgs, "phase-cut") || STRIEQUALS(strArgs, "p"))
     m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_PHASE_CUT);
-  else if (STRIEQUALS(strArgs, "ssr"))
+  else if (STRIEQUALS(strArgs, "ssr") || STRIEQUALS(strArgs, "s"))
     m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_SSR);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
@@ -451,7 +451,7 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdDimStyle(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "ssrpc"))
+  else if (STRIEQUALS(strCommand, "ssrperiod"))
   {
     result = CmdSsrPeriodCount(strArgs);
   }
