@@ -71,10 +71,14 @@ result_code_t CPVBoilerCommandHandler::CmdIpAddress(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  uint8_t ipAddress[4];
+  uint8_t ipAddress[4] = { 0 };
+
+  if (!STRIEQUALS(strArgs, "dhcp"))
+  {
     const result_code_t result = parse_ipv4_arg(strArgs, ipAddress);
-  if (result.code != ERR_CODE_OK)
-    return pack_result_code(ERR_CODE_INVALID_IPV4);
+    if (result.code != ERR_CODE_OK)
+      return pack_result_code(ERR_CODE_INVALID_IPV4);
+  }
 
   m_network.SetIpAddr(ipAddress);
 
