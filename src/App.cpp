@@ -15,14 +15,24 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 {
   const uint32_t iNow = micros();
 
-  if (digitalRead(ZERO_CROSS_INPUT)) // Rising edge
+  /*
+   * Ignore pulse when it's less than ZERO_CROSS_EDGE_MIN_US, when it's more and less then ZERO_CROSS_EDGE_MAX_US
+   * consider it the zero cross (short) pulse, of it's more consider it the (long) remainder of the period
+   */
+  const uint32_t iPulseWidth = iNow - m_iLastEventTime;
+  bool bLongPulse = true;
+  if (iPulseWidth < ZERO_CROSS_EDGE_MIN_US)
   {
-    // filter noise
-    if (iNow - m_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US * 10)
-    {
-      return;
-    }
+    return; // Filter noise
+  }
+  else if (iPulseWidth < ZERO_CROSS_EDGE_MAX_US)
+  {
+    bLongPulse = false;
+  }
+  m_iLastEventTime = iNow;
 
+  if (bLongPulse)
+  {
     m_iZeroCrossTime = iNow - m_iLastZeroCrossTime;
 
     m_iLastZeroCrossTime = iNow;
@@ -40,7 +50,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
         {
           // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
           // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-          const uint32_t iTriacDelayTicks = (m_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MARGIN_US) * 80;
+          const uint32_t iTriacDelayTicks = (m_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MIN_US) * 80;
 
           m_bTriacOn = true;
           timer1_write(iTriacDelayTicks);
@@ -56,14 +66,14 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
         }
       }
     }
-    else
+    else // Dim-style = phase-cut
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-      const float fDelay = max((m_pvBoiler.GetTriacAngleFactor() * m_iZeroCrossTime), ZERO_CROSS_EDGE_MARGIN_US); // Make sure we trigger not too close to zero cross
+      const float fDelay = max((m_pvBoiler.GetTriacAngleFactor() * m_iZeroCrossTime), ZERO_CROSS_EDGE_MIN_US); // Make sure we trigger not too close to zero cross
 
       // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-      if (fDelay + ZERO_CROSS_EDGE_MARGIN_US + GATE_PULSE_WIDTH <= m_iZeroCrossTime)
+      if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= m_iZeroCrossTime)
       {
         // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
         // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
@@ -74,14 +84,8 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
       }
     }
   }
-  else // Falling edge
+  else // Short pulse
   {
-    // filter noise
-    if (iNow - m_iLastZeroCrossTime < ZERO_CROSS_EDGE_MARGIN_US)
-    {
-      return;
-    }
-
     // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
     m_iPhaseCorrectionTime = (iNow - m_iLastZeroCrossTime) / 2;
   }
@@ -337,7 +341,7 @@ void CApp::Init()
     m_network.MqttClientInit();
   }
 
-  m_iLastZeroCrossTime = m_iZeroCrossTime = micros();
+  m_iLastZeroCrossTime = m_iZeroCrossTime = m_iLastEventTime = micros();
 }
 
 
