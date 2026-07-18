@@ -116,7 +116,7 @@ void CPVBoiler::LoadSettings()
   m_logicMode = (iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENTAGE : CPVBoiler::LOGIC_MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
-  m_dimStyle = (iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_CUT;
+  m_dimStyle = (iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_ANGLE;
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
   if (iVal8 < 2 || iVal8 > SSR_PERIOD_COUNT_MAX)

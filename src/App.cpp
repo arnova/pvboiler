@@ -67,7 +67,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
         }
       }
     }
-    else // Dim-style = phase-cut
+    else // Dim-style = phase-angle control
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 

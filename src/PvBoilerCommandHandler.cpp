@@ -18,7 +18,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
                                   "margin [p]             : For budget logic mode margin to [p] Watt\r\n"
-                                  "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-cut\")\n\r"
+                                  "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\n\r"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
                                   "egain [g]              : Set error-gain value [g]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
@@ -214,7 +214,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print("W");
 
   CTermPrint::print(" dim_style=");
-  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT ? "phase-cut" : "ssr");
+  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
   CTermPrint::print(" ssr_period=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
@@ -266,7 +266,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
   CTermPrint::print("%");
 
-  if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_CUT)
+  if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     CTermPrint::print(" angle_factor=");
     CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
@@ -347,8 +347,8 @@ result_code_t CPVBoilerCommandHandler::CmdDimStyle(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "phase-cut") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_PHASE_CUT);
+  if (STRIEQUALS(strArgs, "phase-angle") || STRIEQUALS(strArgs, "phase-cut") || STRIEQUALS(strArgs, "p"))
+    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_PHASE_ANGLE);
   else if (STRIEQUALS(strArgs, "ssr") || STRIEQUALS(strArgs, "s"))
     m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_SSR);
   else
