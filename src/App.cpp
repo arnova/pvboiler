@@ -350,33 +350,53 @@ void CApp::HandleDisplay()
 
     switch (m_displayCount)
     {
-      case 0 : m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
-               m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+      case 0 : {
+                 m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
+                 m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+               } 
                break;
 
-      case 1 : if (!m_network.IsConnected())
-               {
-                 m_display.WriteDisplayStr("WiFi error", 0, true);
+      case 1 : {
+                 if (!m_network.IsConnected())
+                 {
+                   m_display.WriteDisplayStr("WiFi error", 0, true);
+                 }
+                 else if (!m_network.IsMqttConnected())
+                 {
+                   m_display.WriteDisplayStr("MQTT error", 0, true);
+                 }
+                 else
+                 {
+                   m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
+                 }
+                 strValue = WiFi.localIP().toString();
+                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
                }
-               else if (!m_network.IsMqttConnected())
-               {
-                 m_display.WriteDisplayStr("MQTT error", 0, true);
-               }
-               else
-               {
-                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
-               }
-               strValue = WiFi.localIP().toString();
-               m_display.WriteDisplayStr(strValue.c_str(), 1, false);
                break;
 
-      case 2 : strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
-               m_display.WriteDisplayStr(strValue.c_str(), 0, true);
-               strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
-               m_display.WriteDisplayStr(strValue.c_str(), 1, false);
-               break;
+      case 2 : {
+                 const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
+                 strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
+                 m_display.WriteDisplayStr(strValue.c_str(), 0, true);
 
-      case 3 : m_display.WriteDisplayStr("", 0, true);
+                 strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
+
+                 const uint8_t iTotalBars = 10;
+                 int filled = map(iPercent, 0, 100, 0, iTotalBars);
+
+                 strValue = "[";
+                 for (int i = 0; i < iTotalBars; i++)
+                 {
+                   strValue += (i < filled ? "=" : " ");
+                 }
+                 strValue += "] " + String(iPercent) + "%";
+                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+                }
+                break;
+
+      case 3 : {
+                 m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
+               }
                break;
     }
 
