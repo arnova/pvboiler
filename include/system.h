@@ -30,7 +30,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define ZERO_CROSS_PHASE_CORRECTION_DEFAULT     600 // uS
 
 // Minimum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MIN_US                  100.0f // us
+#define ZERO_CROSS_EDGE_MIN_US                  200.0f // us
 
 // Maximum time for positive/negative zero crossing
 #define ZERO_CROSS_EDGE_MAX_US                 2000.0f // us
