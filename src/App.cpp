@@ -88,7 +88,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 }
 
 
-void IRAM_ATTR CApp::TriacPhaseHandler()
+void IRAM_ATTR CApp::TriacGateHandler()
 {
   if (m_bTriacOn)
   {

@@ -16,7 +16,7 @@ class CApp
     void Loop();
 
     void IRAM_ATTR ZeroCrossHandler();
-    void IRAM_ATTR TriacPhaseHandler();
+    void IRAM_ATTR TriacGateHandler();
 
     void MqttPublish();
     void PollSerial();

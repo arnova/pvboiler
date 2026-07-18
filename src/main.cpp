@@ -42,7 +42,7 @@ void IRAM_ATTR ZeroCrossISR()
 // Timer interrupt for triggering triac gate
 void IRAM_ATTR TriacTimerISR()
 {
-  g_app.TriacPhaseHandler();
+  g_app.TriacGateHandler();
 }
 
 
