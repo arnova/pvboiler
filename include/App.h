@@ -18,7 +18,6 @@ class CApp
     void IRAM_ATTR ZeroCrossHandler();
     void IRAM_ATTR TriacGateHandler();
 
-    void MqttPublish();
     void PollSerial();
     void PollEthernet();
     void HandleNetwork();
@@ -26,7 +25,6 @@ class CApp
 
     CNetwork& GetNetwork() { return m_network; };
     CPVBoiler& GetPvBoiler() { return m_pvBoiler; };
-    CPVBoilerCommandHandler& GetPvBoilerCommandHandler() { return m_commandHandler; };
 
   private:
     CNetwork m_network;

@@ -2,7 +2,7 @@
 #include "util.h"
 #include "App.h"
 
-CApp::CApp() : m_network(), m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
+CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
   m_display.Init();
 
@@ -111,29 +111,6 @@ void IRAM_ATTR CApp::TriacGateHandler()
   {
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
   }
-}
-
-
-void CApp::MqttPublish()
-{
-  // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
-
-  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
-  {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
-  }
-  else
-  {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "-10000.0", "10000.0", "0.1");
-  }
-
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
-
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
-
-  // Publish our f/w version
-  m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
 }
 
 
@@ -300,8 +277,8 @@ void CApp::HandleNetwork()
 
   if (m_network.HandleMqttClient())
   {
-    // MQTT (re)connection: publish values
-    MqttPublish();
+    // MQTT (re)connection: publish config
+    m_pvBoiler.MqttPublishConfig();
   }
 
   if (!m_network.IsConnected() || !m_network.IsMqttConnected())

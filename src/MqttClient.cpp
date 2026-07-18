@@ -98,9 +98,20 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strMin, c
   JsonDocument root;
 
   root["command_topic"] = m_strName + "/" + strItem + "/set";
-  root["min"] = strMin;
-  root["max"] = strMax;
-  root["step"] = strStep;
+  if (strlen(strMin) != 0)
+  {
+    root["min"] = strMin;
+  }
+
+  if (strlen(strMax) != 0)
+  {
+    root["max"] = strMax;
+  }
+
+  if (strlen(strStep) != 0)
+  {
+    root["step"] = strStep;
+  }
 
   PublishConfig(root, strItem, "number");
 }

@@ -19,14 +19,14 @@ void CPVBoiler::Loop()
   // Publish new MQTT values (if any) when timer expires (and connected)
   if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
   {
-    MQTTPublishValues();
+    MqttPublishValues();
 
     m_MQTTTimer = 0;
   }
 }
 
 
-bool CPVBoiler::MQTTPublishValues()
+bool CPVBoiler::MqttPublishValues()
 {
   if (m_bUpdateCtrlEnable)
   {
@@ -68,6 +68,29 @@ bool CPVBoiler::MQTTPublishValues()
   }
 
   return true;
+}
+
+
+void CPVBoiler::MqttPublishConfig()
+{
+  // Publish MQTT config for eg. HA discovery and subscribe to control topics
+  m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
+
+  if (m_logicMode == CPVBoiler::LOGIC_MODE_PERCENTAGE)
+  {
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
+  }
+  else
+  {
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "", "", "0.1");
+  }
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
+
+  // Publish our f/w version
+  m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
 }
 
 

@@ -46,7 +46,7 @@ void IRAM_ATTR TriacTimerISR()
 }
 
 
-void MQTTCallback(char* topic, byte *payload, const unsigned int length)
+void MqttCallback(char* topic, byte *payload, const unsigned int length)
 {
 #ifdef MQTT_DEBUG
   CTermPrint::println("-------new message from broker-----");
@@ -133,7 +133,7 @@ void setup()
   g_app.Init();
 
   // Setup the MQTT client callback
-  g_app.GetNetwork().GetMqttClient().setCallback(MQTTCallback);
+  g_app.GetNetwork().GetMqttClient().setCallback(MqttCallback);
 
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
