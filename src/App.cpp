@@ -8,6 +8,7 @@ CApp::CApp() : m_network(), m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, 
 
   m_display.WriteDisplayStr(DEVICE_NAME);
   m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+  m_display.WriteDisplayStr("C) Arnova", 2, false);
 }
 
 
@@ -357,24 +358,28 @@ void CApp::HandleDisplay()
       case 0 : {
                  m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
                  m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+                 m_display.WriteDisplayStr("(C) Arnova", 2, false);
                } 
                break;
 
       case 1 : {
+                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
+
+                 strValue = WiFi.localIP().toString();
+                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+
                  if (!m_network.IsConnected())
                  {
-                   m_display.WriteDisplayStr("WiFi error", 0, true);
+                   m_display.WriteDisplayStr("WiFi error", 2, false);
                  }
                  else if (!m_network.IsMqttConnected())
                  {
-                   m_display.WriteDisplayStr("MQTT error", 0, true);
+                   m_display.WriteDisplayStr("MQTT error", 2, false);
                  }
                  else
                  {
-                   m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
+                   m_display.WriteDisplayStr("Connection OK", 2, false);
                  }
-                 strValue = WiFi.localIP().toString();
-                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
                }
                break;
 
@@ -384,6 +389,7 @@ void CApp::HandleDisplay()
                  m_display.WriteDisplayStr(strValue.c_str(), 0, true);
 
                  strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
+                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
 
                  const uint8_t iTotalBars = 10;
                  int filled = map(iPercent, 0, 100, 0, iTotalBars);
@@ -393,8 +399,8 @@ void CApp::HandleDisplay()
                  {
                    strValue += (i < filled ? "=" : " ");
                  }
-                 strValue += "] " + String(iPercent) + "%";
-                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+                 strValue += "]";
+                 m_display.WriteDisplayStr(strValue.c_str(), 2, false);
                 }
                 break;
 
