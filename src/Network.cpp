@@ -275,7 +275,9 @@ void CNetwork::Loop()
 
     // Handle OTA-updates
     ArduinoOTA.handle();
-
+#ifdef ESP8266
+    MDNS.update();
+#endif
     m_wifiTimeoutTimer = 0;
   }
   else
