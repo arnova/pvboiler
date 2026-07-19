@@ -15,8 +15,10 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "reboot                 : Reboot controller\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
+                                  "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
+                                  "percent [p]            : For percent logic mode set percentage to [p] %\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
-                                  "logicmode [c]          : Set logic mode to [c] (\"percentage\" or \"budget\")\r\n"
+                                  "logicmode [c]          : Set logic mode to [c] (\"percent\" or \"budget\")\r\n"
                                   "margin [p]             : For budget logic mode margin to [p] Watt\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\n\r"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
@@ -203,7 +205,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(m_network.GetServerIp()[3]);
 
   CTermPrint::print(" logic_mode=");
-  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE ? "percentage" : "budget");
+  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
 
   CTermPrint::print(" boiler=");
   CTermPrint::print(m_pvBoiler.GetBoilerPowerRating());
@@ -245,7 +247,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(" mqtt_conn=");
   CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
 
-  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENTAGE)
+  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT)
   {
     CTermPrint::print(" perc_set=");
     CTermPrint::print(m_pvBoiler.GetPowerPercentage());
@@ -284,6 +286,46 @@ result_code_t CPVBoilerCommandHandler::CmdReset(const char *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
   // FIXME: Implementation
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPVBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT)
+    return pack_result_code(ERR_CODE_CMD_INVALID);
+   
+  int32_t iPower;
+  result = get_int32_from_string(strArgs, &iPower, INT32_MIN, INT32_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetPowerBudget(iPower);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPVBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_BUDGET)
+    return pack_result_code(ERR_CODE_CMD_INVALID);
+
+  int32_t iPerc;
+  result = get_int32_from_string(strArgs, &iPerc, 0, 100, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetPowerPercentage(iPerc);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -328,8 +370,8 @@ result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_PERCENTAGE);
+  if (STRIEQUALS(strArgs, "percent") || STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
+    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_PERCENT);
   else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
     m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_BUDGET);
   else
@@ -437,6 +479,14 @@ result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "status"))
   {
     result = CmdStatus(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "budget"))
+  {
+    result = CmdSetPowerBudget(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "percent"))
+  {
+    result = CmdSetPowerPercentage(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {

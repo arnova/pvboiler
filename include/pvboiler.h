@@ -63,7 +63,7 @@ class CPVBoiler
     enum logic_mode_e
     {
       LOGIC_MODE_BUDGET = 0,
-      LOGIC_MODE_PERCENTAGE
+      LOGIC_MODE_PERCENT
     };
     typedef enum logic_mode_e logic_mode_t;
 

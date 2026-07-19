@@ -44,7 +44,7 @@ bool CPVBoiler::MqttPublishValues()
     m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
   }
 
-  if (m_logicMode == LOGIC_MODE_PERCENTAGE && m_bUpdatePowerPercentage)
+  if (m_logicMode == LOGIC_MODE_PERCENT && m_bUpdatePowerPercentage)
   {
     m_bUpdatePowerPercentage = false;
 
@@ -76,7 +76,7 @@ void CPVBoiler::MqttPublishConfig()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-  if (m_logicMode == CPVBoiler::LOGIC_MODE_PERCENTAGE)
+  if (m_logicMode == CPVBoiler::LOGIC_MODE_PERCENT)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
   }
@@ -113,7 +113,7 @@ void CPVBoiler::LoadSettings()
 
   uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_logicMode = (iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENTAGE : CPVBoiler::LOGIC_MODE_BUDGET;
+  m_logicMode = (iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENT : CPVBoiler::LOGIC_MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_ANGLE;
@@ -163,7 +163,7 @@ void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 
 void CPVBoiler::SetLogicMode(const CPVBoiler::logic_mode_t& logicMode)
 {
-  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPVBoiler::LOGIC_MODE_PERCENTAGE) ? 0x01 : 0x00);
+  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPVBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
   EepromCommit();
 
   m_logicMode = logicMode;
@@ -199,7 +199,7 @@ void CPVBoiler::SetErrorGain(const float& fGain)
 
 void CPVBoiler::Update()
 {
-  if (m_logicMode == LOGIC_MODE_PERCENTAGE)
+  if (m_logicMode == LOGIC_MODE_PERCENT)
   {
     if (m_iPowerPercentage > m_iCurrentPercentage)
     {

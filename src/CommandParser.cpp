@@ -360,6 +360,10 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
       STRCAT_PSTR(strResult, "Unknown command");
       break;
 
+    case ERR_CODE_CMD_INVALID:
+      STRCAT_PSTR(strResult, "Invalid command");
+      break;
+
     case ERR_CODE_SUBCMD_MISSING:
       STRCAT_PSTR(strResult, "Missing sub command");
       break;

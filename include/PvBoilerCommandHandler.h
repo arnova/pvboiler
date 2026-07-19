@@ -45,6 +45,9 @@ class CPVBoilerCommandHandler : public CCommandHandler
     result_code_t CmdWifiPassword(const char *strArgs);
     result_code_t CmdRestartNet(const char *strArgs);
 
+    result_code_t CmdSetPowerBudget(const char *strArgs);
+    result_code_t CmdSetPowerPercentage(const char *strArgs);
+
     result_code_t CmdBoilerPowerRating(const char *strArgs);
     result_code_t CmdPowerBudgetMargin(const char *strArgs);
     result_code_t CmdLogicMode(const char *strArgs);
