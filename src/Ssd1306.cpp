@@ -8,7 +8,7 @@
   Last modified    : July 17, 2026
 */
 
-#include "ssd1306.h"
+#include "Ssd1306.h"
 #include "util.h"
 #include "system.h"
 
@@ -20,7 +20,7 @@
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C g_u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);
 
-CSSD1306::CSSD1306()
+CSsd1306::CSsd1306()
 {
   // Init display
   g_u8g2.begin();
@@ -28,7 +28,7 @@ CSSD1306::CSSD1306()
 }
 
 
-void CSSD1306::WriteDisplayStr(const char* strLine, const uint8_t iLine /* = 0 */, const bool bClear /* = true */)
+void CSsd1306::WriteDisplayStr(const char* strLine, const uint8_t iLine /* = 0 */, const bool bClear /* = true */)
 {
   if (bClear)
     g_u8g2.clearBuffer();                   // clear the internal memory

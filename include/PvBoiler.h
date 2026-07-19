@@ -48,10 +48,10 @@ const float triac_percentage_factor[101] =
   0.0000f
 };
 
-class CPVBoiler
+class CPvBoiler
 {
   public:
-    CPVBoiler(CNetwork& network);
+    CPvBoiler(CNetwork& network);
 
     enum dim_style_e
     {
@@ -131,7 +131,7 @@ class CPVBoiler
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
 
     // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
-    CPVBoiler::dim_style_t m_dimStyle = CPVBoiler::DIM_STYLE_PHASE_ANGLE;
+    CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_PHASE_ANGLE;
 
     // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
     uint8_t m_iSsrPeriodCount = 50; // (= 0.5s @ 50 Hz).

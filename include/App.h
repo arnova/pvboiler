@@ -4,8 +4,8 @@
 
 #include "system.h"
 #include "Network.h"
-#include "pvboiler.h"
-#include "ssd1306.h"
+#include "PvBoiler.h"
+#include "Ssd1306.h"
 
 class CApp
 {
@@ -23,13 +23,13 @@ class CApp
     void HandleDisplay();
 
     CNetwork& GetNetwork() { return m_network; };
-    CPVBoiler& GetPvBoiler() { return m_pvBoiler; };
+    CPvBoiler& GetPvBoiler() { return m_pvBoiler; };
 
   private:
     CNetwork m_network;
-    CPVBoiler m_pvBoiler;
-    CPVBoilerCommandHandler m_commandHandler;
-    CSSD1306 m_display;
+    CPvBoiler m_pvBoiler;
+    CPvBoilerCommandHandler m_commandHandler;
+    CSsd1306 m_display;
     uint8_t m_displayCount = 0;
 
     elapsedMillis m_ledTimer = 0;

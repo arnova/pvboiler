@@ -38,7 +38,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 
     m_iLastZeroCrossTime = iNow;
 
-    if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_SSR)
+    if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_SSR)
     {
       if (m_pvBoiler.GetCurrentPercentage() == 0)
       {

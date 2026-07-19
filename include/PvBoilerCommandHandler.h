@@ -16,18 +16,18 @@
 #endif
 
 // Forward declare
-class CPVBoiler; 
+class CPvBoiler; 
 class CNetwork;
 
-class CPVBoilerCommandHandler : public CCommandHandler
+class CPvBoilerCommandHandler : public CCommandHandler
 {
   public:
-    CPVBoilerCommandHandler(CPVBoiler& pvBoiler, CNetwork& network) : m_pvBoiler(pvBoiler), m_network(network) {};
+    CPvBoilerCommandHandler(CPvBoiler& pvBoiler, CNetwork& network) : m_pvBoiler(pvBoiler), m_network(network) {};
 
     result_code_t ProcessCommand(char *strCommand);
 
   private:
-    CPVBoiler& m_pvBoiler;
+    CPvBoiler& m_pvBoiler;
     CNetwork& m_network;
 
     result_code_t CmdShowVersion(const char *strArgs);

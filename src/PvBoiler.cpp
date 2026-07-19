@@ -1,17 +1,17 @@
-#include "pvboiler.h"
+#include "PvBoiler.h"
 #include "util.h"
 
 #include <EEPROM.h>
 
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
-CPVBoiler::CPVBoiler(CNetwork& network) : m_network(network)
+CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network)
 {
   Reset();
 }
 
 
-void CPVBoiler::Loop()
+void CPvBoiler::Loop()
 {
   // Run timed control loop
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)
@@ -32,7 +32,7 @@ void CPVBoiler::Loop()
 }
 
 
-void CPVBoiler::Reset()
+void CPvBoiler::Reset()
 {
   m_iWatchdogCounter = 0;
   m_iWatchdogRecoveryCounter = 0;
@@ -53,7 +53,7 @@ void CPVBoiler::Reset()
 }
 
 
-bool CPVBoiler::MqttPublishValues()
+bool CPvBoiler::MqttPublishValues()
 {
   if (m_bUpdateCtrlEnable)
   {
@@ -98,12 +98,12 @@ bool CPVBoiler::MqttPublishValues()
 }
 
 
-void CPVBoiler::MqttPublishConfig()
+void CPvBoiler::MqttPublishConfig()
 {
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-  if (m_logicMode == CPVBoiler::LOGIC_MODE_PERCENT)
+  if (m_logicMode == CPvBoiler::LOGIC_MODE_PERCENT)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
   }
@@ -121,7 +121,7 @@ void CPVBoiler::MqttPublishConfig()
 }
 
 
-void CPVBoiler::LoadSettings()
+void CPvBoiler::LoadSettings()
 {
   uint16_t iVal16 = 0;
   EEPROM.get(EEPROM_BP_RATING, iVal16);
@@ -140,10 +140,10 @@ void CPVBoiler::LoadSettings()
 
   uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_logicMode = (iVal8 == 0x01) ? CPVBoiler::LOGIC_MODE_PERCENT : CPVBoiler::LOGIC_MODE_BUDGET;
+  m_logicMode = (iVal8 == 0x01) ? CPvBoiler::LOGIC_MODE_PERCENT : CPvBoiler::LOGIC_MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
-  m_dimStyle = (iVal8 == 0x01) ? CPVBoiler::DIM_STYLE_SSR : CPVBoiler::DIM_STYLE_PHASE_ANGLE;
+  m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
   if (iVal8 < 2 || iVal8 > SSR_PERIOD_COUNT_MAX)
@@ -162,7 +162,7 @@ void CPVBoiler::LoadSettings()
 }
 
 
-void CPVBoiler::EepromCommit()
+void CPvBoiler::EepromCommit()
 {
   noInterrupts(); // Enter critical section
   EEPROM.commit();
@@ -170,7 +170,7 @@ void CPVBoiler::EepromCommit()
 }
 
 
-void CPVBoiler::SetBoilerPowerRating(const uint16_t& iPower)
+void CPvBoiler::SetBoilerPowerRating(const uint16_t& iPower)
 {
   EEPROM.put(EEPROM_BP_RATING, iPower);
   EepromCommit();
@@ -179,7 +179,7 @@ void CPVBoiler::SetBoilerPowerRating(const uint16_t& iPower)
 }
 
 
-void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
+void CPvBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 {
   EEPROM.put(EEPROM_PB_MARGIN, iMargin);
   EepromCommit();
@@ -188,25 +188,25 @@ void CPVBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 }
 
 
-void CPVBoiler::SetLogicMode(const CPVBoiler::logic_mode_t& logicMode)
+void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t& logicMode)
 {
-  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPVBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
+  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPvBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
   EepromCommit();
 
   m_logicMode = logicMode;
 }
 
 
-void CPVBoiler::SetDimStyle(const CPVBoiler::dim_style_t& dimStyle)
+void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t& dimStyle)
 {
-  EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPVBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
+  EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
   EepromCommit();
 
   m_dimStyle = dimStyle;
 }
 
 
-void CPVBoiler::SetSsrPeriodCount(const uint8_t& iCount)
+void CPvBoiler::SetSsrPeriodCount(const uint8_t& iCount)
 {
   EEPROM.put(EEPROM_SSR_PERIOD, iCount);
   EepromCommit();
@@ -215,7 +215,7 @@ void CPVBoiler::SetSsrPeriodCount(const uint8_t& iCount)
 }
 
 
-void CPVBoiler::SetErrorGain(const float& fGain)
+void CPvBoiler::SetErrorGain(const float& fGain)
 {
   EEPROM.put(EEPROM_ERROR_GAIN, fGain);
   EepromCommit();
@@ -224,7 +224,7 @@ void CPVBoiler::SetErrorGain(const float& fGain)
 }
 
 
-void CPVBoiler::Update()
+void CPvBoiler::Update()
 {
   if (m_logicMode == LOGIC_MODE_PERCENT)
   {
@@ -273,7 +273,7 @@ void CPVBoiler::Update()
 }
 
 
-void CPVBoiler::CheckWatchDog()
+void CPvBoiler::CheckWatchDog()
 {
 #ifdef WATCHDOG_TIMEOUT_TIME
   // Handle watchdog

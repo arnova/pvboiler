@@ -1,6 +1,6 @@
 #include "PvBoilerCommandHandler.h"
 #include "TermPrint.h"
-#include "pvboiler.h"
+#include "PvBoiler.h"
 #include "util.h"
 #include "Network.h"
 #include "system.h"
@@ -32,7 +32,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   ;
 
 // Show copyright + firmware version
-result_code_t CPVBoilerCommandHandler::CmdShowVersion(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdShowVersion(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
   if (result.code != ERR_CODE_OK)
@@ -44,7 +44,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowVersion(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
   if (result.code != ERR_CODE_OK)
@@ -57,7 +57,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
 
 
 // Show help screen
-result_code_t CPVBoilerCommandHandler::CmdShowHelp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
@@ -68,7 +68,7 @@ result_code_t CPVBoilerCommandHandler::CmdShowHelp(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdIpAddress(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdIpAddress(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -88,7 +88,7 @@ result_code_t CPVBoilerCommandHandler::CmdIpAddress(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdNetMask(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdNetMask(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -104,7 +104,7 @@ result_code_t CPVBoilerCommandHandler::CmdNetMask(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdServerIp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdServerIp(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -120,7 +120,7 @@ result_code_t CPVBoilerCommandHandler::CmdServerIp(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -137,7 +137,7 @@ result_code_t CPVBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdWifiPassword(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdWifiPassword(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -155,7 +155,7 @@ result_code_t CPVBoilerCommandHandler::CmdWifiPassword(const char *strArgs)
 
 
 
-result_code_t CPVBoilerCommandHandler::CmdRestartNet(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
@@ -166,7 +166,7 @@ result_code_t CPVBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
@@ -205,7 +205,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(m_network.GetServerIp()[3]);
 
   CTermPrint::print(" logic_mode=");
-  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
+  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
 
   CTermPrint::print(" boiler=");
   CTermPrint::print(m_pvBoiler.GetBoilerPowerRating());
@@ -216,7 +216,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print("W");
 
   CTermPrint::print(" dim_style=");
-  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
+  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
   CTermPrint::print(" ssr_period=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
@@ -230,7 +230,7 @@ result_code_t CPVBoilerCommandHandler::CmdInfo(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
@@ -247,7 +247,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(" mqtt_conn=");
   CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
 
-  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT)
+  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
     CTermPrint::print(" perc_set=");
     CTermPrint::print(m_pvBoiler.GetPowerPercentage());
@@ -268,7 +268,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
   CTermPrint::print("%");
 
-  if (m_pvBoiler.GetDimStyle() == CPVBoiler::DIM_STYLE_PHASE_ANGLE)
+  if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     CTermPrint::print(" angle_factor=");
     CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
@@ -280,7 +280,7 @@ result_code_t CPVBoilerCommandHandler::CmdStatus(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdReset(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
@@ -291,13 +291,13 @@ result_code_t CPVBoilerCommandHandler::CmdReset(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_PERCENT)
+  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
     return pack_result_code(ERR_CODE_CMD_INVALID);
    
   int32_t iPower;
@@ -311,13 +311,13 @@ result_code_t CPVBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  if (m_pvBoiler.GetLogicMode() == CPVBoiler::LOGIC_MODE_BUDGET)
+  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_BUDGET)
     return pack_result_code(ERR_CODE_CMD_INVALID);
 
   int32_t iPerc;
@@ -331,7 +331,7 @@ result_code_t CPVBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
   if (result.code != ERR_CODE_OK)
@@ -348,7 +348,7 @@ result_code_t CPVBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
@@ -365,15 +365,15 @@ result_code_t CPVBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdLogicMode(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "percent") || STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_PERCENT);
+    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
   else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
-    m_pvBoiler.SetLogicMode(CPVBoiler::LOGIC_MODE_BUDGET);
+    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_BUDGET);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
@@ -384,15 +384,15 @@ result_code_t CPVBoilerCommandHandler::CmdLogicMode(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdDimStyle(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdDimStyle(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "phase-angle") || STRIEQUALS(strArgs, "phase-cut") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_PHASE_ANGLE);
+    m_pvBoiler.SetDimStyle(CPvBoiler::DIM_STYLE_PHASE_ANGLE);
   else if (STRIEQUALS(strArgs, "ssr") || STRIEQUALS(strArgs, "s"))
-    m_pvBoiler.SetDimStyle(CPVBoiler::DIM_STYLE_SSR);
+    m_pvBoiler.SetDimStyle(CPvBoiler::DIM_STYLE_SSR);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
@@ -400,7 +400,7 @@ result_code_t CPVBoilerCommandHandler::CmdDimStyle(const char *strArgs)
 }
 
 
-result_code_t CPVBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
@@ -418,7 +418,7 @@ result_code_t CPVBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
 
 
 
-result_code_t CPVBoilerCommandHandler::CmdErrorGain(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdErrorGain(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
@@ -436,7 +436,7 @@ result_code_t CPVBoilerCommandHandler::CmdErrorGain(const char *strArgs)
 
 
 // Process provided string command
-result_code_t CPVBoilerCommandHandler::ProcessCommand(char *strCommand)
+result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
 {
   // Trim strCommand to remove leading/trailing space \n \r
   strtrim(strCommand, " \r\n");

@@ -13,11 +13,11 @@
 #include <Wire.h>
 #endif
 
-class CSSD1306
+class CSsd1306
 {
   public:
-    CSSD1306(); // Constructor
-    ~CSSD1306() {}; // Empty destructor
+    CSsd1306(); // Constructor
+    ~CSsd1306() {}; // Empty destructor
 
     void WriteDisplayStr(const char* strLine, const uint8_t iLine = 0, const bool bClear = true);
 };
