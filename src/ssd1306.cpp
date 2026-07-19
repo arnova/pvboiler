@@ -20,7 +20,7 @@
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C g_u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);
 
-void CSSD1306::Init()
+CSSD1306::CSSD1306()
 {
   // Init display
   g_u8g2.begin();

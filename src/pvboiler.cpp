@@ -5,6 +5,12 @@
 
 #define CONTROL_LOOP_TIME_MS                    200   // ms
 
+CPVBoiler::CPVBoiler(CNetwork& network) : m_network(network)
+{
+  Reset();
+}
+
+
 void CPVBoiler::Loop()
 {
   // Run timed control loop

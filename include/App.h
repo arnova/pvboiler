@@ -12,7 +12,6 @@ class CApp
   public:
     CApp();
 
-    void Init();
     void Loop();
 
     void IRAM_ATTR ZeroCrossHandler();

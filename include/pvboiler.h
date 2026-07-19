@@ -51,7 +51,7 @@ const float triac_percentage_factor[101] =
 class CPVBoiler
 {
   public:
-    CPVBoiler(CNetwork& network) : m_network(network) {}; // Constructor
+    CPVBoiler(CNetwork& network);
 
     enum dim_style_e
     {

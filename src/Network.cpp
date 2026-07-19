@@ -21,6 +21,14 @@ CNetwork::CNetwork()
 #endif
 {
   m_mqttClient.setClient(m_wifiClient);
+  LoadSettings();
+
+  InitWifi(false);
+
+  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0))
+  {
+    MqttClientInit();
+  }
 }
 
 

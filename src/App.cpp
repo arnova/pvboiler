@@ -4,7 +4,7 @@
 
 CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
-  m_display.Init();
+  m_iLastZeroCrossTime = m_iZeroCrossTime = m_iLastEventTime = micros();
 
   m_display.WriteDisplayStr(DEVICE_NAME);
   m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
@@ -302,24 +302,6 @@ void CApp::HandleNetwork()
     }
 #endif
   }
-}
-
-
-void CApp::Init()
-{
-  m_network.LoadSettings();
-  m_pvBoiler.Reset();
-
-  delay(10);
-
-  m_network.InitWifi(false);
-
-  if (IPAddress(m_network.GetServerIp()) != IPAddress(0, 0, 0, 0))
-  {
-    m_network.MqttClientInit();
-  }
-
-  m_iLastZeroCrossTime = m_iZeroCrossTime = m_iLastEventTime = micros();
 }
 
 
