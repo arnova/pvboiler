@@ -68,6 +68,8 @@ class CPVBoiler
     typedef enum logic_mode_e logic_mode_t;
 
     void Loop();
+    void Reset();
+
     bool MqttPublishValues();
     void MqttPublishConfig();
     void LoadSettings();

@@ -26,6 +26,27 @@ void CPVBoiler::Loop()
 }
 
 
+void CPVBoiler::Reset()
+{
+  m_iWatchdogCounter = 0;
+  m_iWatchdogRecoveryCounter = 0;
+
+  m_bCtrlEnable = true;
+  m_bUpdateCtrlEnable = true;
+
+  m_iPowerBudget = 0;
+  m_bUpdatePowerBudget = true;
+
+  m_iPowerPercentage = 0;
+  m_bUpdatePowerPercentage = true;
+
+  m_iCurrentPercentage = 0;
+  m_bUpdateOutputPercentage = true;
+
+  LoadSettings();
+}
+
+
 bool CPVBoiler::MqttPublishValues()
 {
   if (m_bUpdateCtrlEnable)

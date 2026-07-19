@@ -285,7 +285,7 @@ result_code_t CPVBoilerCommandHandler::CmdReset(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  // FIXME: Implementation
+  m_pvBoiler.Reset();
 
   return pack_result_code(ERR_CODE_OK);
 }

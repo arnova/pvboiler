@@ -308,7 +308,7 @@ void CApp::HandleNetwork()
 void CApp::Init()
 {
   m_network.LoadSettings();
-  m_pvBoiler.LoadSettings();
+  m_pvBoiler.Reset();
 
   delay(10);
 
