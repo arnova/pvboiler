@@ -124,7 +124,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_WIFI_SSID, "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
   // Publish our f/w version
   m_network.GetMqttClient().PublishData(MQTT_FW_VERSION, MY_VERSION, true);
