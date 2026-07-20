@@ -38,16 +38,16 @@ void CPvBoiler::Reset()
   m_iWatchdogRecoveryCounter = 0;
 
   m_bCtrlEnable = true;
-  m_bUpdateCtrlEnable = true;
+  m_bPublishCtrlEnable = true;
 
   m_iPowerBudget = 0;
-  m_bUpdatePowerBudget = true;
+  m_bPublishPowerBudget = true;
 
   m_iPowerPercentage = 0;
-  m_bUpdatePowerPercentage = true;
+  m_bPublishPowerPercentage = true;
 
   m_iCurrentPercentage = 0;
-  m_bUpdateOutputPercentage = true;
+  m_bPublishOutputPercentage = true;
 
   LoadSettings();
 }
@@ -55,43 +55,46 @@ void CPvBoiler::Reset()
 
 bool CPvBoiler::MqttPublishValues()
 {
-  if (m_bUpdateCtrlEnable)
+  if (m_bPublishCtrlEnable)
   {
-    m_bUpdateCtrlEnable = false;
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0", true);
+    m_bPublishCtrlEnable = false;
+    m_network.GetMqttClient().PublishData(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
   }
 
-  if (m_logicMode == LOGIC_MODE_BUDGET && m_bUpdatePowerBudget)
+  if (m_logicMode == LOGIC_MODE_BUDGET && m_bPublishPowerBudget)
   {
-    m_bUpdatePowerBudget = false;
-
-    char strTemp[6];
-
-    snprintf(strTemp, 6, "%i", m_iPowerBudget);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_BUDGET, strTemp, true);
+    m_bPublishPowerBudget = false;
+    m_network.GetMqttClient().PublishData(MQTT_SET_POWER_BUDGET, String(m_iPowerBudget));
   }
 
-  if (m_logicMode == LOGIC_MODE_PERCENT && m_bUpdatePowerPercentage)
+  if (m_logicMode == LOGIC_MODE_PERCENT && m_bPublishPowerPercentage)
   {
-    m_bUpdatePowerPercentage = false;
-
-    char strTemp[6];
-
-    snprintf(strTemp, 6, "%i", m_iPowerPercentage);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE, strTemp, true);
+    m_bPublishPowerPercentage = false;
+    m_network.GetMqttClient().PublishData(MQTT_SET_POWER_PERCENTAGE, String(m_iPowerPercentage));
   }
 
-  if (m_bUpdateOutputPercentage)
+  if (m_bPublishOutputPercentage)
   {
-    m_bUpdateOutputPercentage = false;
+    m_bPublishOutputPercentage = false;
+    m_network.GetMqttClient().PublishData(MQTT_OUTPUT_PERCENTAGE, String(m_iCurrentPercentage));
+    m_network.GetMqttClient().PublishData(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
+    m_network.GetMqttClient().PublishData(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor()));
+  }
 
-    char strTemp[7];
+  if (m_bPublishConfig)
+  {
+    m_bPublishConfig = false;
 
-    snprintf(strTemp, 7, "%i", m_iCurrentPercentage);
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_PERCENTAGE, strTemp, true);
+    m_network.GetMqttClient().PublishData(MQTT_LOGIC_MODE, (m_logicMode == LOGIC_MODE_BUDGET) ? "Budget" : "Percentage");
+    m_network.GetMqttClient().PublishData(MQTT_BOILER_POWER, String(m_iBoilerPowerRating));
+    m_network.GetMqttClient().PublishData(MQTT_BUDGET_MARGIN, String(m_iPowerBudgetMargin));
+    m_network.GetMqttClient().PublishData(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_PHASE_ANGLE) ? "Phase-angle" : "SSR");
+    m_network.GetMqttClient().PublishData(MQTT_SSR_PERIOD, String(m_iSsrPeriodCount));
+    m_network.GetMqttClient().PublishData(MQTT_ERROR_GAIN, String(m_fErrorGain));
 
-    snprintf(strTemp, 7, "%i", GetCurrentPower());
-    m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_OUTPUT_POWER, strTemp, true);
+        m_network.GetMqttClient().PublishData(MQTT_WIFI_SSID, String(m_network.GetWifiSsid()));
+    m_network.GetMqttClient().PublishData(MQTT_IP_ADDRESS, IPAddress(m_network.GetIpAddr()).toString());
+    m_network.GetMqttClient().PublishData(MQTT_IP_NETMASK, IPAddress(m_network.GetNetMask()).toString());
   }
 
   return true;
@@ -105,19 +108,31 @@ void CPvBoiler::MqttPublishConfig()
 
   if (m_logicMode == CPvBoiler::LOGIC_MODE_PERCENT)
   {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "0", "100", "1");
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100");
   }
   else
   {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "", "", "0.1");
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "0.1");
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
-
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
 
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LOGIC_MODE);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER, "W", "power");
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power");
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN);
+
+  // Diagnostic
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_WIFI_SSID, "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
+
   // Publish our f/w version
-  m_network.GetMqttClient().publish(MQTT_NAME "/" MQTT_FW_VERSION, MY_VERSION, true);
+  m_network.GetMqttClient().PublishData(MQTT_FW_VERSION, MY_VERSION, true);
 }
 
 
@@ -159,6 +174,8 @@ void CPvBoiler::LoadSettings()
     fGain = ERROR_GAIN_DEFAULT;
   }
   m_fErrorGain = fGain;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -176,6 +193,8 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t& iPower)
   EepromCommit();
 
   m_iBoilerPowerRating = iPower;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -185,6 +204,8 @@ void CPvBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
   EepromCommit();
 
   m_iPowerBudgetMargin = iMargin;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -194,6 +215,8 @@ void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t& logicMode)
   EepromCommit();
 
   m_logicMode = logicMode;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -203,6 +226,8 @@ void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t& dimStyle)
   EepromCommit();
 
   m_dimStyle = dimStyle;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -212,6 +237,8 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t& iCount)
   EepromCommit();
 
   m_iSsrPeriodCount = iCount;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -221,6 +248,8 @@ void CPvBoiler::SetErrorGain(const float& fGain)
   EepromCommit();
 
   m_fErrorGain = fGain;
+
+  m_bPublishConfig = true;
 }
 
 
@@ -231,12 +260,12 @@ void CPvBoiler::Update()
     if (m_iPowerPercentage > m_iCurrentPercentage)
     {
       m_iCurrentPercentage++;
-      m_bUpdateOutputPercentage = true;
+      m_bPublishOutputPercentage = true;
     }
     else if (m_iPowerPercentage < m_iCurrentPercentage)
     {
       m_iCurrentPercentage--;
-      m_bUpdateOutputPercentage = true;
+      m_bPublishOutputPercentage = true;
     }
   }
   else if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
@@ -249,7 +278,7 @@ void CPvBoiler::Update()
     if (m_iCurrentPercentage > 0)
     {
       m_iCurrentPercentage--; // Device off or watch-dog triggered: output to 0%
-      m_bUpdateOutputPercentage = true;
+      m_bPublishOutputPercentage = true;
     }
   }
   else
@@ -267,7 +296,7 @@ void CPvBoiler::Update()
     if (iOutputPercentage != m_iCurrentPercentage)
     {
       m_iCurrentPercentage = iOutputPercentage;
-      m_bUpdateOutputPercentage = true;
+      m_bPublishOutputPercentage = true;
     }
   }
 }

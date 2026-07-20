@@ -40,7 +40,7 @@ void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
 }
 
 
-void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
 {
   String strFriendlyItem;
   GetFriendlyName(strItem, strFriendlyItem);
@@ -50,6 +50,9 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   root["unique_id"] = m_strName + "_" + strItem; // Optional
   root["retain"] = true;
   root["qos"] = 1;
+
+  if (bDiag)
+    root["entity_category"] = "diagnostic";
 
   JsonObject device = root["device"].to<JsonObject>();
   device["name"] = HA_DEVICE_NAME;
@@ -93,7 +96,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 }
 
 
-void CMqttClient::PublishNumberConfig(const char* strItem, const char* strMin, const char* strMax, const char* strStep)
+void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /* = "" */, const char* strMin /* = "" */, const char* strMax /* = "" */)
 {
   JsonDocument root;
 
@@ -117,25 +120,31 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strMin, c
 }
 
 
-void CMqttClient::PublishBinarySensorConfig(const char* strItem)
+void CMqttClient::PublishBinarySensorConfig(const char* strItem, const bool bDiag /* = false */)
 {
   JsonDocument root;
 
   root["payload_on"] = "1";
   root["payload_off"] = "0";
 
-  PublishConfig(root, strItem, "binary_sensor");
+  PublishConfig(root, strItem, "binary_sensor", bDiag);
 }
 
 
-void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla)
+void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla, const bool bDiag /* = false */)
 {
   JsonDocument root;
 
   root["unit_of_measurement"] = strUnit;
   root["device_class"] = strCla;
 
-  PublishConfig(root, strItem, "sensor");
+  PublishConfig(root, strItem, "sensor", bDiag);
+}
+
+
+bool CMqttClient::PublishData(const char* strItem, const String& strPayload, const bool bRetained /* = true */)
+{
+  return publish((String(MQTT_NAME "/") + strItem).c_str(), strPayload.c_str(), bRetained);
 }
 
 

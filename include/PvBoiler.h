@@ -18,6 +18,19 @@
 #define MQTT_OUTPUT_POWER                           "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
 
+#define MQTT_LOGIC_MODE                             "logic_mode"
+#define MQTT_BOILER_POWER                           "boiler_power"
+#define MQTT_BUDGET_MARGIN                          "budget_margin"
+#define MQTT_DIM_STYLE                              "dim_style"
+#define MQTT_SSR_PERIOD                             "ssr_period"
+#define MQTT_ERROR_GAIN                             "error_gain"
+
+// Diagnostic
+#define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
+#define MQTT_WIFI_SSID                              "wifi_ssid"
+#define MQTT_IP_ADDRESS                             "ip_address"
+#define MQTT_IP_NETMASK                             "ip_netmask"
+
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
 // Value = firing delay as fraction of half-period (0.0 = start, 1.0 = end)
@@ -76,9 +89,9 @@ class CPvBoiler
 
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 
-    void SetOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bUpdateCtrlEnable = true; };
-    void SetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bUpdatePowerBudget = true; };
-    void SetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bUpdatePowerPercentage = true; };
+    void SetOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlEnable = true; };
+    void SetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
+    void SetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
 
     void SetBoilerPowerRating(const uint16_t& iPower);
     void SetPowerBudgetMargin(const uint16_t& iBudget);
@@ -116,16 +129,18 @@ class CPvBoiler
     uint32_t m_iWatchdogRecoveryCounter = 0;
 
     bool m_bCtrlEnable = true;
-    bool m_bUpdateCtrlEnable = true;
+    bool m_bPublishCtrlEnable = true;
 
     int32_t m_iPowerBudget = 0;
-    bool m_bUpdatePowerBudget = true;
+    bool m_bPublishPowerBudget = true;
 
     uint8_t m_iPowerPercentage = 0;
-    bool m_bUpdatePowerPercentage = true;
+    bool m_bPublishPowerPercentage = true;
 
     uint8_t m_iCurrentPercentage = 0;
-    bool m_bUpdateOutputPercentage = true;
+    bool m_bPublishOutputPercentage = true;
+
+    bool m_bPublishConfig = true;
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
