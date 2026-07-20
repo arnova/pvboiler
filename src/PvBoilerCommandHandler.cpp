@@ -293,7 +293,7 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -313,7 +313,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -333,7 +333,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 
 result_code_t CPvBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM2);
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
