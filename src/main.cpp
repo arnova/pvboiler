@@ -83,7 +83,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (g_app.GetPvBoiler().GetLogicMode() != CPvBoiler::LOGIC_MODE_BUDGET && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  else if (g_app.GetPvBoiler().GetLogicMode() == CPvBoiler::LOGIC_MODE_BUDGET && STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
