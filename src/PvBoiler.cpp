@@ -107,7 +107,7 @@ void CPvBoiler::MqttPublishConfig()
   }
   else
   {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1");
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");

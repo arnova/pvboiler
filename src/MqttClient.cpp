@@ -116,6 +116,8 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
     root["step"] = strStep;
   }
 
+  root["mode"] = "box";
+
   PublishConfig(root, strItem, "number");
 }
 
