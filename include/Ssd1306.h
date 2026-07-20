@@ -16,8 +16,10 @@
 class CSsd1306
 {
   public:
-    CSsd1306(); // Constructor
+    CSsd1306() {}; // Empty constructor
     ~CSsd1306() {}; // Empty destructor
+
+    void Init();
 
     void WriteDisplayStr(const char* strLine, const uint8_t iLine = 0, const bool bClear = true);
 };

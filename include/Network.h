@@ -21,7 +21,10 @@
 class CNetwork
 {
   public:
-    CNetwork();
+    CNetwork(); // Ctor
+    ~CNetwork() {}; // Emtpy dtor
+
+    void Init();
 
     void Loop();
 

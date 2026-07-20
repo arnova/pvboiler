@@ -7,7 +7,6 @@
 
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network)
 {
-  Reset();
 }
 
 

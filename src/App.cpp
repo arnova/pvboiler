@@ -5,10 +5,19 @@
 CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
   m_iLastZeroCrossTime = m_iZeroCrossTime = m_iLastEventTime = micros();
+}
 
+
+void CApp::Init()
+{
+  m_display.Init();
   m_display.WriteDisplayStr(DEVICE_NAME);
   m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
   m_display.WriteDisplayStr("C) Arnova", 2, false);
+
+  m_network.Init();
+
+  m_pvBoiler.Reset();
 }
 
 

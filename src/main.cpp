@@ -130,6 +130,9 @@ void setup()
   TERM_SERIAL.begin(BAUD_RATE);
   TERM_SERIAL.setTimeout(2000);
 
+  // Init g_app instance
+  g_app.Init();
+
   // Setup the MQTT client callback
   g_app.GetNetwork().GetMqttClient().setCallback(MqttCallback);
 

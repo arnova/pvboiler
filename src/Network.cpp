@@ -20,6 +20,11 @@ CNetwork::CNetwork()
   : m_socketServer(SOCKET_SERVER_PORT)
 #endif
 {
+}
+
+
+void CNetwork::Init()
+{
   m_mqttClient.setClient(m_wifiClient);
   LoadSettings();
 
