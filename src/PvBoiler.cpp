@@ -90,10 +90,6 @@ bool CPvBoiler::MqttPublishValues()
     m_network.GetMqttClient().PublishData(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_PHASE_ANGLE) ? "Phase-angle" : "SSR");
     m_network.GetMqttClient().PublishData(MQTT_SSR_PERIOD, String(m_iSsrPeriodCount));
     m_network.GetMqttClient().PublishData(MQTT_ERROR_GAIN, String(m_fErrorGain));
-
-        m_network.GetMqttClient().PublishData(MQTT_WIFI_SSID, String(m_network.GetWifiSsid()));
-    m_network.GetMqttClient().PublishData(MQTT_IP_ADDRESS, IPAddress(m_network.GetIpAddr()).toString());
-    m_network.GetMqttClient().PublishData(MQTT_IP_NETMASK, IPAddress(m_network.GetNetMask()).toString());
   }
 
   return true;

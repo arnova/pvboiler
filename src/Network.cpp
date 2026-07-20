@@ -61,6 +61,9 @@ void CNetwork::LoadSettings()
 
 void CNetwork::InitWifi(const bool bReconnect)
 {
+  // Publish current settings to MQTT
+  MqttPublishValues();
+
   m_wifiTimeoutTimer = 0;
   m_bWifiConnected = false;
 
@@ -170,6 +173,14 @@ void CNetwork::MqttClientInit()
 }
 
 
+void CNetwork::MqttPublishValues()
+{
+  m_mqttClient.PublishData(MQTT_WIFI_SSID, String(m_strWifiSsid));
+  m_mqttClient.PublishData(MQTT_IP_ADDRESS, IPAddress(WiFi.localIP()).toString());
+//  m_mqttClient.PublishData(MQTT_IP_NETMASK, IPAddress(WiFi.net m_ipNetmask).toString());
+}
+
+
 void CNetwork::MqttUpdateServerIp(const uint8_t* ipAddress)
 {
   memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
@@ -231,6 +242,8 @@ void CNetwork::Loop()
   {
     if (!m_bWifiConnected)
     {
+      MqttPublishValues();
+
       // Initialize mDNS
       if (!MDNS.begin(HOST_NAME))
       {

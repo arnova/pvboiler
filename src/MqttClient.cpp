@@ -135,8 +135,11 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, 
 {
   JsonDocument root;
 
-  root["unit_of_measurement"] = strUnit;
-  root["device_class"] = strCla;
+  if (strlen(strUnit) != 0)
+    root["unit_of_measurement"] = strUnit;
+
+  if (strlen(strCla) != 0)
+    root["device_class"] = strCla;
 
   PublishConfig(root, strItem, "sensor", bDiag);
 }

@@ -36,6 +36,7 @@ class CNetwork
     void SetNetMask(const uint8_t* ipNetMask);
 
     void MqttClientInit();
+    void MqttPublishValues();
     void MqttUpdateServerIp(const uint8_t* ipAddress);
 
     const char* GetWifiSsid() { return m_strWifiSsid; };

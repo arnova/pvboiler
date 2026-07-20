@@ -7,30 +7,6 @@
 #include "Network.h"
 #include "PvBoilerCommandHandler.h"
 
-// Control topics
-#define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
-
-#define MQTT_SET_POWER_PERCENTAGE                   "power_percentage"
-#define MQTT_SET_POWER_BUDGET                       "power_budget"
-
-// Status topics
-#define MQTT_FW_VERSION                             "firmware_version"
-#define MQTT_OUTPUT_POWER                           "output_power"
-#define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
-
-#define MQTT_LOGIC_MODE                             "logic_mode"
-#define MQTT_BOILER_POWER                           "boiler_power"
-#define MQTT_BUDGET_MARGIN                          "budget_margin"
-#define MQTT_DIM_STYLE                              "dim_style"
-#define MQTT_SSR_PERIOD                             "ssr_period"
-#define MQTT_ERROR_GAIN                             "error_gain"
-
-// Diagnostic
-#define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
-#define MQTT_WIFI_SSID                              "wifi_ssid"
-#define MQTT_IP_ADDRESS                             "ip_address"
-#define MQTT_IP_NETMASK                             "ip_netmask"
-
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
 // Value = firing delay as fraction of half-period (0.0 = start, 1.0 = end)
