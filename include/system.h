@@ -59,7 +59,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // MQTT settings
 #define MQTT_PORT                               1883
 #define MQTT_UPDATE_TIME                        1     // Seconds
-#define MQTT_MAX_SIZE                           1024
+#define MQTT_MAX_MESSAGE_SIZE                   1024
 
 // Control topics
 #define MQTT_CONTROLLER_ON_OFF                      "controller_enable"

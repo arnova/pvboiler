@@ -62,7 +62,7 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
 void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   // Serialize JSON for MQTT
-  char message[MQTT_MAX_SIZE];
+  char message[MQTT_MAX_MESSAGE_SIZE];
   serializeJson(root, message);
 
 #ifdef MQTT_DEBUG
@@ -219,7 +219,7 @@ void CMqttClient::Init(const uint8_t* serverIp)
 {
   memcpy(m_serverIp, serverIp, 4);
 
-  setBufferSize(MQTT_MAX_SIZE);
+  setBufferSize(MQTT_MAX_MESSAGE_SIZE);
   setServer(m_serverIp, MQTT_PORT);
 }
 
