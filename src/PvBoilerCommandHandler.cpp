@@ -22,7 +22,8 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "margin [p]             : For budget logic mode margin to [p] Watt\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\n\r"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
-                                  "egain [g]              : Set error-gain value [g]\r\n"
+                                  "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
+                                  "eclamp [c]             : For budget logic mode set error-clamp to value [c]%\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Use [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
@@ -221,11 +222,12 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" ssr_period=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
-  CTermPrint::print(" egain=");
+  CTermPrint::print(" error_gain=");
   CTermPrint::print(String(m_pvBoiler.GetErrorGain(), 3));
 
-  CTermPrint::print(" eclamp=");
-  CTermPrint::print(String(m_pvBoiler.GetErrorClamp(), 3));
+  CTermPrint::print(" error_clamp=");
+  CTermPrint::print(String(m_pvBoiler.GetErrorClamp()));
+  CTermPrint::print("%");
 
   CTermPrint::println("");
 

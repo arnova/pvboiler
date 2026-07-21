@@ -19,7 +19,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 
 // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
 #define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
-#define SSR_PERIOD_COUNT_MAX                    1000  // (= 0.5s @ 50 Hz).
+#define SSR_PERIOD_COUNT_MAX                    254
 
 // Proportional error gain
 #define ERROR_GAIN_DEFAULT                      0.1f
