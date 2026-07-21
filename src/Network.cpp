@@ -32,7 +32,7 @@ void CNetwork::Init()
 
   if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0))
   {
-    MqttClientInit();
+    m_mqttClient.Init(m_serverIpAddr);
   }
 }
 
@@ -61,9 +61,6 @@ void CNetwork::LoadSettings()
 
 void CNetwork::InitWifi(const bool bReconnect)
 {
-  // Publish current settings to MQTT
-  MqttPublishValues();
-
   m_wifiTimeoutTimer = 0;
   m_bWifiConnected = false;
 
@@ -159,12 +156,6 @@ void CNetwork::SetNetMask(const uint8_t* ipNetMask)
 }
 
 
-void CNetwork::MqttClientInit()
-{
-  m_mqttClient.Init(m_serverIpAddr);
-}
-
-
 void CNetwork::MqttPublishValues()
 {
   m_mqttClient.PublishMessage(MQTT_WIFI_SSID, String(m_strWifiSsid));
@@ -180,7 +171,13 @@ void CNetwork::MqttUpdateServerIp(const uint8_t* ipAddress)
   EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
   EEPROM.commit();
 
-  MqttClientInit();
+  // Disconnect to current server
+  if (m_mqttClient.connected())
+  {
+    m_mqttClient.disconnect();
+  }
+
+  m_mqttClient.Init(m_serverIpAddr);
 }
 
 
@@ -234,8 +231,6 @@ void CNetwork::Loop()
   {
     if (!m_bWifiConnected)
     {
-      MqttPublishValues();
-
       // Initialize mDNS
       if (!MDNS.begin(HOST_NAME))
       {

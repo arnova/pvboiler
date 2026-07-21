@@ -276,8 +276,10 @@ void CApp::HandleNetwork()
 
   if (m_network.HandleMqttClient())
   {
-    // MQTT (re)connection: publish config
+    // MQTT (re)connection: publish config & values
     m_pvBoiler.MqttPublishConfig();
+    m_pvBoiler.MqttPublishValues();
+    m_network.MqttPublishValues();
   }
 
   if (!m_network.IsConnected() || !m_network.IsMqttConnected())

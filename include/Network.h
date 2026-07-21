@@ -35,7 +35,6 @@ class CNetwork
     void SetIpAddr(const uint8_t* ipAddress);
     void SetNetMask(const uint8_t* ipNetMask);
 
-    void MqttClientInit();
     void MqttPublishValues();
     void MqttUpdateServerIp(const uint8_t* ipAddress);
 
