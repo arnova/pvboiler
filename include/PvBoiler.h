@@ -81,7 +81,7 @@ class CPvBoiler
     uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
     uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
-    float UpdateTriacPhaseAngle(const uint32_t iPeriodTime);
+    float UpdateTriacPhaseAngle(const uint32_t iPeriodTime, const uint32_t iZeroCrossWindow);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
     float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
 
@@ -96,6 +96,8 @@ class CPvBoiler
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetErrorGain() const { return m_fErrorGain; };
     uint8_t GetErrorClamp() const { return m_iErrorClamp; };
+    uint32_t GetNetPeriod() const { return m_iPeriodTime; };
+    uint32_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
 
   private:
     void Update();
@@ -104,7 +106,7 @@ class CPvBoiler
     CNetwork& m_network;
 
     elapsedMillis m_loopTimer = 0;
-    elapsedMillis m_MQTTTimer = 0;
+    elapsedMillis m_mqttPublishTimer = 0;
     uint32_t m_iWatchdogCounter = 0;
     uint32_t m_iWatchdogRecoveryCounter = 0;
 
@@ -133,6 +135,8 @@ class CPvBoiler
 
     float m_fTriacAngleFactor = 0.0f;
     float m_fTriacPhaseAngle = 0.0f; // us
+    uint32_t m_iPeriodTime = 0; // us
+    uint32_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
 
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;

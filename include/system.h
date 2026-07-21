@@ -31,10 +31,10 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define ERROR_CLAMP_MAX                         100
 
 // Initial value for phase correction time
-#define ZERO_CROSS_PHASE_CORRECTION_DEFAULT     600 // uS
+#define ZERO_CROSS_WINDOW_DEFAULT              1200 // uS
 
 // Minimum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MIN_US                  200.0f // us
+#define ZERO_CROSS_EDGE_MIN_US                 200.0f // us
 
 // Maximum time for positive/negative zero crossing
 #define ZERO_CROSS_EDGE_MAX_US                 2000.0f // us
@@ -76,16 +76,18 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_BOILER_POWER                           "boiler_power_rating"
 #define MQTT_BUDGET_MARGIN                          "budget_margin"
 #define MQTT_DIM_STYLE                              "dim_style"
-#define MQTT_SSR_PERIOD                             "ssr_period"
+#define MQTT_SSR_PERIOD_COUNT                       "ssr_period_count"
 #define MQTT_ERROR_GAIN                             "error_gain"
 #define MQTT_ERROR_CLAMP                            "error_clamp"
 
 // Diagnostic
-#define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
-#define MQTT_PHASE_ANGLE                            "phase_angle"
 #define MQTT_WIFI_SSID                              "wifi_ssid"
 #define MQTT_IP_ADDRESS                             "ip_address"
 #define MQTT_IP_NETMASK                             "ip_netmask"
+#define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
+#define MQTT_PHASE_ANGLE                            "phase_angle"
+#define MQTT_NET_PERIOD                             "net_period"
+#define MQTT_ZERO_CROSS_WINDOW                      "zero_cross_window"
 
 // Socket server settings
 #define SOCKET_SERVER_PORT                      8000

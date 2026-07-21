@@ -273,11 +273,19 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
   CTermPrint::print("%");
 
+  CTermPrint::print(" net_period=");
+  CTermPrint::print(String(static_cast<float>(m_pvBoiler.GetNetPeriod()) / 1000.0f, 2));
+  CTermPrint::print("ms");
+
+  CTermPrint::print(" zero_cross_window=");
+  CTermPrint::print(String(m_pvBoiler.GetZeroCrossWindow()));
+  CTermPrint::print("us");
+
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     CTermPrint::print(" phase_angle=");
-    CTermPrint::print(String((m_pvBoiler.GetTriacPhaseAngle() / 1000.0f), 3));
-    CTermPrint::print("ms");
+    CTermPrint::print(String(m_pvBoiler.GetTriacPhaseAngle()));
+    CTermPrint::print("us");
 
     CTermPrint::print(" angle_factor=");
     CTermPrint::print(String(m_pvBoiler.GetTriacAngleFactor(), 4));

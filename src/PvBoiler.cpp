@@ -22,11 +22,11 @@ void CPvBoiler::Loop()
   }
 
   // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_MQTTTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
+  if (m_mqttPublishTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
   {
     MqttPublishValues();
 
-    m_MQTTTimer = 0;
+    m_mqttPublishTimer = 0;
   }
 }
 
@@ -81,13 +81,17 @@ bool CPvBoiler::MqttPublishValues()
     m_bPublishOutputPercentage = false;
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, String(m_iCurrentPercentage));
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
-    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String((GetTriacPhaseAngle() / 1000.0f), 3));
+    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String(GetTriacPhaseAngle()));
 
     if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor(), 4));
     }
   }
+
+  // These are always updated
+  m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, String(m_iPeriodTime));
+  m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, String(m_iZeroCrossWindow));
 
   if (m_bPublishSettings)
   {
@@ -110,7 +114,7 @@ bool CPvBoiler::MqttPublishValues()
     if (m_dimStyle == DIM_STYLE_SSR)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "SSR");
-      m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD, String(m_iSsrPeriodCount));
+      m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, String(m_iSsrPeriodCount));
     }
     else
     {
@@ -156,11 +160,11 @@ void CPvBoiler::MqttPublishConfig()
 
   if (m_dimStyle == DIM_STYLE_SSR)
   {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT);
   }
   else
   {
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_SSR_PERIOD);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_SSR_PERIOD_COUNT);
   }
 
   // Diagnostic
@@ -168,7 +172,15 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "ms", "duration", "measurement", true);
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "ms", "duration", "measurement", true);  
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "us", "", "", true);
+
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "ms", "duration", "measurement", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "us", "", "", true);
+
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
+
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
     m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
@@ -311,8 +323,11 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 }
 
 
-float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime)
+float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime, const uint32_t iZeroCrossWindow)
 {
+  m_iPeriodTime = iPeriodTime;
+  m_iZeroCrossWindow = iZeroCrossWindow;
+
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
     m_fTriacAngleFactor = 0.0f;
@@ -341,7 +356,7 @@ float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime)
     m_fTriacPhaseAngle = 0; // Do nothing
   }
 
-  return m_fTriacPhaseAngle;
+  return m_fTriacPhaseAngle + (iZeroCrossWindow / 2); // Return phase angle including zero cross window compensation
 }
 
 
