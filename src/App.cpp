@@ -47,50 +47,40 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 
     m_iLastZeroCrossTime = iNow;
 
-    if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_SSR)
+    if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
     {
-      if (m_pvBoiler.GetCurrentPercentage() == 0)
+      if (m_iCurrentPercentage == 0)
       {
         digitalWrite(TRIAC_OUTPUT, LOW); // Always off
       }
       else
       {
         m_iSSRPeriodCounter++;
-        if ((m_iSSRPeriodCounter * 100) / m_pvBoiler.GetSsrPeriodCount() <= m_pvBoiler.GetCurrentPercentage())
+        if ((m_iSSRPeriodCounter * 100) / m_iSSRPeriodCount <= m_iCurrentPercentage)
         {
-          // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-          // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-          const uint32_t iTriacDelayTicks = (m_iPhaseCorrectionTime + ZERO_CROSS_EDGE_MIN_US) * 80;
-
           m_bTriacOn = true;
-          timer1_write(iTriacDelayTicks);
+          timer1_write(m_iTriacDelayTicks);
         }
         else
         {
           digitalWrite(TRIAC_OUTPUT, LOW); // Off
         }
 
-        if (m_iSSRPeriodCounter >= m_pvBoiler.GetSsrPeriodCount())
+        if (m_iSSRPeriodCounter >= m_iSSRPeriodCount)
         {
           m_iSSRPeriodCounter = 0;
         }
       }
     }
-    else // Dim-style = phase-angle control
+    else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-      const float fDelay = max((m_pvBoiler.GetTriacAngleFactor() * m_iZeroCrossTime), ZERO_CROSS_EDGE_MIN_US); // Make sure we trigger not too close to zero cross
-
       // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-      if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= m_iZeroCrossTime)
+      if (m_iTriacDelayTicks > 0)
       {
-        // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-        // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-        const uint32_t iTriacDelayTicks = (fDelay + m_iPhaseCorrectionTime) * 80;
-
         m_bTriacOn = true;
-        timer1_write(iTriacDelayTicks);
+        timer1_write(m_iTriacDelayTicks);
       }
     }
   }
@@ -386,6 +376,31 @@ void CApp::HandleDisplay()
 }
 
 
+// Update values from PvBoiler for triac ISR
+void CApp::UpdateValues()
+{
+  noInterrupts(); // Enter critical section
+
+  // Get updated values for ISR
+  m_iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();
+  m_iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
+  m_dimStyle = m_pvBoiler.GetDimStyle();
+
+  // Get current phase correction & zero cross time value from ISR
+  const uint32_t iPhaseCorrectionTime = m_iPhaseCorrectionTime;
+  const uint32_t iZeroCrossTime = m_iZeroCrossTime;
+
+  // Get triac phase angle in uS
+  const float fPhaseAngle = m_pvBoiler.UpdateTriacPhaseAngle(iPhaseCorrectionTime, iZeroCrossTime);
+
+  // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
+  // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+  m_iTriacDelayTicks = fPhaseAngle * 80;
+
+  interrupts(); // Leave critical section
+}
+
+
 void CApp::Loop()
 {
   HandleNetwork();
@@ -397,6 +412,8 @@ void CApp::Loop()
   PollSerial();
 
   m_pvBoiler.Loop();
+
+  UpdateValues();
 
   HandleDisplay();
 }

@@ -44,7 +44,8 @@ class CPvBoiler
 
     enum dim_style_e
     {
-      DIM_STYLE_PHASE_ANGLE = 0,
+      DIM_STYLE_NONE = 0,
+      DIM_STYLE_PHASE_ANGLE,
       DIM_STYLE_SSR
     };
     typedef enum dim_style_e dim_style_t;
@@ -77,9 +78,12 @@ class CPvBoiler
     void SetErrorGain(const float& fGain);
     void SetErrorClamp(const uint8_t& iClamp);
 
-    inline const float& GetTriacAngleFactor() const { return triac_percentage_factor[m_iCurrentPercentage]; };
-    inline const uint8_t& GetCurrentPercentage() const { return m_iCurrentPercentage; };
+    const uint8_t& GetCurrentPercentage() const { return m_iCurrentPercentage; };
     const uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
+
+    float UpdateTriacPhaseAngle(const uint32_t& iPhaseCorrectionTime, const uint32_t& iZeroCrossTime);
+    const float& GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
+    const float& GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
 
     const bool& GetCtrlOnOff() const { return m_bCtrlEnable; };
     const int32_t& GetPowerBudget() const { return m_iPowerBudget; };
@@ -88,8 +92,8 @@ class CPvBoiler
     const uint16_t& GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
     const uint16_t& GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
     const logic_mode_t& GetLogicMode() const { return m_logicMode; };
-    inline const dim_style_t& GetDimStyle() const { return m_dimStyle; };
-    inline const uint8_t& GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
+    const dim_style_t& GetDimStyle() const { return m_dimStyle; };
+    const uint8_t& GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     const float& GetErrorGain() const { return m_fErrorGain; };
     const uint8_t& GetErrorClamp() const { return m_iErrorClamp; };
 
@@ -124,10 +128,13 @@ class CPvBoiler
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
 
     // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
-    CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_PHASE_ANGLE;
+    CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 
     // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
     uint8_t m_iSsrPeriodCount = 50; // (= 0.5s @ 50 Hz).
+
+    float m_fTriacAngleFactor = 0.0f;
+    float m_fTriacPhaseAngle = 0.0f; // us
 
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;

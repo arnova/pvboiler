@@ -192,15 +192,18 @@ void CMqttClient::PublishBinarySensorConfig(const char* strItem, const bool bDia
 }
 
 
-void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, const char* strCla, const bool bDiag /* = false */)
+void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /* = "" */, const char* strDeviceClass /* = "" */, const char* strStateClass /* = "" */, const bool bDiag /* = false */)
 {
   JsonDocument root;
 
   if (strlen(strUnit) != 0)
     root["unit_of_measurement"] = strUnit;
 
-  if (strlen(strCla) != 0)
-    root["device_class"] = strCla;
+  if (strlen(strDeviceClass) != 0)
+    root["device_class"] = strDeviceClass;
+
+  if (strlen(strStateClass) != 0)
+    root["state_class"] = strStateClass;
 
   PublishGetterConfig(root, strItem, "sensor", bDiag);
 }

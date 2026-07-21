@@ -13,6 +13,7 @@ class CApp
     CApp();
 
     void Init();
+    void UpdateValues();
     void Loop();
 
     void IRAM_ATTR ZeroCrossHandler();
@@ -42,6 +43,10 @@ class CApp
     volatile uint32_t m_iZeroCrossTime = 0;
     volatile bool m_bTriacOn = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;
+    volatile uint32_t m_iTriacDelayTicks = 0;
+    volatile uint8_t m_iSSRPeriodCount = 0;
+    volatile uint8_t m_iCurrentPercentage = 0;
+    volatile CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 
     uint8_t m_termCharCount = 0;
     char m_strTermCommand[CMD_BUF_SIZE] = { 0 };

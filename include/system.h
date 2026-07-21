@@ -79,6 +79,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 
 // Diagnostic
 #define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
+#define MQTT_PHASE_ANGLE                            "phase_angle"
 #define MQTT_WIFI_SSID                              "wifi_ssid"
 #define MQTT_IP_ADDRESS                             "ip_address"
 #define MQTT_IP_NETMASK                             "ip_netmask"
