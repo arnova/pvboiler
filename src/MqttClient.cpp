@@ -226,7 +226,9 @@ void CMqttClient::Init(const uint8_t* serverIp)
 
 bool CMqttClient::ServerConnect()
 {
+#ifdef MQTT_DEBUG
   CTermPrint::print(String("Connecting to MQTT server: ") + IPAddress(m_serverIp).toString() + ":" + String(MQTT_PORT) + "...");
+#endif
   // Create a random client ID
   String clientId = HOST_NAME "-";
   clientId += String(random(0xffff), HEX);
@@ -234,12 +236,16 @@ bool CMqttClient::ServerConnect()
 //    if (connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
   if (!connect(clientId.c_str()))
   {
+#ifdef MQTT_DEBUG
     CTermPrint::print("ERROR, rc=");
     CTermPrint::println(state());
+#endif
     return false;
   }
 
+#ifdef MQTT_DEBUG
   CTermPrint::println("OK");
+#endif
 
   return true;
 }

@@ -204,13 +204,15 @@ WiFiClient& CNetwork::GetSocketServerClient()
 bool CNetwork::HandleMqttClient()
 {
   // Handle MQTT client-server connection
-  if (m_bWifiConnected && !m_mqttClient.connected())
+  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) &&
+      m_bWifiConnected &&
+      !m_mqttClient.connected())
   {
-    if (m_mqttTimeoutTimer > 5000)
+    if (m_mqttTimeoutTimer > MQTT_CONNECT_TIMEOUT)
     {
       m_mqttTimeoutTimer = 0;
 
-      if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) && m_mqttClient.ServerConnect())
+      if (m_mqttClient.ServerConnect())
       {
         return true; // Reconnected
       }
