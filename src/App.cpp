@@ -381,21 +381,27 @@ void CApp::UpdateValues()
 {
   noInterrupts(); // Enter critical section
 
-  // Get updated values for ISR
-  m_iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();
-  m_iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
-  m_dimStyle = m_pvBoiler.GetDimStyle();
-
   // Get current phase correction & zero cross time value from ISR
   const uint32_t iPhaseCorrectionTime = m_iPhaseCorrectionTime;
   const uint32_t iZeroCrossTime = m_iZeroCrossTime;
 
-  // Get triac phase angle in uS
-  const float fPhaseAngle = m_pvBoiler.UpdateTriacPhaseAngle(iPhaseCorrectionTime, iZeroCrossTime);
+  interrupts(); // Leave critical section
+
+  // Get updated values for ISR
+  const uint8_t iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();
+  const uint8_t iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
+  const CPvBoiler::dim_style_t dimStyle = m_pvBoiler.GetDimStyle();
 
   // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
   // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  m_iTriacDelayTicks = fPhaseAngle * 80;
+  const uint32_t iTriacDelayTicks = m_pvBoiler.UpdateTriacPhaseAngle(iPhaseCorrectionTime, iZeroCrossTime) * 80;
+
+  noInterrupts(); // Enter critical section
+
+  m_iCurrentPercentage = iCurrentPercentage;
+  m_iSSRPeriodCount = iSSRPeriodCount;
+  m_dimStyle = dimStyle;
+  m_iTriacDelayTicks = iTriacDelayTicks;
 
   interrupts(); // Leave critical section
 }
