@@ -173,6 +173,10 @@ void CPvBoiler::MqttPublishConfig()
   {
     m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
   }
+  else
+  {
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR);
+  }
 
   // Publish our f/w version
   m_network.GetMqttClient().PublishMessage(MQTT_FW_VERSION, MY_VERSION, true);
