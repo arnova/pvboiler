@@ -222,7 +222,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
   CTermPrint::print(" egain=");
-  CTermPrint::print(m_pvBoiler.GetErrorGain());
+  CTermPrint::print(String(m_pvBoiler.GetErrorGain(), 3));
 
   CTermPrint::println("");
 
@@ -271,7 +271,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     CTermPrint::print(" angle_factor=");
-    CTermPrint::print(m_pvBoiler.GetTriacAngleFactor());
+    CTermPrint::print(String(m_pvBoiler.GetTriacAngleFactor(), 4));
   }
 
   CTermPrint::println("");
@@ -425,7 +425,7 @@ result_code_t CPvBoilerCommandHandler::CmdErrorGain(const char *strArgs)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, 0.01f, 100.0f, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, 0.001f, 100.0f, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 

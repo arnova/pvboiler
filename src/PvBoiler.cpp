@@ -81,7 +81,7 @@ bool CPvBoiler::MqttPublishValues()
     m_bPublishOutputPercentage = false;
     m_network.GetMqttClient().PublishData(MQTT_OUTPUT_PERCENTAGE, String(m_iCurrentPercentage));
     m_network.GetMqttClient().PublishData(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
-    m_network.GetMqttClient().PublishData(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor()));
+    m_network.GetMqttClient().PublishData(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor(), 4));
   }
 
   if (m_bPublishSettings)
@@ -93,7 +93,7 @@ bool CPvBoiler::MqttPublishValues()
     m_network.GetMqttClient().PublishData(MQTT_BUDGET_MARGIN, String(m_iPowerBudgetMargin));
     m_network.GetMqttClient().PublishData(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_PHASE_ANGLE) ? "Phase-angle" : "SSR");
     m_network.GetMqttClient().PublishData(MQTT_SSR_PERIOD, String(m_iSsrPeriodCount));
-    m_network.GetMqttClient().PublishData(MQTT_ERROR_GAIN, String(m_fErrorGain));
+    m_network.GetMqttClient().PublishData(MQTT_ERROR_GAIN, String(m_fErrorGain, 3));
   }
 
   return true;
