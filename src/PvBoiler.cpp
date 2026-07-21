@@ -81,7 +81,7 @@ bool CPvBoiler::MqttPublishValues()
     m_bPublishOutputPercentage = false;
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, String(m_iCurrentPercentage));
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
-    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String(GetTriacPhaseAngle()));
+    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String((GetTriacPhaseAngle() / 1000.0f), 3));
 
     if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
     {
@@ -168,7 +168,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "us", "duration", "measurement", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "ms", "duration", "measurement", true);
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
     m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
@@ -311,15 +311,12 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 }
 
 
-float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPhaseCorrectionTime, const uint32_t iZeroCrossTime)
+float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iZeroCrossTime)
 {
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
     m_fTriacAngleFactor = 0.0f;
-
-    // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-    // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-    m_fTriacPhaseAngle = (iPhaseCorrectionTime + ZERO_CROSS_EDGE_MIN_US);
+    m_fTriacPhaseAngle = ZERO_CROSS_EDGE_MIN_US;
   }
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
@@ -331,9 +328,7 @@ float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPhaseCorrectionTime, cons
     // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
     if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iZeroCrossTime)
     {
-      // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-      // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-      m_fTriacPhaseAngle = (fDelay + iPhaseCorrectionTime);
+      m_fTriacPhaseAngle = fDelay;
     }
     else
     {

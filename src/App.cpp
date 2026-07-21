@@ -396,7 +396,7 @@ void CApp::UpdateValues()
 
   // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
   // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  const uint32_t iTriacDelayTicks = m_pvBoiler.UpdateTriacPhaseAngle(iPhaseCorrectionTime, iZeroCrossTime) * 80;
+  const uint32_t iTriacDelayTicks = (m_pvBoiler.UpdateTriacPhaseAngle(iZeroCrossTime) + iPhaseCorrectionTime) * 80;
 
   noInterrupts(); // Enter critical section
 

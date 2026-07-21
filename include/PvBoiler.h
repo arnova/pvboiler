@@ -81,7 +81,7 @@ class CPvBoiler
     uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
     uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
-    float UpdateTriacPhaseAngle(const uint32_t iPhaseCorrectionTime, const uint32_t iZeroCrossTime);
+    float UpdateTriacPhaseAngle(const uint32_t iZeroCrossTime);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
     float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
 
