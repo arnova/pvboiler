@@ -96,7 +96,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 }
 
 
-void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /* = "" */, const char* strMin /* = "" */, const char* strMax /* = "" */)
+void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /* = "" */, const char* strMin /* = "" */, const char* strMax /* = "" */, const bool bBox /* = true */)
 {
   JsonDocument root;
 
@@ -116,7 +116,10 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
     root["step"] = strStep;
   }
 
-  root["mode"] = "box";
+  if (bBox)
+  {
+    root["mode"] = "box";
+  }
 
   PublishConfig(root, strItem, "number");
 }

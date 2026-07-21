@@ -103,7 +103,7 @@ void CPvBoiler::MqttPublishConfig()
 
   if (m_logicMode == CPvBoiler::LOGIC_MODE_PERCENT)
   {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100");
+    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100", false);
   }
   else
   {

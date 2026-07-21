@@ -13,7 +13,7 @@ class CMqttClient : public PubSubClient
     static void GetFriendlyName(const String& strName, String& strFriendly);
 
     void PublishSwitchConfig(const char* strItem);
-    void PublishNumberConfig(const char* strItem, const char* strStep, const char* strMin = "", const char* strMax = "");
+    void PublishNumberConfig(const char* strItem, const char* strStep = "", const char* strMin = "", const char* strMax = "", const bool bBox = true);
     void PublishBinarySensorConfig(const char* strItem, const bool bDiag = false);
     void PublishSensorConfig(const char* strItem, const char* strUnit = "", const char* strCla = "", const bool bDiag = false);
 
