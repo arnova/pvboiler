@@ -311,7 +311,7 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 }
 
 
-float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iZeroCrossTime)
+float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime)
 {
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
@@ -323,10 +323,10 @@ float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iZeroCrossTime)
     // Update triac angle factor
     m_fTriacAngleFactor = triac_percentage_factor[m_iCurrentPercentage];
 
-    const float fDelay = max((m_fTriacAngleFactor * iZeroCrossTime), ZERO_CROSS_EDGE_MIN_US); // Make sure we trigger not too close to zero cross
+    const float fDelay = max((m_fTriacAngleFactor * iPeriodTime), ZERO_CROSS_EDGE_MIN_US); // Make sure we trigger not too close to zero cross
 
     // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-    if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iZeroCrossTime)
+    if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
     {
       m_fTriacPhaseAngle = fDelay;
     }

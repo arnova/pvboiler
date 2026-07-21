@@ -4,7 +4,7 @@
 
 CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
-  m_iLastZeroCrossTime = m_iZeroCrossTime = m_iLastEventTime = micros();
+  m_iLastZeroCrossTime = m_iPeriodTime = m_iLastEventTime = micros();
 }
 
 
@@ -43,7 +43,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 
   if (bLongPulse)
   {
-    m_iZeroCrossTime = iNow - m_iLastZeroCrossTime;
+    m_iPeriodTime = iNow - m_iLastZeroCrossTime;
 
     m_iLastZeroCrossTime = iNow;
 
@@ -87,7 +87,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
   else // Short pulse
   {
     // NOTE: The time between rising edge and falling edge is used (/2) for phase correction
-    m_iPhaseCorrectionTime = (iNow - m_iLastZeroCrossTime) / 2;
+    m_iPhaseCorrectionTime = iPulseWidth / 2;
   }
 }
 
@@ -385,7 +385,7 @@ void CApp::UpdateValues()
 
   // Get current phase correction & zero cross time value from ISR
   const uint32_t iPhaseCorrectionTime = m_iPhaseCorrectionTime;
-  const uint32_t iZeroCrossTime = m_iZeroCrossTime;
+  const uint32_t iPeriodTime = m_iPeriodTime;
 
   interrupts(); // Leave critical section
 
@@ -396,7 +396,7 @@ void CApp::UpdateValues()
 
   // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
   // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  const uint32_t iTriacDelayTicks = (m_pvBoiler.UpdateTriacPhaseAngle(iZeroCrossTime) + iPhaseCorrectionTime) * 80;
+  const uint32_t iTriacDelayTicks = (m_pvBoiler.UpdateTriacPhaseAngle(iPeriodTime) + iPhaseCorrectionTime) * 80;
 
   noInterrupts(); // Enter critical section
 

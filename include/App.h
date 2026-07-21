@@ -40,7 +40,7 @@ class CApp
     volatile uint32_t m_iLastZeroCrossTime = 0;
     volatile uint32_t m_iLastEventTime = 0;
     volatile uint32_t m_iPhaseCorrectionTime = ZERO_CROSS_PHASE_CORRECTION_DEFAULT;
-    volatile uint32_t m_iZeroCrossTime = 0;
+    volatile uint32_t m_iPeriodTime = 0;
     volatile bool m_bTriacOn = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;
     volatile uint32_t m_iTriacDelayTicks = 0;
