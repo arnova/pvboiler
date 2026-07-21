@@ -78,24 +78,24 @@ class CPvBoiler
     void SetErrorGain(const float fGain);
     void SetErrorClamp(const uint8_t iClamp);
 
-    const uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
-    const uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
+    uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
+    uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
     float UpdateTriacPhaseAngle(const uint32_t iPhaseCorrectionTime, const uint32_t iZeroCrossTime);
-    const float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
-    const float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
+    float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
+    float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
 
-    const bool GetCtrlOnOff() const { return m_bCtrlEnable; };
-    const int32_t GetPowerBudget() const { return m_iPowerBudget; };
-    const uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
+    bool GetCtrlOnOff() const { return m_bCtrlEnable; };
+    int32_t GetPowerBudget() const { return m_iPowerBudget; };
+    uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
 
-    const uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
-    const uint16_t GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
-    const logic_mode_t GetLogicMode() const { return m_logicMode; };
-    const dim_style_t GetDimStyle() const { return m_dimStyle; };
-    const uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
-    const float GetErrorGain() const { return m_fErrorGain; };
-    const uint8_t GetErrorClamp() const { return m_iErrorClamp; };
+    uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
+    uint16_t GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
+    logic_mode_t GetLogicMode() const { return m_logicMode; };
+    dim_style_t GetDimStyle() const { return m_dimStyle; };
+    uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
+    float GetErrorGain() const { return m_fErrorGain; };
+    uint8_t GetErrorClamp() const { return m_iErrorClamp; };
 
   private:
     static void EepromCommit();
