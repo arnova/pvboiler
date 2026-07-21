@@ -97,7 +97,7 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 }
 
 
-void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool& bSetter /* = false */)
+void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
   JsonDocument root;
 

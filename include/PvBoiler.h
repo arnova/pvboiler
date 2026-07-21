@@ -66,36 +66,36 @@ class CPvBoiler
 
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 
-    void SetOnOff(const bool& bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlEnable = true; };
-    void SetPowerBudget(const int32_t& iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
-    void SetPowerPercentage(const uint8_t& iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
+    void SetOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlEnable = true; };
+    void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
+    void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
 
-    void SetBoilerPowerRating(const uint16_t& iPower);
-    void SetPowerBudgetMargin(const uint16_t& iBudget);
-    void SetLogicMode(const logic_mode_t& logicMode);
-    void SetDimStyle(const dim_style_t& dimStyle);
-    void SetSsrPeriodCount(const uint8_t& iPeriod);
-    void SetErrorGain(const float& fGain);
-    void SetErrorClamp(const uint8_t& iClamp);
+    void SetBoilerPowerRating(const uint16_t iPower);
+    void SetPowerBudgetMargin(const uint16_t iBudget);
+    void SetLogicMode(const logic_mode_t logicMode);
+    void SetDimStyle(const dim_style_t dimStyle);
+    void SetSsrPeriodCount(const uint8_t iPeriod);
+    void SetErrorGain(const float fGain);
+    void SetErrorClamp(const uint8_t iClamp);
 
-    const uint8_t& GetCurrentPercentage() const { return m_iCurrentPercentage; };
+    const uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
     const uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
-    float UpdateTriacPhaseAngle(const uint32_t& iPhaseCorrectionTime, const uint32_t& iZeroCrossTime);
-    const float& GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
-    const float& GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
+    float UpdateTriacPhaseAngle(const uint32_t iPhaseCorrectionTime, const uint32_t iZeroCrossTime);
+    const float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
+    const float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
 
-    const bool& GetCtrlOnOff() const { return m_bCtrlEnable; };
-    const int32_t& GetPowerBudget() const { return m_iPowerBudget; };
-    const uint8_t& GetPowerPercentage() const { return m_iPowerPercentage; };
+    const bool GetCtrlOnOff() const { return m_bCtrlEnable; };
+    const int32_t GetPowerBudget() const { return m_iPowerBudget; };
+    const uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
 
-    const uint16_t& GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
-    const uint16_t& GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
-    const logic_mode_t& GetLogicMode() const { return m_logicMode; };
-    const dim_style_t& GetDimStyle() const { return m_dimStyle; };
-    const uint8_t& GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
-    const float& GetErrorGain() const { return m_fErrorGain; };
-    const uint8_t& GetErrorClamp() const { return m_iErrorClamp; };
+    const uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
+    const uint16_t GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
+    const logic_mode_t GetLogicMode() const { return m_logicMode; };
+    const dim_style_t GetDimStyle() const { return m_dimStyle; };
+    const uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
+    const float GetErrorGain() const { return m_fErrorGain; };
+    const uint8_t GetErrorClamp() const { return m_iErrorClamp; };
 
   private:
     static void EepromCommit();

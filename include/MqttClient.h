@@ -32,7 +32,7 @@ class CMqttClient : public PubSubClient
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
     void PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
     void PublishGetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag = false);
-    void UnpublishConfig(const char* strItem, const char* strTopicType, const bool& bSetter = false);
+    void UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter = false);
 
     uint8_t m_serverIp[4] = { 0 };
     const String m_strName = MQTT_NAME;

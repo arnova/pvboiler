@@ -45,7 +45,7 @@ class CNetwork
     const uint8_t* GetNetMask() { return m_ipNetmask; };
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
 
-    const bool& IsConnected() { return m_bWifiConnected; };
+    const bool IsConnected() { return m_bWifiConnected; };
     const bool IsMqttConnected() { return m_mqttClient.connected(); };
     bool HandleMqttClient();
 
