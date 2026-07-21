@@ -17,13 +17,23 @@ class CMqttClient : public PubSubClient
     void PublishBinarySensorConfig(const char* strItem, const bool bDiag = false);
     void PublishSensorConfig(const char* strItem, const char* strUnit = "", const char* strCla = "", const bool bDiag = false);
 
+    void UnpublishSwitchConfig(const char* strItem);
+    void UnpublishNumberConfig(const char* strItem);
+    void UnpublishBinarySensorConfig(const char* strItem);
+    void UnpublishSensorConfig(const char* strItem);
+
     bool PublishData(const char* strItem, const String& strPayload, const bool bRetained = true);
 
     void Init(const uint8_t* serverIp);
     bool ServerConnect();
 
   private:
-    void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag = false);
+    void ConstructPublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
+    void PublishToClient(JsonDocument& root, const char* strItem, const char* strTopicType);
+    void PublishInputConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
+    void PublishOutputConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag = false);
+    void UnpublishInputConfig(const char* strItem, const char* strTopicType);
+    void UnpublishOutputConfig(const char* strItem, const char* strTopicType);
 
     uint8_t m_serverIp[4] = { 0 };
     const String m_strName = MQTT_NAME;

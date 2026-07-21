@@ -60,16 +60,20 @@ bool CPvBoiler::MqttPublishValues()
     m_network.GetMqttClient().PublishData(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
   }
 
-  if (m_logicMode == LOGIC_MODE_BUDGET && m_bPublishPowerBudget)
+  if (m_bPublishPowerBudget)
   {
     m_bPublishPowerBudget = false;
-    m_network.GetMqttClient().PublishData(MQTT_SET_POWER_BUDGET, String(m_iPowerBudget));
+
+    if (m_logicMode == LOGIC_MODE_BUDGET)
+      m_network.GetMqttClient().PublishData(MQTT_SET_POWER_BUDGET, String(m_iPowerBudget));
   }
 
-  if (m_logicMode == LOGIC_MODE_PERCENT && m_bPublishPowerPercentage)
+  if (m_bPublishPowerPercentage)
   {
     m_bPublishPowerPercentage = false;
-    m_network.GetMqttClient().PublishData(MQTT_SET_POWER_PERCENTAGE, String(m_iPowerPercentage));
+
+    if (m_logicMode == LOGIC_MODE_PERCENT)
+      m_network.GetMqttClient().PublishData(MQTT_SET_POWER_PERCENTAGE, String(m_iPowerPercentage));
   }
 
   if (m_bPublishOutputPercentage)
@@ -80,9 +84,9 @@ bool CPvBoiler::MqttPublishValues()
     m_network.GetMqttClient().PublishData(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor()));
   }
 
-  if (m_bPublishConfig)
+  if (m_bPublishSettings)
   {
-    m_bPublishConfig = false;
+    m_bPublishSettings = false;
 
     m_network.GetMqttClient().PublishData(MQTT_LOGIC_MODE, (m_logicMode == LOGIC_MODE_BUDGET) ? "Budget" : "Percentage");
     m_network.GetMqttClient().PublishData(MQTT_BOILER_POWER, String(m_iBoilerPowerRating));
@@ -104,10 +108,12 @@ void CPvBoiler::MqttPublishConfig()
   if (m_logicMode == CPvBoiler::LOGIC_MODE_PERCENT)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100", false);
+    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_BUDGET);
   }
   else
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
+    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
@@ -170,7 +176,7 @@ void CPvBoiler::LoadSettings()
   }
   m_fErrorGain = fGain;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -189,7 +195,7 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t& iPower)
 
   m_iBoilerPowerRating = iPower;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -200,7 +206,7 @@ void CPvBoiler::SetPowerBudgetMargin(const uint16_t& iMargin)
 
   m_iPowerBudgetMargin = iMargin;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -211,7 +217,7 @@ void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t& logicMode)
 
   m_logicMode = logicMode;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -222,7 +228,7 @@ void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t& dimStyle)
 
   m_dimStyle = dimStyle;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -233,7 +239,7 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t& iCount)
 
   m_iSsrPeriodCount = iCount;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 
@@ -244,7 +250,7 @@ void CPvBoiler::SetErrorGain(const float& fGain)
 
   m_fErrorGain = fGain;
 
-  m_bPublishConfig = true;
+  m_bPublishSettings = true;
 }
 
 

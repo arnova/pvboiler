@@ -116,7 +116,7 @@ class CPvBoiler
     uint8_t m_iCurrentPercentage = 0;
     bool m_bPublishOutputPercentage = true;
 
-    bool m_bPublishConfig = true;
+    bool m_bPublishSettings = true;
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt

@@ -40,7 +40,7 @@ void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
 }
 
 
-void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
+void CMqttClient::ConstructPublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   String strFriendlyItem;
   GetFriendlyName(strItem, strFriendlyItem);
@@ -51,21 +51,16 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   root["retain"] = true;
   root["qos"] = 1;
 
-  if (bDiag)
-    root["entity_category"] = "diagnostic";
-
   JsonObject device = root["device"].to<JsonObject>();
   device["name"] = HA_DEVICE_NAME;
   device["model"] = HA_DEVICE_MODEL;
   device["manufacturer"] = HA_MANUFACTURER;
   device["identifiers"] = HA_DEVICE_NAME;
+}
 
-  // Output to console
-#ifdef MQTT_DEBUG
-  serializeJsonPretty(root, TERM_SERIAL);
-  CTermPrint::println("");
-#endif
 
+void CMqttClient::PublishToClient(JsonDocument& root, const char* strItem, const char* strTopicType)
+{
   // Serialize JSON for MQTT
   char message[MQTT_MAX_SIZE];
   serializeJson(root, message);
@@ -76,8 +71,65 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
 
   String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 
-  subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
   publish(strTopic.c_str(), message, true);
+}
+
+
+void CMqttClient::PublishInputConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+{
+  ConstructPublishConfig(root, strItem, strTopicType);
+
+  PublishToClient(root, strItem, strTopicType);
+
+  subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
+}
+
+
+void CMqttClient::PublishOutputConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
+{
+  ConstructPublishConfig(root, strItem, strTopicType);
+
+  if (bDiag)
+    root["entity_category"] = "diagnostic";
+
+  PublishToClient(root, strItem, strTopicType);
+}
+
+
+void CMqttClient::UnpublishInputConfig(const char* strItem, const char* strTopicType)
+{
+  JsonDocument root;
+
+  String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
+
+  PublishToClient(root, strItem, strTopicType);
+
+  // Unsubscribe to any setters
+  unsubscribe((m_strName + "/" + strItem + "/set").c_str());
+}
+
+
+void CMqttClient::UnpublishSwitchConfig(const char* strItem)
+{
+  UnpublishInputConfig(strItem, "switch");
+}
+
+
+void CMqttClient::UnpublishNumberConfig(const char* strItem)
+{
+  UnpublishInputConfig(strItem, "number");
+}
+
+
+void CMqttClient::UnpublishSensorConfig(const char* strItem)
+{
+  UnpublishOutputConfig(strItem, "sensor");
+}
+
+
+void CMqttClient::UnpublishBinarySensorConfig(const char* strItem)
+{
+  UnpublishOutputConfig(strItem, "binary_sensor");
 }
 
 
@@ -92,7 +144,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
   root["state_off"] = "0";
 //  root["value_template"] = "{{ value_json.state }}"; // Not used
 
-  PublishConfig(root, strItem, "switch");
+  PublishInputConfig(root, strItem, "switch");
 }
 
 
@@ -121,7 +173,7 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
     root["mode"] = "box";
   }
 
-  PublishConfig(root, strItem, "number");
+  PublishInputConfig(root, strItem, "number");
 }
 
 
@@ -132,7 +184,7 @@ void CMqttClient::PublishBinarySensorConfig(const char* strItem, const bool bDia
   root["payload_on"] = "1";
   root["payload_off"] = "0";
 
-  PublishConfig(root, strItem, "binary_sensor", bDiag);
+  PublishOutputConfig(root, strItem, "binary_sensor", bDiag);
 }
 
 
@@ -146,7 +198,7 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, 
   if (strlen(strCla) != 0)
     root["device_class"] = strCla;
 
-  PublishConfig(root, strItem, "sensor", bDiag);
+  PublishOutputConfig(root, strItem, "sensor", bDiag);
 }
 
 
