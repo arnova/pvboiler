@@ -98,8 +98,6 @@ class CPvBoiler
     uint8_t GetErrorClamp() const { return m_iErrorClamp; };
 
   private:
-    static void EepromCommit();
-
     void Update();
     void CheckWatchDog();
 

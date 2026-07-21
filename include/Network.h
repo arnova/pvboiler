@@ -56,8 +56,6 @@ class CNetwork
     CMqttClient& GetMqttClient() { return m_mqttClient; };
 
   private:
-    static void EepromCommit();
-
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
     char m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
     uint8_t m_ipAddr[4] = { 0 };

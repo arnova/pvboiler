@@ -230,18 +230,10 @@ void CPvBoiler::LoadSettings()
 }
 
 
-void CPvBoiler::EepromCommit()
-{
-  noInterrupts(); // Enter critical section
-  EEPROM.commit();
-  interrupts(); // Leave critical section
-}
-
-
 void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 {
   EEPROM.put(EEPROM_BP_RATING, iPower);
-  EepromCommit();
+  EEPROM.commit();
 
   m_iBoilerPowerRating = iPower;
 
@@ -252,7 +244,7 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 void CPvBoiler::SetPowerBudgetMargin(const uint16_t iMargin)
 {
   EEPROM.put(EEPROM_PB_MARGIN, iMargin);
-  EepromCommit();
+  EEPROM.commit();
 
   m_iPowerBudgetMargin = iMargin;
 
@@ -263,7 +255,7 @@ void CPvBoiler::SetPowerBudgetMargin(const uint16_t iMargin)
 void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t logicMode)
 {
   EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPvBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
-  EepromCommit();
+  EEPROM.commit();
 
   m_logicMode = logicMode;
 
@@ -274,7 +266,7 @@ void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t logicMode)
 void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t dimStyle)
 {
   EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
-  EepromCommit();
+  EEPROM.commit();
 
   m_dimStyle = dimStyle;
 
@@ -285,7 +277,7 @@ void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t dimStyle)
 void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 {
   EEPROM.put(EEPROM_SSR_PERIOD, iCount);
-  EepromCommit();
+  EEPROM.commit();
 
   m_iSsrPeriodCount = iCount;
 
@@ -296,7 +288,7 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 void CPvBoiler::SetErrorGain(const float fGain)
 {
   EEPROM.put(EEPROM_ERROR_GAIN, fGain);
-  EepromCommit();
+  EEPROM.commit();
 
   m_fErrorGain = fGain;
 
@@ -307,7 +299,7 @@ void CPvBoiler::SetErrorGain(const float fGain)
 void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 {
   EEPROM.put(EEPROM_ERROR_CLAMP, iClamp);
-  EepromCommit();
+  EEPROM.commit();
 
   m_iErrorClamp = iClamp;
 
