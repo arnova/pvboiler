@@ -283,9 +283,9 @@ void CPvBoiler::Update()
     if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
       iOutputPercentage += fStepPercentage;
 
-    if (m_iCurrentPercentage > 100)
+    if (iOutputPercentage > 100)
       iOutputPercentage = 100;
-    else if (m_iCurrentPercentage < 0)
+    else if (iOutputPercentage < 0)
       iOutputPercentage = 0;
 
     if (iOutputPercentage != m_iCurrentPercentage)
