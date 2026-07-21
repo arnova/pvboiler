@@ -175,9 +175,9 @@ void CNetwork::MqttClientInit()
 
 void CNetwork::MqttPublishValues()
 {
-  m_mqttClient.PublishData(MQTT_WIFI_SSID, String(m_strWifiSsid));
-  m_mqttClient.PublishData(MQTT_IP_ADDRESS, IPAddress(WiFi.localIP()).toString());
-//  m_mqttClient.PublishData(MQTT_IP_NETMASK, IPAddress(WiFi.net m_ipNetmask).toString());
+  m_mqttClient.PublishMessage(MQTT_WIFI_SSID, String(m_strWifiSsid));
+  m_mqttClient.PublishMessage(MQTT_IP_ADDRESS, IPAddress(WiFi.localIP()).toString());
+//  m_mqttClient.PublishMessage(MQTT_IP_NETMASK, IPAddress(WiFi.net m_ipNetmask).toString());
 }
 
 

@@ -38,21 +38,22 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdStatus(const char *strArgs);
     result_code_t CmdReset(const char *strArgs);
 
-    result_code_t CmdIpAddress(const char *strArgs);
-    result_code_t CmdNetMask(const char *strArgs);
-    result_code_t CmdServerIp(const char *strArgs);
-    result_code_t CmdWifiSsid(const char *strArgs);
-    result_code_t CmdWifiPassword(const char *strArgs);
+    result_code_t CmdSetIpAddress(const char *strArgs);
+    result_code_t CmdSetNetMask(const char *strArgs);
+    result_code_t CmdSetServerIp(const char *strArgs);
+    result_code_t CmdSetWifiSsid(const char *strArgs);
+    result_code_t CmdSetWifiPassword(const char *strArgs);
     result_code_t CmdRestartNet(const char *strArgs);
 
     result_code_t CmdSetPowerBudget(const char *strArgs);
     result_code_t CmdSetPowerPercentage(const char *strArgs);
 
-    result_code_t CmdBoilerPowerRating(const char *strArgs);
-    result_code_t CmdPowerBudgetMargin(const char *strArgs);
-    result_code_t CmdLogicMode(const char *strArgs);
-    result_code_t CmdDimStyle(const char *strArgs);
-    result_code_t CmdSsrPeriodCount(const char *strArgs);
-    result_code_t CmdErrorGain(const char *strArgs);
+    result_code_t CmdSetBoilerPowerRating(const char *strArgs);
+    result_code_t CmdSetPowerBudgetMargin(const char *strArgs);
+    result_code_t CmdSetLogicMode(const char *strArgs);
+    result_code_t CmdSetDimStyle(const char *strArgs);
+    result_code_t CmdSetSsrPeriodCount(const char *strArgs);
+    result_code_t CmdSetErrorGain(const char *strArgs);
+    result_code_t CmdSetErrorClamp(const char *strArgs);
 };
 #endif // PVBOILER_COMMAND_HANDLER_H

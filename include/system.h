@@ -26,6 +26,10 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define ERROR_GAIN_MIN                          0.001f
 #define ERROR_GAIN_MAX                          100.0f
 
+#define ERROR_CLAMP_DEFAULT                     10
+#define ERROR_CLAMP_MIN                         1
+#define ERROR_CLAMP_MAX                         100
+
 // Initial value for phase correction time
 #define ZERO_CROSS_PHASE_CORRECTION_DEFAULT     600 // uS
 
@@ -71,6 +75,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_DIM_STYLE                              "dim_style"
 #define MQTT_SSR_PERIOD                             "ssr_period"
 #define MQTT_ERROR_GAIN                             "error_gain"
+#define MQTT_ERROR_CLAMP                            "error_clamp"
 
 // Diagnostic
 #define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
@@ -112,16 +117,17 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define WIFI_PASSWORD_MAX_SIZE  64
 
 // EEPROM locations
-#define EEPROM_BP_RATING      0
+#define EEPROM_WIFI_SSID      0
+#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1
+#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1
+#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE
+#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE
+#define EEPROM_BP_RATING      EEPROM_SERVER_IP_ADDR + IP_BYTE_SIZE
 #define EEPROM_PB_MARGIN      EEPROM_BP_RATING + BP_RATING_SIZE
 #define EEPROM_CTRL_MODE      EEPROM_PB_MARGIN + PB_MARGIN_SIZE
 #define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE
 #define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE
 #define EEPROM_ERROR_GAIN     EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE
-#define EEPROM_WIFI_SSID      EEPROM_ERROR_GAIN + sizeof(float)
-#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1
-#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1
-#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE
-#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE
+#define EEPROM_ERROR_CLAMP    EEPROM_ERROR_GAIN + sizeof(float)
 
 #endif // SYSTEM_H

@@ -75,6 +75,7 @@ class CPvBoiler
     void SetDimStyle(const dim_style_t& dimStyle);
     void SetSsrPeriodCount(const uint8_t& iPeriod);
     void SetErrorGain(const float& fGain);
+    void SetErrorClamp(const uint8_t& iClamp);
 
     inline const float& GetTriacAngleFactor() const { return triac_percentage_factor[m_iCurrentPercentage]; };
     inline const uint8_t& GetCurrentPercentage() const { return m_iCurrentPercentage; };
@@ -90,6 +91,7 @@ class CPvBoiler
     inline const dim_style_t& GetDimStyle() const { return m_dimStyle; };
     inline const uint8_t& GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     const float& GetErrorGain() const { return m_fErrorGain; };
+    const uint8_t& GetErrorClamp() const { return m_iErrorClamp; };
 
   private:
     static void EepromCommit();
@@ -129,6 +131,8 @@ class CPvBoiler
 
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;
+
+    uint8_t m_iErrorClamp = ERROR_CLAMP_DEFAULT;
 
     logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 };

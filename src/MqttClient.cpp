@@ -40,7 +40,7 @@ void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
 }
 
 
-void CMqttClient::ConstructPublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   String strFriendlyItem;
   GetFriendlyName(strItem, strFriendlyItem);
@@ -59,7 +59,7 @@ void CMqttClient::ConstructPublishConfig(JsonDocument& root, const char* strItem
 }
 
 
-void CMqttClient::PublishToClient(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   // Serialize JSON for MQTT
   char message[MQTT_MAX_SIZE];
@@ -75,61 +75,65 @@ void CMqttClient::PublishToClient(JsonDocument& root, const char* strItem, const
 }
 
 
-void CMqttClient::PublishInputConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
-  ConstructPublishConfig(root, strItem, strTopicType);
+  ConstructConfigMessage(root, strItem, strTopicType);
 
-  PublishToClient(root, strItem, strTopicType);
+  PublishConfig(root, strItem, strTopicType);
 
+  // Subscribe to /set messages
   subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
 }
 
 
-void CMqttClient::PublishOutputConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
+void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
 {
-  ConstructPublishConfig(root, strItem, strTopicType);
+  ConstructConfigMessage(root, strItem, strTopicType);
 
   if (bDiag)
     root["entity_category"] = "diagnostic";
 
-  PublishToClient(root, strItem, strTopicType);
+  PublishConfig(root, strItem, strTopicType);
 }
 
 
-void CMqttClient::UnpublishInputConfig(const char* strItem, const char* strTopicType)
+void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool& bSetter /* = false */)
 {
   JsonDocument root;
 
   String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
 
-  PublishToClient(root, strItem, strTopicType);
+  PublishConfig(root, strItem, strTopicType);
 
-  // Unsubscribe to any setters
-  unsubscribe((m_strName + "/" + strItem + "/set").c_str());
+  if (bSetter)
+  {
+    // Unsubscribe setter
+    unsubscribe((m_strName + "/" + strItem + "/set").c_str());
+  }
 }
 
 
 void CMqttClient::UnpublishSwitchConfig(const char* strItem)
 {
-  UnpublishInputConfig(strItem, "switch");
+  UnpublishConfig(strItem, "switch", true);
 }
 
 
 void CMqttClient::UnpublishNumberConfig(const char* strItem)
 {
-  UnpublishInputConfig(strItem, "number");
+  UnpublishConfig(strItem, "number", true);
 }
 
 
 void CMqttClient::UnpublishSensorConfig(const char* strItem)
 {
-  UnpublishOutputConfig(strItem, "sensor");
+  UnpublishConfig(strItem, "sensor");
 }
 
 
 void CMqttClient::UnpublishBinarySensorConfig(const char* strItem)
 {
-  UnpublishOutputConfig(strItem, "binary_sensor");
+  UnpublishConfig(strItem, "binary_sensor");
 }
 
 
@@ -144,7 +148,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
   root["state_off"] = "0";
 //  root["value_template"] = "{{ value_json.state }}"; // Not used
 
-  PublishInputConfig(root, strItem, "switch");
+  PublishSetterConfig(root, strItem, "switch");
 }
 
 
@@ -173,7 +177,7 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
     root["mode"] = "box";
   }
 
-  PublishInputConfig(root, strItem, "number");
+  PublishSetterConfig(root, strItem, "number");
 }
 
 
@@ -184,7 +188,7 @@ void CMqttClient::PublishBinarySensorConfig(const char* strItem, const bool bDia
   root["payload_on"] = "1";
   root["payload_off"] = "0";
 
-  PublishOutputConfig(root, strItem, "binary_sensor", bDiag);
+  PublishGetterConfig(root, strItem, "binary_sensor", bDiag);
 }
 
 
@@ -198,11 +202,11 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit, 
   if (strlen(strCla) != 0)
     root["device_class"] = strCla;
 
-  PublishOutputConfig(root, strItem, "sensor", bDiag);
+  PublishGetterConfig(root, strItem, "sensor", bDiag);
 }
 
 
-bool CMqttClient::PublishData(const char* strItem, const String& strPayload, const bool bRetained /* = true */)
+bool CMqttClient::PublishMessage(const char* strItem, const String& strPayload, const bool bRetained /* = true */)
 {
   return publish((String(MQTT_NAME "/") + strItem).c_str(), strPayload.c_str(), bRetained);
 }

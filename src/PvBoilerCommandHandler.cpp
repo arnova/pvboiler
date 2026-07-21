@@ -68,7 +68,7 @@ result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdIpAddress(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetIpAddress(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -88,7 +88,7 @@ result_code_t CPvBoilerCommandHandler::CmdIpAddress(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdNetMask(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetNetMask(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -104,7 +104,7 @@ result_code_t CPvBoilerCommandHandler::CmdNetMask(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdServerIp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetServerIp(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -120,7 +120,7 @@ result_code_t CPvBoilerCommandHandler::CmdServerIp(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetWifiSsid(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -137,7 +137,7 @@ result_code_t CPvBoilerCommandHandler::CmdWifiSsid(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdWifiPassword(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetWifiPassword(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -223,6 +223,9 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTermPrint::print(" egain=");
   CTermPrint::print(String(m_pvBoiler.GetErrorGain(), 3));
+
+  CTermPrint::print(" eclamp=");
+  CTermPrint::print(String(m_pvBoiler.GetErrorClamp(), 3));
 
   CTermPrint::println("");
 
@@ -331,14 +334,14 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, 1, 10000, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iPower, 1, BOILER_POWER_RATING_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -348,14 +351,14 @@ result_code_t CPvBoilerCommandHandler::CmdBoilerPowerRating(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetPowerBudgetMargin(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, 1, 10000, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iPower, 1, POWER_BUDGET_MARGIN_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -365,7 +368,7 @@ result_code_t CPvBoilerCommandHandler::CmdPowerBudgetMargin(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdLogicMode(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetLogicMode(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -384,7 +387,7 @@ result_code_t CPvBoilerCommandHandler::CmdLogicMode(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdDimStyle(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetDimStyle(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -400,14 +403,14 @@ result_code_t CPvBoilerCommandHandler::CmdDimStyle(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   int32_t iCount;
-  result = get_int32_from_string(strArgs, &iCount, 1, 255, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iCount, 1, SSR_PERIOD_COUNT_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -418,18 +421,35 @@ result_code_t CPvBoilerCommandHandler::CmdSsrPeriodCount(const char *strArgs)
 
 
 
-result_code_t CPvBoilerCommandHandler::CmdErrorGain(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetErrorGain(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, 0.001f, 100.0f, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_MIN, ERROR_GAIN_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   m_pvBoiler.SetErrorGain(fGain);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetErrorClamp(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iClamp;
+  result = get_int32_from_string(strArgs, &iClamp, ERROR_CLAMP_MIN, ERROR_CLAMP_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetErrorClamp(iClamp);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -490,47 +510,47 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {
-    result = CmdBoilerPowerRating(strArgs);
+    result = CmdSetBoilerPowerRating(strArgs);
   }
   else if (STRIEQUALS(strCommand, "margin"))
   {
-    result = CmdPowerBudgetMargin(strArgs);
+    result = CmdSetPowerBudgetMargin(strArgs);
   }
   else if (STRIEQUALS(strCommand, "logicmode"))
   {
-    result = CmdLogicMode(strArgs);
+    result = CmdSetLogicMode(strArgs);
   }
   else if (STRIEQUALS(strCommand, "dimstyle"))
   {
-    result = CmdDimStyle(strArgs);
+    result = CmdSetDimStyle(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ssrperiod"))
   {
-    result = CmdSsrPeriodCount(strArgs);
+    result = CmdSetSsrPeriodCount(strArgs);
   }
   else if (STRIEQUALS(strCommand, "egain"))
   {
-    result = CmdErrorGain(strArgs);
+    result = CmdSetErrorGain(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ssid"))
   {
-    result = CmdWifiSsid(strArgs);
+    result = CmdSetWifiSsid(strArgs);
   }
   else if (STRIEQUALS(strCommand, "pass"))
   {
-    result = CmdWifiPassword(strArgs);
+    result = CmdSetWifiPassword(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ipaddr"))
   {
-    result = CmdIpAddress(strArgs);
+    result = CmdSetIpAddress(strArgs);
   }
   else if (STRIEQUALS(strCommand, "netmask"))
   {
-    result = CmdNetMask(strArgs);
+    result = CmdSetNetMask(strArgs);
   }
   else if (STRIEQUALS(strCommand, "serverip"))
   {
-    result = CmdServerIp(strArgs);
+    result = CmdSetServerIp(strArgs);
   }
   else if (STRIEQUALS(strCommand, "restartnet"))
   {
