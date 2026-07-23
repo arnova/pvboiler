@@ -97,8 +97,8 @@ class CPvBoiler
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetErrorGain() const { return m_fErrorGain; };
     uint8_t GetErrorClamp() const { return m_iErrorClamp; };
-    uint32_t GetNetPeriod() const { return m_iPeriodTime; };
-    uint32_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
+    uint16_t GetNetPeriod() const { return m_iPeriodTime; };
+    uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
     bool GetError() const { return m_bError; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
 
