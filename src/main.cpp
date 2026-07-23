@@ -168,8 +168,5 @@ void setup()
 
 void loop()
 {
-  // Loop delay
-  delay(10);
-
   g_app.Loop();
 }

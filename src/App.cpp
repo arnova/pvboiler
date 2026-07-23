@@ -432,6 +432,9 @@ void CApp::UpdateValues()
 
 void CApp::Loop()
 {
+  // 1ms loop delay
+  delay(1);
+
   HandleNetwork();
 
   // Poll ethernet for commands
