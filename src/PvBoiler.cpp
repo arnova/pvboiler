@@ -323,7 +323,7 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 }
 
 
-float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime, const uint32_t iZeroCrossWindow)
+uint16_t CPvBoiler::UpdateTriacPhaseAngle(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow)
 {
   m_iPeriodTime = iPeriodTime;
   m_iZeroCrossWindow = iZeroCrossWindow;
@@ -331,32 +331,40 @@ float CPvBoiler::UpdateTriacPhaseAngle(const uint32_t iPeriodTime, const uint32_
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
     m_fTriacAngleFactor = 0.0f;
-    m_fTriacPhaseAngle = ZERO_CROSS_EDGE_MIN_US;
+    m_iTriacPhaseAngle = ZERO_CROSS_EDGE_MIN_US;
   }
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     // Update triac angle factor
     m_fTriacAngleFactor = triac_percentage_factor[m_iCurrentPercentage];
 
-    const float fDelay = max((m_fTriacAngleFactor * iPeriodTime), ZERO_CROSS_EDGE_MIN_US); // Make sure we trigger not too close to zero cross
+    // Make sure we trigger not too close to zero cross
+    const uint32_t iDelay = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(ZERO_CROSS_EDGE_MIN_US));
 
     // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-    if (fDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
+    if (iDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
     {
-      m_fTriacPhaseAngle = fDelay;
+      m_iTriacPhaseAngle = iDelay;
     }
     else
     {
-      m_fTriacPhaseAngle = 0; // Do nothing
+      m_iTriacPhaseAngle = 0; // Do nothing
     }
   }
   else // DIM_STYLE_NONE
   {
     m_fTriacAngleFactor = 0.0f;
-    m_fTriacPhaseAngle = 0; // Do nothing
+    m_iTriacPhaseAngle = 0; // Do nothing
   }
 
-  return m_fTriacPhaseAngle + (iZeroCrossWindow / 2); // Return phase angle including zero cross window compensation
+  // Sanity check
+  if (iPeriodTime == 0 || iPeriodTime > NET_PERIOD_MAX_US || m_iTriacPhaseAngle == 0)
+  {
+    return 0;
+  }
+
+  // Return phase angle including zero cross window compensation
+  return m_iTriacPhaseAngle + (iZeroCrossWindow / 2);
 }
 
 

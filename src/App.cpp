@@ -39,7 +39,16 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
   {
     bLongPulse = false;
   }
+
+  // Update last even time
   m_iLastEventTime = iNow;
+
+  // Pulse is longer than ~65 ms?
+  if (iPulseWidth > 65535)
+  {
+    m_iPeriodTime = 65535; // Cap to max uint16 value
+    return;
+  }
 
   if (bLongPulse)
   {
@@ -384,8 +393,8 @@ void CApp::UpdateValues()
   noInterrupts(); // Enter critical section
 
   // Get current phase correction & zero cross time value from ISR
-  const uint32_t iZeroCrossWindow = m_iZeroCrossWindow;
-  const uint32_t iPeriodTime = m_iPeriodTime;
+  const uint16_t iZeroCrossWindow = m_iZeroCrossWindow;
+  const uint16_t iPeriodTime = m_iPeriodTime;
 
   interrupts(); // Leave critical section
 

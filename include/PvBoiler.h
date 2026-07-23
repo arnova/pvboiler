@@ -81,9 +81,9 @@ class CPvBoiler
     uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
     uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
-    float UpdateTriacPhaseAngle(const uint32_t iPeriodTime, const uint32_t iZeroCrossWindow);
+    uint16_t UpdateTriacPhaseAngle(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
-    float GetTriacPhaseAngle() const { return m_fTriacPhaseAngle; };
+    uint16_t GetTriacPhaseAngle() const { return m_iTriacPhaseAngle; };
 
     bool GetCtrlOnOff() const { return m_bCtrlEnable; };
     int32_t GetPowerBudget() const { return m_iPowerBudget; };
@@ -134,9 +134,9 @@ class CPvBoiler
     uint8_t m_iSsrPeriodCount = 50; // (= 0.5s @ 50 Hz).
 
     float m_fTriacAngleFactor = 0.0f;
-    float m_fTriacPhaseAngle = 0.0f; // us
-    uint32_t m_iPeriodTime = 0; // us
-    uint32_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
+    uint16_t m_iTriacPhaseAngle = 0; // us
+    uint16_t m_iPeriodTime = 0; // us
+    uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
 
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;

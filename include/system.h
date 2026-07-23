@@ -31,13 +31,16 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define ERROR_CLAMP_MAX                         100
 
 // Initial value for phase correction time
-#define ZERO_CROSS_WINDOW_DEFAULT              1200 // uS
+#define ZERO_CROSS_WINDOW_DEFAULT               1200 // uS
 
 // Minimum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MIN_US                 200.0f // us
+#define ZERO_CROSS_EDGE_MIN_US                  200 // us
 
 // Maximum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MAX_US                 2000.0f // us
+#define ZERO_CROSS_EDGE_MAX_US                  2000 // us
+
+// Maximum net period time
+#define NET_PERIOD_MAX_US                       12000 // us
 
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50 // uS
