@@ -44,6 +44,8 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdSetWifiSsid(const char *strArgs);
     result_code_t CmdSetWifiPassword(const char *strArgs);
     result_code_t CmdRestartNet(const char *strArgs);
+    result_code_t CmdEnable(const char *strArgs);
+    result_code_t CmdDisable(const char *strArgs);
 
     result_code_t CmdSetPowerBudget(const char *strArgs);
     result_code_t CmdSetPowerPercentage(const char *strArgs);

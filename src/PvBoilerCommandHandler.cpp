@@ -15,6 +15,8 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "reboot                 : Reboot controller\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
+                                  "enable                 : Enable controller\r\n"
+                                  "disable                : Disable controller\r\n"
                                   "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent logic mode set percentage to [p] %\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
@@ -162,6 +164,29 @@ result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
   m_network.InitWifi(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+
+result_code_t CPvBoilerCommandHandler::CmdEnable(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  m_pvBoiler.SetCtrlOnOff(true);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdDisable(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  m_pvBoiler.SetCtrlOnOff(false);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -572,6 +597,14 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "restartnet"))
   {
     result = CmdRestartNet(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "enable"))
+  {
+    result = CmdEnable(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disable"))
+  {
+    result = CmdDisable(strArgs);
   }
 
   // Finally output result-code string (OK or ERROR:)

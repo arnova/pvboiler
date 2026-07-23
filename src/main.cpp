@@ -71,7 +71,14 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       if (iVal == 0 || iVal == 1 || length == 0)
       {
-        g_app.GetPvBoiler().SetOnOff((iVal == 1 || length == 0) ? true : false);
+        if (iVal == 1 || length == 0)
+        {
+          g_app.GetPvBoiler().SetCtrlOnOff(true);
+        }
+        else
+        {
+          g_app.GetPvBoiler().SetCtrlOnOff(false);
+        }
       }
       else
       {

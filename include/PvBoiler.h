@@ -66,7 +66,7 @@ class CPvBoiler
 
     void TriggerWatchdog() { m_iWatchdogCounter = 0; };
 
-    void SetOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlEnable = true; };
+    void SetCtrlOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlOnOff = true; };
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
 
@@ -111,7 +111,7 @@ class CPvBoiler
     uint32_t m_iWatchdogRecoveryCounter = 0;
 
     bool m_bCtrlEnable = true;
-    bool m_bPublishCtrlEnable = true;
+    bool m_bPublishCtrlOnOff = true;
 
     int32_t m_iPowerBudget = 0;
     bool m_bPublishPowerBudget = true;

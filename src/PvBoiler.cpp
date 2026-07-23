@@ -37,7 +37,7 @@ void CPvBoiler::Reset()
   m_iWatchdogRecoveryCounter = 0;
 
   m_bCtrlEnable = true;
-  m_bPublishCtrlEnable = true;
+  m_bPublishCtrlOnOff = true;
 
   m_iPowerBudget = 0;
   m_bPublishPowerBudget = true;
@@ -54,9 +54,9 @@ void CPvBoiler::Reset()
 
 bool CPvBoiler::MqttPublishValues()
 {
-  if (m_bPublishCtrlEnable)
+  if (m_bPublishCtrlOnOff)
   {
-    m_bPublishCtrlEnable = false;
+    m_bPublishCtrlOnOff = false;
     m_network.GetMqttClient().PublishMessage(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
   }
 
