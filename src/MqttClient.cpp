@@ -55,7 +55,8 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   device["name"] = HA_DEVICE_NAME;
   device["model"] = HA_DEVICE_MODEL;
   device["manufacturer"] = HA_MANUFACTURER;
-  device["identifiers"] = HA_DEVICE_NAME;
+  device["identifiers"][0] = HA_DEVICE_NAME;
+  device["sw_version"] = MY_VERSION;
 }
 
 
