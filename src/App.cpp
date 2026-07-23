@@ -374,18 +374,26 @@ void CApp::HandleDisplay()
                  strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
                  m_display.WriteDisplayStr(strValue.c_str(), 1, false);
 
-                 const uint8_t iTotalBars = 10;
-                 int filled = map(iPercent, 0, 100, 0, iTotalBars);
-
                  strValue = "[";
-                 for (int i = 0; i < iTotalBars; i++)
+
+                 // Chars are not monospace so need to compensate for smaller spaces with the logic below
+                 for (uint8_t iCount = 0; iCount < 100;)
                  {
-                   strValue += (i < filled ? "=" : " ");
+                   if (iCount < iPercent)
+                   {
+                     strValue += "=";
+                     iCount += 10;
+                   }
+                   else
+                   {
+                     strValue += " ";
+                     iCount += 5; // Spaces are smaller
+                   }
                  }
                  strValue += "]";
                  m_display.WriteDisplayStr(strValue.c_str(), 2, false);
-                }
-                break;
+               }
+               break;
 
       case 3 : {
                  m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
