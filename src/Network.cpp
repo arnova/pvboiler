@@ -96,12 +96,12 @@ void CNetwork::InitWifi(const bool bReconnect)
   if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
   {
     // Static IP. NOTE: No gateway / dns
-    WiFi.config(m_ipAddr, 0, m_ipNetmask);
+    WiFi.config(m_ipAddr, IPAddress(0, 0, 0, 0), m_ipNetmask);
   }
   else
   {
     // DHCP IP
-    WiFi.config(0, 0, 0);
+    WiFi.config(IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0));
   }
 
   WiFi.mode(WIFI_STA);
