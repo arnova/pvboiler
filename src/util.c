@@ -6,7 +6,7 @@
   Target compiler  : (Generic)
   Dependencies     : (none)
   Initial date     : August 27, 2019
-  Last modified    : July 13, 2025
+  Last modified    : July 23, 2025
 */
 
 #include "util.h"
@@ -229,8 +229,7 @@ char *int32_to_decstr(int32_t iNum, char *strDec, const size_t iBufSize)
   // Obviously this should never happen:
   if (iBufSize < 2)
   {
-    strDec = NULL;
-    return "";
+    return NULL;
   }
 
   size_t iPos = 0;
@@ -282,8 +281,9 @@ char *uint32_to_decstr(uint32_t iNum, char *strDec, const size_t iBufSize)
   // Obviously this should never happen:
   if (iBufSize < 2)
   {
-    strDec = NULL;
-    return "";
+    // Return empty string
+    strDec[0] = '\0';
+    return strDec;
   }
 
   size_t iPos = 0;
@@ -328,8 +328,7 @@ char *int64_to_decstr(int64_t iNum, char *strDec, const size_t iBufSize)
   // Obviously this should never happen:
   if (iBufSize < 2)
   {
-    strDec = NULL;
-    return "";
+    return NULL;
   }
 
   size_t iPos = 0;
@@ -381,8 +380,7 @@ char *uint64_to_decstr(uint64_t iNum, char *strDec, const size_t iBufSize)
   // Obviously this should never happen:
   if (iBufSize < 2)
   {
-    strDec = NULL;
-    return "";
+    return NULL;
   }
 
   size_t iPos = 0;
@@ -479,8 +477,7 @@ char *uint64_to_binstr(uint64_t iNum, char *strBin, const uint8_t iLen)
   // Obviously this should never happen:
   if (iLen < 2)
   {
-    strBin = NULL;
-    return "";
+    return NULL;
   }
 
   for (int8_t iPos = iLen - 1; iPos >= 0; iPos--)
@@ -508,8 +505,7 @@ char *uint64_to_hexstr(uint64_t iNum, char *strHex, const uint8_t iLen)
   // Obviously this should never happen:
   if (iLen < 2)
   {
-    strHex = NULL;
-    return "";
+    return NULL;
   }
 
   for (int8_t iPos = iLen - 1; iPos >= 0; iPos--)
