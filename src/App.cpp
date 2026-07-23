@@ -68,7 +68,13 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
         if ((m_iSSRPeriodCounter * 100) / m_iSSRPeriodCount <= m_iCurrentPercentage)
         {
           m_bTriacOn = true;
-          timer1_write(m_iTriacDelayTicks);
+#ifdef ESP8266
+          timer1_write(m_iTriacDelayUs * ESP8266_TICKS_PER_US);
+#else
+          timerWrite(m_hTriacTimer, 0);
+          timerAlarmWrite(m_hTriacTimer, m_iTriacDelayUs, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
+          timerAlarmEnable(m_hTriacTimer);
+#endif
         }
         else
         {
@@ -86,10 +92,17 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
       // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-      if (m_iTriacDelayTicks > 0)
+      if (m_iTriacDelayUs > 0)
       {
         m_bTriacOn = true;
-        timer1_write(m_iTriacDelayTicks);
+
+#ifdef ESP8266
+        timer1_write(m_iTriacDelayUs * ESP8266_TICKS_PER_US);
+#else
+        timerWrite(m_hTriacTimer, 0);
+        timerAlarmWrite(m_hTriacTimer, m_iTriacDelayUs, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
+        timerAlarmEnable(m_hTriacTimer);
+#endif
       }
     }
   }
@@ -107,13 +120,14 @@ void IRAM_ATTR CApp::TriacGateHandler()
   {
     digitalWrite(TRIAC_OUTPUT, HIGH); // On
 
-    // Setup timer to turn off trigger pulse after 100uS:
-    // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-    // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-    const uint32_t iTriacDelayTicks = GATE_PULSE_WIDTH * 80;
-
     m_bTriacOn = false;
-    timer1_write(iTriacDelayTicks);
+#ifdef ESP8266
+    timer1_write(GATE_PULSE_WIDTH * ESP8266_TICKS_PER_US);
+#else // ESP32
+    timerWrite(m_hTriacTimer, 0);
+    timerAlarmWrite(m_hTriacTimer, GATE_PULSE_WIDTH, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
+    timerAlarmEnable(m_hTriacTimer);
+#endif
   }
   else
   {
@@ -403,16 +417,14 @@ void CApp::UpdateValues()
   const uint8_t iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
   const CPvBoiler::dim_style_t dimStyle = m_pvBoiler.GetDimStyle();
 
-  // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs
-  // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-  const uint32_t iTriacDelayTicks = m_pvBoiler.UpdateTriacPhaseAngle(iPeriodTime, iZeroCrossWindow) * 80;
+  const uint16_t iTriacDelayUs = m_pvBoiler.UpdateTriacPhaseAngle(iPeriodTime, iZeroCrossWindow);
 
   noInterrupts(); // Enter critical section
 
   m_iCurrentPercentage = iCurrentPercentage;
   m_iSSRPeriodCount = iSSRPeriodCount;
   m_dimStyle = dimStyle;
-  m_iTriacDelayTicks = iTriacDelayTicks;
+  m_iTriacDelayUs = iTriacDelayUs;
 
   interrupts(); // Leave critical section
 }

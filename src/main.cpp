@@ -136,9 +136,15 @@ void setup()
   // Setup the MQTT client callback
   g_app.GetNetwork().GetMqttClient().setCallback(MqttCallback);
 
+#ifdef ESP8266
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
+#else // ESP32
+  hw_timer_t* hTriacTimer = timerBegin(0, 80, true); // timer 0, /80 prescaler of 80 MHz APB → 1 MHz tick
+  timerAttachInterrupt(hTriacTimer, &TriacTimerISR, true);
+  g_app.SetTimerHandle(hTriacTimer);
+#endif
 
   attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
 

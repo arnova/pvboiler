@@ -19,6 +19,10 @@ class CApp
     void IRAM_ATTR ZeroCrossHandler();
     void IRAM_ATTR TriacGateHandler();
 
+#ifdef ESP32
+    void SetTimerHandle(hw_timer_t* hTriacTimer) { m_hTriacTimer = hTriacTimer; };
+#endif
+
     void PollSerial();
     void PollEthernet();
     void HandleNetwork();
@@ -28,6 +32,10 @@ class CApp
     CPvBoiler& GetPvBoiler() { return m_pvBoiler; };
 
   private:
+#ifdef ESP32
+    hw_timer_t *m_hTriacTimer = nullptr;
+#endif
+
     CNetwork m_network;
     CPvBoiler m_pvBoiler;
     CPvBoilerCommandHandler m_commandHandler;
@@ -43,7 +51,7 @@ class CApp
     volatile uint16_t m_iPeriodTime = 0;
     volatile bool m_bTriacOn = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;
-    volatile uint32_t m_iTriacDelayTicks = 0;
+    volatile uint16_t m_iTriacDelayUs = 0;
     volatile uint8_t m_iSSRPeriodCount = 0;
     volatile uint8_t m_iCurrentPercentage = 0;
     volatile CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;

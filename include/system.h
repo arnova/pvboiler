@@ -139,4 +139,8 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_ERROR_GAIN     EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE
 #define EEPROM_ERROR_CLAMP    EEPROM_ERROR_GAIN + sizeof(float)
 
+// Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
+// Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+#define ESP8266_TICKS_PER_US  80
+
 #endif // SYSTEM_H
