@@ -48,6 +48,13 @@ void CPvBoiler::Reset()
   m_iCurrentPercentage = 0;
   m_bPublishOutputPercentage = true;
 
+  m_bError = false;
+
+  m_fTriacAngleFactor = 0.0f;
+  m_iTriacPhaseAngle = 0;
+  m_iPeriodTime = 0;
+  m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
+
   LoadSettings();
 }
 
@@ -89,7 +96,8 @@ bool CPvBoiler::MqttPublishValues()
     }
   }
 
-  // These are always updated
+  // FIXME: These are always updated
+  m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_ERROR, m_bError ? "1" : "0");
   m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, String(m_iPeriodTime));
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, String(m_iZeroCrossWindow));
 
@@ -130,6 +138,8 @@ void CPvBoiler::MqttPublishConfig()
 {
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
+
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_TRIAC_ERROR);
 
   if (m_logicMode == CPvBoiler::LOGIC_MODE_BUDGET)
   {
@@ -323,15 +333,17 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
 }
 
 
-uint16_t CPvBoiler::UpdateTriacPhaseAngle(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow)
+uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow)
 {
   m_iPeriodTime = iPeriodTime;
   m_iZeroCrossWindow = iZeroCrossWindow;
 
+  uint32_t iDelay = 0;
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
     m_fTriacAngleFactor = 0.0f;
     m_iTriacPhaseAngle = ZERO_CROSS_EDGE_MIN_US;
+    iDelay = ZERO_CROSS_EDGE_MIN_US;
   }
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
@@ -339,32 +351,31 @@ uint16_t CPvBoiler::UpdateTriacPhaseAngle(const uint16_t iPeriodTime, const uint
     m_fTriacAngleFactor = triac_percentage_factor[m_iCurrentPercentage];
 
     // Make sure we trigger not too close to zero cross
-    const uint32_t iDelay = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(ZERO_CROSS_EDGE_MIN_US));
+    m_iTriacPhaseAngle = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(ZERO_CROSS_EDGE_MIN_US));
 
     // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-    if (iDelay + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
+    if (m_iTriacPhaseAngle + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
     {
-      m_iTriacPhaseAngle = iDelay;
-    }
-    else
-    {
-      m_iTriacPhaseAngle = 0; // Do nothing
+      iDelay = m_iTriacPhaseAngle;
     }
   }
   else // DIM_STYLE_NONE
   {
     m_fTriacAngleFactor = 0.0f;
-    m_iTriacPhaseAngle = 0; // Do nothing
+    m_iTriacPhaseAngle = 0;
   }
 
-  // Sanity check
-  if (iPeriodTime == 0 || iPeriodTime > NET_PERIOD_MAX_US || m_iTriacPhaseAngle == 0)
+  // Update error state. Note that invalid iZeroCrossWindow-value can never happen (handled in ISR)
+  m_bError = (iPeriodTime == 0 || iPeriodTime > NET_PERIOD_MAX_US);
+
+  // With errors or zero delay return zero so we know we should do "nothing"
+  if (m_bError || iDelay == 0)
   {
     return 0;
   }
 
   // Return phase angle including zero cross window compensation
-  return m_iTriacPhaseAngle + (iZeroCrossWindow / 2);
+  return iDelay + (iZeroCrossWindow / 2);
 }
 
 

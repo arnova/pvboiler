@@ -81,7 +81,7 @@ class CPvBoiler
     uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
     uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
 
-    uint16_t UpdateTriacPhaseAngle(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow);
+    uint16_t CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
     uint16_t GetTriacPhaseAngle() const { return m_iTriacPhaseAngle; };
 
@@ -98,6 +98,7 @@ class CPvBoiler
     uint8_t GetErrorClamp() const { return m_iErrorClamp; };
     uint32_t GetNetPeriod() const { return m_iPeriodTime; };
     uint32_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
+    bool GetError() const { return m_bError; };
 
   private:
     void Update();
@@ -126,6 +127,9 @@ class CPvBoiler
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
+
+    // Error flag
+    bool m_bError = false;
 
     // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
     CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;

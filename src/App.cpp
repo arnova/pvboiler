@@ -91,7 +91,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     {
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
-      // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
+      // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
       if (m_iTriacDelayUs > 0)
       {
         m_bTriacOn = true;
@@ -417,7 +417,7 @@ void CApp::UpdateValues()
   const uint8_t iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
   const CPvBoiler::dim_style_t dimStyle = m_pvBoiler.GetDimStyle();
 
-  const uint16_t iTriacDelayUs = m_pvBoiler.UpdateTriacPhaseAngle(iPeriodTime, iZeroCrossWindow);
+  const uint16_t iTriacDelayUs = m_pvBoiler.CalculateTriacPhaseDelay(iPeriodTime, iZeroCrossWindow);
 
   noInterrupts(); // Enter critical section
 

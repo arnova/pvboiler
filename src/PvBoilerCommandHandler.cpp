@@ -268,6 +268,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print("on_off=");
   CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "1" : "0");
 
+  CTermPrint::print(" error=");
+  CTermPrint::print(m_pvBoiler.GetError() ? "1" : "0");
+
   CTermPrint::print(" wifi_conn=");
   CTermPrint::print(m_network.IsConnected() ? "1" : "0");
 
