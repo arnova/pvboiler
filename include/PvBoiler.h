@@ -4,6 +4,7 @@
 #include <elapsedMillis.h>
 
 #include "system.h"
+#include "Uptime.h"
 #include "Network.h"
 #include "PvBoilerCommandHandler.h"
 
@@ -99,6 +100,7 @@ class CPvBoiler
     uint32_t GetNetPeriod() const { return m_iPeriodTime; };
     uint32_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
     bool GetError() const { return m_bError; };
+    CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
 
   private:
     void Update();
@@ -130,6 +132,9 @@ class CPvBoiler
 
     // Error flag
     bool m_bError = false;
+
+    // Keep track of up-time
+    CUptime m_upTime;
 
     // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
     CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;

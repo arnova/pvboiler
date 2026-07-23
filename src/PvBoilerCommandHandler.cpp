@@ -1,4 +1,5 @@
 #include "PvBoilerCommandHandler.h"
+#include "Uptime.h"
 #include "TermPrint.h"
 #include "PvBoiler.h"
 #include "util.h"
@@ -15,6 +16,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "reboot                 : Reboot controller\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
+                                  "uptime                 : Show device uptime\r\n"
                                   "enable                 : Enable controller\r\n"
                                   "disable                : Disable controller\r\n"
                                   "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
@@ -325,6 +327,21 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  // Publish uptime
+  const CUptime::uptime_t upTime = m_pvBoiler.GetUpTime();
+  char strTemp[24];
+  snprintf(strTemp, sizeof(strTemp), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+  CTermPrint::println(strTemp);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
@@ -544,6 +561,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "status"))
   {
     result = CmdStatus(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "uptime"))
+  {
+    result = CmdUpTime(strArgs);
   }
   else if (STRIEQUALS(strCommand, "budget"))
   {

@@ -12,6 +12,9 @@ CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network)
 
 void CPvBoiler::Loop()
 {
+  // Update uptime
+  m_upTime.Update();
+
   // Run timed control loop
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)
   {
@@ -100,6 +103,12 @@ bool CPvBoiler::MqttPublishValues()
   m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_ERROR, m_bError ? "1" : "0");
   m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, String(m_iPeriodTime));
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, String(m_iZeroCrossWindow));
+
+  // Publish uptime
+  const CUptime::uptime_t upTime = GetUpTime();
+  char strTemp[24];
+  snprintf(strTemp, sizeof(strTemp), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+  m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strTemp);
 
   if (m_bPublishSettings)
   {
