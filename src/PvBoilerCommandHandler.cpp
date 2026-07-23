@@ -241,16 +241,16 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
   CTermPrint::print("on_off=");
-  CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "on" : "off");
+  CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "1" : "0");
 
   CTermPrint::print(" wifi_conn=");
   CTermPrint::print(m_network.IsConnected() ? "1" : "0");
 
-  CTermPrint::print(" wifi_ip=");
-  CTermPrint::print(WiFi.localIP().toString().c_str());
-
   CTermPrint::print(" mqtt_conn=");
   CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
+
+  CTermPrint::print(" wifi_ip=");
+  CTermPrint::print(WiFi.localIP().toString().c_str());
 
   if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
