@@ -144,7 +144,7 @@ class CPvBoiler
 
     float m_fTriacAngleFactor = 0.0f;
     uint16_t m_iTriacPhaseAngle = 0; // us
-    uint16_t m_iPeriodTime = 0; // us
+    uint16_t m_iPeriodTime = 65535; // us
     uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
 
     // (Proportional) error gain

@@ -91,7 +91,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_PHASE_ANGLE                            "phase_angle"
 #define MQTT_NET_PERIOD                             "net_period"
 #define MQTT_ZERO_CROSS_WINDOW                      "zero_cross_window"
-#define MQTT_TRIAC_ERROR                            "triac_error"
+#define MQTT_POWER_ERROR                            "power_error"
 #define MQTT_UP_TIME                                "up_time"
 
 // Socket server settings

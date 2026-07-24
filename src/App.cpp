@@ -4,7 +4,7 @@
 
 CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
 {
-  m_iLastZeroCrossTime = m_iPeriodTime = m_iLastEventTime = micros();
+  m_iLastZeroCrossTime = m_iLastEventTime = micros();
 }
 
 
@@ -367,8 +367,15 @@ void CApp::HandleDisplay()
                break;
 
       case 2 : {
-                 strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
-                 m_display.WriteDisplayStr(strValue.c_str(), 0, true);
+                 if (m_pvBoiler.GetError())
+                 {
+                   m_display.WriteDisplayStr("Power error", 0, true);
+                 }
+                 else
+                 {
+                   strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
+                   m_display.WriteDisplayStr(strValue.c_str(), 0, true);
+                 }
 
                  const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
                  strValue = String(iPercent) + "%";
@@ -409,16 +416,26 @@ void CApp::HandleDisplay()
 }
 
 
-// Update values from PvBoiler for triac ISR
+// Update values between CPvBoiler and triac ISR
 void CApp::UpdateValues()
 {
   noInterrupts(); // Enter critical section
 
+  const uint32_t iTimeSinceLastZeroCross = micros() - m_iLastZeroCrossTime;
+
   // Get current phase correction & zero cross time value from ISR
-  const uint16_t iZeroCrossWindow = m_iZeroCrossWindow;
-  const uint16_t iPeriodTime = m_iPeriodTime;
+  uint16_t iZeroCrossWindow = m_iZeroCrossWindow;
+  uint16_t iPeriodTime = m_iPeriodTime;
 
   interrupts(); // Leave critical section
+
+  // Check for timeout: No zero cross within 1 second?
+  if (iTimeSinceLastZeroCross > 1000 * 1000)
+  {
+    // Zero cross ISR timeout: reset values to default
+    iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
+    iPeriodTime = 65535;
+  }
 
   // Get updated values for ISR
   const uint8_t iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();

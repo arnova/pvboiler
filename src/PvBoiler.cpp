@@ -55,7 +55,7 @@ void CPvBoiler::Reset()
 
   m_fTriacAngleFactor = 0.0f;
   m_iTriacPhaseAngle = 0;
-  m_iPeriodTime = 0;
+  m_iPeriodTime = 65535;
   m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
 
   LoadSettings();
@@ -100,7 +100,7 @@ bool CPvBoiler::MqttPublishValues()
   }
 
   // FIXME: These are always updated
-  m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_ERROR, m_bError ? "1" : "0");
+  m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, m_bError ? "1" : "0");
   m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, String(m_iPeriodTime));
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, String(m_iZeroCrossWindow));
 
@@ -148,7 +148,7 @@ void CPvBoiler::MqttPublishConfig()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_TRIAC_ERROR);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR);
 
   if (m_logicMode == CPvBoiler::LOGIC_MODE_BUDGET)
   {
@@ -392,18 +392,7 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_logicMode == LOGIC_MODE_PERCENT)
-  {
-    if (m_iPowerPercentage > m_fCurrentPercentage)
-    {
-      fNewPercentage++;
-    }
-    else if (m_iPowerPercentage < m_fCurrentPercentage)
-    {
-      fNewPercentage--;
-    }
-  }
-  else if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
+  if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable || m_bError)
   {
     if (!m_bCtrlEnable)
     {
@@ -413,6 +402,17 @@ void CPvBoiler::Update()
     if (m_fCurrentPercentage > 0)
     {
       fNewPercentage--; // Device off or watch-dog triggered: output to 0%
+    }
+  }
+  else if (m_logicMode == LOGIC_MODE_PERCENT)
+  {
+    if (m_iPowerPercentage > m_fCurrentPercentage)
+    {
+      fNewPercentage++;
+    }
+    else if (m_iPowerPercentage < m_fCurrentPercentage)
+    {
+      fNewPercentage--;
     }
   }
   else
