@@ -45,9 +45,9 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50 // uS
 
-// Watchdog timer settings. Comment WATCHDOG_TIMEOUT_TIME define to disable
-#define WATCHDOG_TIMEOUT_TIME                   900  // Seconds = 15 minutes
-#define WATCHDOG_RECOVERY_TIME                  60   // Seconds = 1 minute
+// Network watchdog timer settings. Comment NETWORK_WATCHDOG_TIMEOUT_TIME define to disable
+#define NETWORK_WATCHDOG_TIMEOUT_TIME           900  // Seconds = 15 minutes
+#define NETWORK_WATCHDOG_RECOVERY_TIME          60   // Seconds = 1 minute
 
 // Enable below for additional wifi / mqtt debug messages
 #define WIFI_DEBUG

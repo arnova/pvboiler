@@ -114,7 +114,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   }
 
   // Got a message so network is still ok:
-  g_app.GetPvBoiler().TriggerWatchdog();
+  g_app.GetPvBoiler().TrigNetworkWatchdog();
 }
 
 

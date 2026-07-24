@@ -18,7 +18,7 @@ void CPvBoiler::Loop()
   // Run timed control loop
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)
   {
-    CheckWatchDog();
+    CheckNetworkWatchDog();
     Update();
 
     m_loopTimer = 0;
@@ -36,8 +36,8 @@ void CPvBoiler::Loop()
 
 void CPvBoiler::Reset()
 {
-  m_iWatchdogCounter = 0;
-  m_iWatchdogRecoveryCounter = 0;
+  m_iNetworkWatchdogCounter = 0;
+  m_iNetworkWatchdogRecoveryCounter = 0;
 
   m_bCtrlEnable = true;
   m_bPublishCtrlOnOff = true;
@@ -403,11 +403,11 @@ void CPvBoiler::Update()
       fNewPercentage--;
     }
   }
-  else if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
+  else if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
   {
     if (!m_bCtrlEnable)
     {
-      m_iWatchdogRecoveryCounter = 0; // When off: quick recovery
+      m_iNetworkWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
 
     if (m_fCurrentPercentage > 0)
@@ -443,21 +443,21 @@ void CPvBoiler::Update()
 }
 
 
-void CPvBoiler::CheckWatchDog()
+void CPvBoiler::CheckNetworkWatchDog()
 {
-#ifdef WATCHDOG_TIMEOUT_TIME
-  // Handle watchdog
-  if (m_iWatchdogCounter < (WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
+#ifdef NETWORK_WATCHDOG_TIMEOUT_TIME
+  // Handle network watchdog
+  if (m_iNetworkWatchdogCounter < (NETWORK_WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
   {
-    m_iWatchdogCounter++;
-    if (m_iWatchdogRecoveryCounter > 0)
+    m_iNetworkWatchdogCounter++;
+    if (m_iNetworkWatchdogRecoveryCounter > 0)
     {
-      m_iWatchdogRecoveryCounter--;
+      m_iNetworkWatchdogRecoveryCounter--;
     }
   }
   else
   {
-    m_iWatchdogRecoveryCounter = (WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
+    m_iNetworkWatchdogRecoveryCounter = (NETWORK_WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
   }
 #endif
 }

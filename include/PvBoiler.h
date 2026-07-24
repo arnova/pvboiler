@@ -65,7 +65,7 @@ class CPvBoiler
     void MqttPublishConfig();
     void LoadSettings();
 
-    void TriggerWatchdog() { m_iWatchdogCounter = 0; };
+    void TrigNetworkWatchdog() { m_iNetworkWatchdogCounter = 0; };
 
     void SetCtrlOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlOnOff = true; };
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
@@ -104,14 +104,14 @@ class CPvBoiler
 
   private:
     void Update();
-    void CheckWatchDog();
+    void CheckNetworkWatchDog();
 
     CNetwork& m_network;
 
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
-    uint32_t m_iWatchdogCounter = 0;
-    uint32_t m_iWatchdogRecoveryCounter = 0;
+    uint32_t m_iNetworkWatchdogCounter = 0;
+    uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
     bool m_bCtrlEnable = true;
     bool m_bPublishCtrlOnOff = true;
