@@ -48,7 +48,7 @@ void CPvBoiler::Reset()
   m_iPowerPercentage = 0;
   m_bPublishPowerPercentage = true;
 
-  m_iCurrentPercentage = 0;
+  m_fCurrentPercentage = 0.0f;
   m_bPublishOutputPercentage = true;
 
   m_bError = false;
@@ -89,7 +89,7 @@ bool CPvBoiler::MqttPublishValues()
   if (m_bPublishOutputPercentage)
   {
     m_bPublishOutputPercentage = false;
-    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, String(m_iCurrentPercentage));
+    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, String(m_fCurrentPercentage));
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
     m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String(GetTriacPhaseAngle()));
 
@@ -357,7 +357,7 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     // Update triac angle factor
-    m_fTriacAngleFactor = triac_percentage_factor[m_iCurrentPercentage];
+    m_fTriacAngleFactor = triac_percentage_factor[static_cast<uint8_t>(m_fCurrentPercentage)];
 
     // Make sure we trigger not too close to zero cross
     m_iTriacPhaseAngle = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(ZERO_CROSS_EDGE_MIN_US));
@@ -390,17 +390,17 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
 
 void CPvBoiler::Update()
 {
+  float fNewPercentage = m_fCurrentPercentage;
+
   if (m_logicMode == LOGIC_MODE_PERCENT)
   {
-    if (m_iPowerPercentage > m_iCurrentPercentage)
+    if (m_iPowerPercentage > m_fCurrentPercentage)
     {
-      m_iCurrentPercentage++;
-      m_bPublishOutputPercentage = true;
+      fNewPercentage++;
     }
-    else if (m_iPowerPercentage < m_iCurrentPercentage)
+    else if (m_iPowerPercentage < m_fCurrentPercentage)
     {
-      m_iCurrentPercentage--;
-      m_bPublishOutputPercentage = true;
+      fNewPercentage--;
     }
   }
   else if (m_iWatchdogRecoveryCounter > 0 || !m_bCtrlEnable)
@@ -410,10 +410,9 @@ void CPvBoiler::Update()
       m_iWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
 
-    if (m_iCurrentPercentage > 0)
+    if (m_fCurrentPercentage > 0)
     {
-      m_iCurrentPercentage--; // Device off or watch-dog triggered: output to 0%
-      m_bPublishOutputPercentage = true;
+      fNewPercentage--; // Device off or watch-dog triggered: output to 0%
     }
   }
   else
@@ -426,21 +425,20 @@ void CPvBoiler::Update()
     else if (fErrorStep < -m_iErrorClamp)
       fErrorStep = -m_iErrorClamp;
 
-    int32_t iOutputPercentage = m_iCurrentPercentage;
     if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
-      iOutputPercentage += fErrorStep;
+      fNewPercentage += fErrorStep;
+  }
 
-    // Clamp percentage to 0-100
-    if (iOutputPercentage > 100)
-      iOutputPercentage = 100;
-    else if (iOutputPercentage < 0)
-      iOutputPercentage = 0;
+  // Clamp to 0-100%
+  if (fNewPercentage > 100.0f)
+    fNewPercentage = 100.0f;
+  else if (fNewPercentage < 0.0f)
+    fNewPercentage = 0.0f;
 
-    if (iOutputPercentage != m_iCurrentPercentage)
-    {
-      m_iCurrentPercentage = iOutputPercentage;
-      m_bPublishOutputPercentage = true;
-    }
+  if (fNewPercentage != m_fCurrentPercentage)
+  {
+    m_fCurrentPercentage = fNewPercentage;
+    m_bPublishOutputPercentage = true;
   }
 }
 

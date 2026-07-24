@@ -367,11 +367,11 @@ void CApp::HandleDisplay()
                break;
 
       case 2 : {
-                 const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
                  strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
                  m_display.WriteDisplayStr(strValue.c_str(), 0, true);
 
-                 strValue = String(m_pvBoiler.GetCurrentPercentage()) + "%";
+                 const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
+                 strValue = String(iPercent) + "%";
                  m_display.WriteDisplayStr(strValue.c_str(), 1, false);
 
                  strValue = "[";

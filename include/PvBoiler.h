@@ -79,8 +79,8 @@ class CPvBoiler
     void SetErrorGain(const float fGain);
     void SetErrorClamp(const uint8_t iClamp);
 
-    uint8_t GetCurrentPercentage() const { return m_iCurrentPercentage; };
-    uint16_t GetCurrentPower() const { return (m_iBoilerPowerRating * m_iCurrentPercentage) / 100; };
+    float GetCurrentPercentage() const { return m_fCurrentPercentage; };
+    uint16_t GetCurrentPower() const { return (m_fCurrentPercentage * m_iBoilerPowerRating) / 100; };
 
     uint16_t CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
@@ -122,7 +122,7 @@ class CPvBoiler
     uint8_t m_iPowerPercentage = 0;
     bool m_bPublishPowerPercentage = true;
 
-    uint8_t m_iCurrentPercentage = 0;
+    float m_fCurrentPercentage = 0.0f;
     bool m_bPublishOutputPercentage = true;
 
     bool m_bPublishSettings = true;
