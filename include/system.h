@@ -22,8 +22,8 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define SSR_PERIOD_COUNT_MAX                    254
 
 // Proportional error gain
-#define ERROR_GAIN_DEFAULT                      0.1f
-#define ERROR_GAIN_MIN                          0.001f
+#define ERROR_GAIN_DEFAULT                      0.01f
+#define ERROR_GAIN_MIN                          0.0001f
 #define ERROR_GAIN_MAX                          100.0f
 
 #define ERROR_CLAMP_DEFAULT                     10
