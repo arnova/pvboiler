@@ -204,11 +204,13 @@ WiFiClient& CNetwork::GetSocketServerClient()
 bool CNetwork::HandleMqttClient()
 {
   // Handle MQTT client-server connection
-  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) &&
-      m_bWifiConnected &&
-      !m_mqttClient.connected())
+  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) && m_bWifiConnected)
   {
-    if (m_mqttTimeoutTimer > MQTT_CONNECT_TIMEOUT)
+    if (m_mqttClient.connected())
+    {
+      m_mqttTimeoutTimer = 0;
+    }
+    else if (m_mqttTimeoutTimer > MQTT_CONNECT_TIMEOUT)
     {
       m_mqttTimeoutTimer = 0;
 
@@ -217,10 +219,6 @@ bool CNetwork::HandleMqttClient()
         return true; // Reconnected
       }
     }
-  }
-  else
-  {
-    m_mqttTimeoutTimer = 0;
   }
 
   return false; // No reconnection
