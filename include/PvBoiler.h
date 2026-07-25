@@ -78,6 +78,8 @@ class CPvBoiler
     void SetSsrPeriodCount(const uint8_t iPeriod);
     void SetErrorGain(const float fGain);
     void SetErrorClamp(const uint8_t iClamp);
+    void SetNetWatchDogTimeout(const uint16_t iTimeout);
+    void SetNetWatchDogRecovery(const uint16_t iTimeout);
 
     float GetCurrentPercentage() const { return m_fCurrentPercentage; };
     uint16_t GetCurrentPower() const { return (m_fCurrentPercentage * m_iBoilerPowerRating) / 100; };
@@ -100,6 +102,8 @@ class CPvBoiler
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
     bool GetError() const { return m_bError; };
+    uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
+    uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
 
   private:
@@ -130,7 +134,8 @@ class CPvBoiler
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
 
-    // Error flag
+    uint16_t m_iNetWatchDogTimeout = 0;
+    uint16_t m_iNetWatchDogRecovery = 0;
     bool m_bError = false;
 
     // Keep track of up-time

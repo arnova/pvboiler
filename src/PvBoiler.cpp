@@ -137,6 +137,9 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "Phase-angle");
     }
+
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_TIMEOUT, String(m_iNetWatchDogTimeout));
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, String(m_iNetWatchDogRecovery));
   }
 
   return true;
@@ -200,6 +203,9 @@ void CPvBoiler::MqttPublishConfig()
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
 
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
+
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
     m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
@@ -260,6 +266,21 @@ void CPvBoiler::LoadSettings()
     iErrorClamp = ERROR_CLAMP_DEFAULT;
   }
   m_iErrorClamp = iErrorClamp;
+
+  uint16_t iTime = 0;
+  EEPROM.get(EEPROM_NET_WD_TIMEOUT, iTime);
+  if (iTime > NETWORK_WATCHDOG_TIMEOUT_MAX)
+  {
+    iTime = NETWORK_WATCHDOG_TIMEOUT_DEFAULT;
+  }
+  m_iNetWatchDogTimeout = iTime;
+
+  EEPROM.get(EEPROM_NET_WD_RECOVER, iTime);
+  if (iTime > NETWORK_WATCHDOG_RECOVERY_MAX)
+  {
+    iTime = NETWORK_WATCHDOG_RECOVERY_DEFAULT;
+  }
+  m_iNetWatchDogRecovery = iTime;
 
   m_bPublishSettings = true;
 }
@@ -337,6 +358,28 @@ void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
   EEPROM.commit();
 
   m_iErrorClamp = iClamp;
+
+  m_bPublishSettings = true;
+}
+
+
+void CPvBoiler::SetNetWatchDogTimeout(const uint16_t iTime)
+{
+  EEPROM.put(EEPROM_NET_WD_TIMEOUT, iTime);
+  EEPROM.commit();
+
+  m_iNetWatchDogTimeout = iTime;
+
+  m_bPublishSettings = true;
+}
+
+
+void CPvBoiler::SetNetWatchDogRecovery(const uint16_t iTime)
+{
+  EEPROM.put(EEPROM_NET_WD_RECOVER, iTime);
+  EEPROM.commit();
+
+  m_iNetWatchDogRecovery = iTime;
 
   m_bPublishSettings = true;
 }
@@ -445,9 +488,11 @@ void CPvBoiler::Update()
 
 void CPvBoiler::CheckNetworkWatchDog()
 {
-#ifdef NETWORK_WATCHDOG_TIMEOUT_TIME
+  if (m_iNetWatchDogTimeout == 0)
+    return;
+
   // Handle network watchdog
-  if (m_iNetworkWatchdogCounter < (NETWORK_WATCHDOG_TIMEOUT_TIME * 1000) / CONTROL_LOOP_TIME_MS)
+  if (m_iNetworkWatchdogCounter < (m_iNetWatchDogTimeout * 1000) / CONTROL_LOOP_TIME_MS)
   {
     m_iNetworkWatchdogCounter++;
     if (m_iNetworkWatchdogRecoveryCounter > 0)
@@ -457,7 +502,6 @@ void CPvBoiler::CheckNetworkWatchDog()
   }
   else
   {
-    m_iNetworkWatchdogRecoveryCounter = (NETWORK_WATCHDOG_RECOVERY_TIME * 1000) / CONTROL_LOOP_TIME_MS;
+    m_iNetworkWatchdogRecoveryCounter = (m_iNetWatchDogRecovery * 1000) / CONTROL_LOOP_TIME_MS;
   }
-#endif
 }

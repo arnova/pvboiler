@@ -34,6 +34,8 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "netmask [mask]         : Use [mask] for device IP netmask\r\n"
                                   "serverip [ip]          : Set MQTT server IP address to [ip]\r\n"
                                   "restartnet             : Restart network functions\r\n"
+                                  "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
+                                  "netwdr [i]             : Set network watchdog recovery time to [i] seconds\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -255,6 +257,14 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" error_clamp=");
   CTermPrint::print(String(m_pvBoiler.GetErrorClamp()));
   CTermPrint::print("%");
+
+  CTermPrint::print(" net_wd_timeout=");
+  CTermPrint::print(String(m_pvBoiler.GetNetWatchDogTimeout()));
+  CTermPrint::print("s");
+
+  CTermPrint::print(" net_wd_recovery=");
+  CTermPrint::print(String(m_pvBoiler.GetNetWatchDogRecovery()));
+  CTermPrint::print("s");
 
   CTermPrint::println("");
 
@@ -517,6 +527,47 @@ result_code_t CPvBoilerCommandHandler::CmdSetErrorClamp(const char *strArgs)
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdNetWatchdogTimeout(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
+  {
+    m_pvBoiler.SetNetWatchDogTimeout(0);
+  }
+  else
+  {
+    int32_t iTimeout;
+    result = get_int32_from_string(strArgs, &iTimeout, 0, NETWORK_WATCHDOG_TIMEOUT_MAX, ARG_INT32_NUM1);
+    if (result.code != ERR_CODE_OK)
+      return result;
+
+    m_pvBoiler.SetNetWatchDogTimeout(iTimeout);
+  }
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdNetWatchdogRecovery(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iTime;
+  result = get_int32_from_string(strArgs, &iTime, 0, NETWORK_WATCHDOG_RECOVERY_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetNetWatchDogRecovery(iTime);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 // Process provided string command
 result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
 {
@@ -629,6 +680,14 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "disable"))
   {
     result = CmdDisable(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "netwdt"))
+  {
+    result = CmdNetWatchdogTimeout(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "netwdr"))
+  {
+    result = CmdNetWatchdogRecovery(strArgs);
   }
 
   // Finally output result-code string (OK or ERROR:)

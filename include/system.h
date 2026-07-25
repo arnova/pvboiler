@@ -45,9 +45,12 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50 // uS
 
-// Network watchdog timer settings. Comment NETWORK_WATCHDOG_TIMEOUT_TIME define to disable
-#define NETWORK_WATCHDOG_TIMEOUT_TIME           900  // Seconds = 15 minutes
-#define NETWORK_WATCHDOG_RECOVERY_TIME          60   // Seconds = 1 minute
+// Network watchdog timer settings
+#define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        900  // Seconds = 15 minutes
+#define NETWORK_WATCHDOG_TIMEOUT_MAX            65000
+
+#define NETWORK_WATCHDOG_RECOVERY_DEFAULT       60   // Seconds = 1 minute
+#define NETWORK_WATCHDOG_RECOVERY_MAX           65000
 
 // Enable below for additional wifi / mqtt debug messages
 #define WIFI_DEBUG
@@ -92,6 +95,8 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_NET_PERIOD                             "net_period"
 #define MQTT_ZERO_CROSS_WINDOW                      "zero_cross_window"
 #define MQTT_POWER_ERROR                            "power_error"
+#define MQTT_NET_WD_TIMEOUT                         "network_watchdog_timeout"
+#define MQTT_NET_WD_RECOVERY                        "network_watchdog_recovery"
 #define MQTT_UP_TIME                                "up_time"
 
 // Socket server settings
@@ -118,28 +123,34 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define SOCKET_CLIENT_TIMEOUT_MS      100 // ms
 
 // EEprom byte sizes
-#define IP_BYTE_SIZE          4
-#define BP_RATING_SIZE        2
-#define PB_MARGIN_SIZE        2
-#define CTRL_MODE_SIZE        1
-#define DIM_STYLE_SIZE        1
-#define SSR_PERIOD_SIZE       1
+#define IP_BYTE_SIZE            4
+#define BP_RATING_SIZE          2
+#define PB_MARGIN_SIZE          2
+#define CTRL_MODE_SIZE          1
+#define DIM_STYLE_SIZE          1
+#define SSR_PERIOD_SIZE         1
 #define WIFI_SSID_MAX_SIZE      32
 #define WIFI_PASSWORD_MAX_SIZE  64
+#define ERROR_GAIN_SIZE         sizeof(float)
+#define ERROR_CLAMP_SIZE        1
+#define NET_WD_TIMEOUT_SIZE     2
+#define NET_WD_RECOVER_SIZE     2
 
 // EEPROM locations
-#define EEPROM_WIFI_SSID      0
-#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1
-#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1
-#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE
-#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE
-#define EEPROM_BP_RATING      EEPROM_SERVER_IP_ADDR + IP_BYTE_SIZE
-#define EEPROM_PB_MARGIN      EEPROM_BP_RATING + BP_RATING_SIZE
-#define EEPROM_CTRL_MODE      EEPROM_PB_MARGIN + PB_MARGIN_SIZE
-#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE
-#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE
-#define EEPROM_ERROR_GAIN     EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE
-#define EEPROM_ERROR_CLAMP    EEPROM_ERROR_GAIN + sizeof(float)
+#define EEPROM_WIFI_SSID      0                                                   // offset 32
+#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // offset 96
+#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1   // offset 100
+#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE                       // offset 104
+#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE                    // offset 108
+#define EEPROM_BP_RATING      EEPROM_SERVER_IP_ADDR + IP_BYTE_SIZE                // offset 110
+#define EEPROM_PB_MARGIN      EEPROM_BP_RATING + BP_RATING_SIZE                   // offset 112
+#define EEPROM_CTRL_MODE      EEPROM_PB_MARGIN + PB_MARGIN_SIZE                   // offset 113
+#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE                   // offset 114
+#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offset 115
+#define EEPROM_ERROR_GAIN     EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offset 119
+#define EEPROM_ERROR_CLAMP    EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offset 120
+#define EEPROM_NET_WD_TIMEOUT EEPROM_ERROR_CLAMP + ERROR_CLAMP_SIZE               // offset 122
+#define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offset 124
 
 // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
