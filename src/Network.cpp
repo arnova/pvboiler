@@ -158,9 +158,14 @@ void CNetwork::SetNetMask(const uint8_t* ipNetMask)
 
 void CNetwork::MqttPublishValues()
 {
-  m_mqttClient.PublishMessage(MQTT_WIFI_SSID, String(m_strWifiSsid));
-  m_mqttClient.PublishMessage(MQTT_IP_ADDRESS, IPAddress(WiFi.localIP()).toString());
-//  m_mqttClient.PublishMessage(MQTT_IP_NETMASK, IPAddress(WiFi.net m_ipNetmask).toString());
+  m_mqttClient.PublishMessage(MQTT_WIFI_SSID, m_strWifiSsid);
+
+  char strBuf[16]; // Enough room for a standard IPv4 address
+  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+  m_mqttClient.PublishMessage(MQTT_IP_ADDRESS, strBuf);
+
+//  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.net()[0], WiFi.net()[1], WiFi.net()[2], WiFi.net()[3]);
+//  m_mqttClient.PublishMessage(MQTT_IP_NETMASK, strBuf);
 }
 
 
@@ -191,7 +196,9 @@ WiFiClient& CNetwork::GetSocketServerClient()
     if (m_socketServerClient)
     {
       CTermPrint::print("Accepting connection from client: ");
-      CTermPrint::println(m_socketServerClient.remoteIP().toString().c_str());
+
+      char strBuf[16]; // Enough room for a standard IPv4 address
+      snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_socketServerClient.remoteIP()[0], m_socketServerClient.remoteIP()[1], m_socketServerClient.remoteIP()[2], m_socketServerClient.remoteIP()[3]);
     }
 #endif
   }
@@ -264,7 +271,10 @@ void CNetwork::Loop()
 #ifdef WIFI_DEBUG
       TERM_SERIAL.println("");
       TERM_SERIAL.print(PSTR("WiFi connected with IP address: "));
-      TERM_SERIAL.println(WiFi.localIP().toString().c_str());
+
+      char strBuf[16]; // Enough room for a standard IPv4 address
+      snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+      TERM_SERIAL.println(strBuf);
 #endif
 
 #ifdef SOCKET_SERVER_PORT

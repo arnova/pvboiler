@@ -10,7 +10,7 @@ class CMqttClient : public PubSubClient
 {
   public:
     static void PrintDataError(void);
-    static void GetFriendlyName(const String& strName, String& strFriendly);
+    static void GetFriendlyName(const char* strName, char* strFriendly, const size_t iMaxSize);
 
     void PublishSwitchConfig(const char* strItem);
     void PublishNumberConfig(const char* strItem, const char* strStep = "", const char* strMin = "", const char* strMax = "", const bool bBox = true);
@@ -22,7 +22,7 @@ class CMqttClient : public PubSubClient
     void UnpublishBinarySensorConfig(const char* strItem);
     void UnpublishSensorConfig(const char* strItem);
 
-    bool PublishMessage(const char* strItem, const String& strPayload, const bool bRetained = true);
+    bool PublishMessage(const char* strItem, const char* strPayload, const bool bRetained = true);
 
     void Init(const uint8_t* serverIp);
     bool ServerConnect();
@@ -35,6 +35,5 @@ class CMqttClient : public PubSubClient
     void UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter = false);
 
     uint8_t m_serverIp[4] = { 0 };
-    const String m_strName = MQTT_NAME;
 };
 #endif // MQTT_CLIENT_H

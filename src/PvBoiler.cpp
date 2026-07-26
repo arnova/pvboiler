@@ -64,6 +64,8 @@ void CPvBoiler::Reset()
 
 bool CPvBoiler::MqttPublishValues()
 {
+  char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
+
   if (m_bPublishCtrlOnOff)
   {
     m_bPublishCtrlOnOff = false;
@@ -75,7 +77,10 @@ bool CPvBoiler::MqttPublishValues()
     m_bPublishPowerBudget = false;
 
     if (m_logicMode == LOGIC_MODE_BUDGET)
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, String(m_iPowerBudget));
+    {
+      snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
+    }
   }
 
   if (m_bPublishPowerPercentage)
@@ -83,45 +88,64 @@ bool CPvBoiler::MqttPublishValues()
     m_bPublishPowerPercentage = false;
 
     if (m_logicMode == LOGIC_MODE_PERCENT)
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, String(m_iPowerPercentage));
+    {
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
+    }
   }
 
   if (m_bPublishOutputPercentage)
   {
     m_bPublishOutputPercentage = false;
-    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, String(m_fCurrentPercentage));
-    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, String(GetCurrentPower()));
-    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, String(GetTriacPhaseAngle()));
+    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fCurrentPercentage);
+    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", GetCurrentPower());
+    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", GetTriacPhaseAngle());
+    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, strBuf);
 
     if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
     {
-      m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, String(GetTriacAngleFactor(), 4));
+      snprintf(strBuf, sizeof(strBuf), "%.4f", GetTriacAngleFactor());
+      m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, strBuf);
     }
   }
 
   // FIXME: These are always updated
   m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, m_bError ? "1" : "0");
-  m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, String(m_iPeriodTime));
-  m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, String(m_iZeroCrossWindow));
+
+  snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime);
+  m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
+
+  snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
+  m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
 
   // Publish uptime
   const CUptime::uptime_t upTime = GetUpTime();
-  char strTemp[24];
-  snprintf(strTemp, sizeof(strTemp), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
-  m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strTemp);
+  snprintf(strBuf, sizeof(strBuf), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+  m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
 
   if (m_bPublishSettings)
   {
     m_bPublishSettings = false;
 
-    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER, String(m_iBoilerPowerRating));
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
+    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER, strBuf);
 
     if (m_logicMode == LOGIC_MODE_BUDGET)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_LOGIC_MODE, "Budget");
-      m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, String(m_iPowerBudgetMargin));
-      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN, String(m_fErrorGain, 3));
-      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_CLAMP, String(m_iErrorClamp));
+
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerBudgetMargin);
+      m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGain);
+      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iErrorClamp);
+      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_CLAMP, strBuf);
     }
     else // Percentage
     {
@@ -131,15 +155,20 @@ bool CPvBoiler::MqttPublishValues()
     if (m_dimStyle == DIM_STYLE_SSR)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "SSR");
-      m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, String(m_iSsrPeriodCount));
+
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iSsrPeriodCount);
+      m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, strBuf);
     }
     else
     {
       m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "Phase-angle");
     }
 
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_TIMEOUT, String(m_iNetWatchDogTimeout));
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, String(m_iNetWatchDogRecovery));
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogTimeout);
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_TIMEOUT, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogRecovery);
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, strBuf);
   }
 
   return true;

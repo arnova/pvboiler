@@ -3,6 +3,7 @@
 
 #include "MqttClient.h"
 #include "TermPrint.h"
+#include "util.h"
 
 
 void CMqttClient::PrintDataError(void)
@@ -13,15 +14,16 @@ void CMqttClient::PrintDataError(void)
 }
 
 
-void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
+void CMqttClient::GetFriendlyName(const char* strName, char* strFriendly, const size_t iMaxSize)
 {
   bool bSpace = true;
 
-  for (uint8_t it = 0; it < strName.length(); it++)
+  size_t iPos;
+  for (iPos = 0; iPos < strlen(strName) && iPos < iMaxSize - 1; iPos++)
   {
-    if (strName[it] == '_')
+    if (strName[iPos] == '_')
     {
-      strFriendly += ' ';
+      strFriendly[iPos] = ' ';
       bSpace = true;
     }
     else
@@ -29,25 +31,33 @@ void CMqttClient::GetFriendlyName(const String& strName, String& strFriendly)
       if (bSpace)
       {
         bSpace = false;
-        strFriendly += (char) toupper(strName[it]);
+        strFriendly[iPos] = (char) toupper((unsigned char) strName[iPos]);
       }
       else
       {
-        strFriendly += strName[it];
+        strFriendly[iPos] = strName[iPos];
       }
     }
   }
+  strFriendly[iPos] = '\0';
 }
 
 
 void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
-  String strFriendlyItem;
-  GetFriendlyName(strItem, strFriendlyItem);
+  char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
+  GetFriendlyName(strItem, strFriendlyItem, sizeof(strFriendlyItem));
 
-  root["state_topic"] = m_strName + "/" + strItem;
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 2];
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s", strItem);
+  root["state_topic"] = strBuf;
+
   root["name"] = strFriendlyItem;
-  root["unique_id"] = m_strName + "_" + strItem; // Optional
+
+  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 2];
+  snprintf(strBuf2, sizeof(strBuf2), HOST_NAME "_%s", strItem);
+  root["unique_id"] = strBuf2;
+  
   root["retain"] = true;
   root["qos"] = 1;
 
@@ -63,16 +73,16 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
 void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   // Serialize JSON for MQTT
-  char message[MQTT_MAX_MESSAGE_SIZE];
-  serializeJson(root, message);
+  char strMessage[MQTT_MAX_MESSAGE_SIZE];
+  serializeJson(root, strMessage);
 
 #ifdef MQTT_DEBUG
   CTermPrint::println(message); //Prints it out on one line
 #endif
 
-  String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
-
-  publish(strTopic.c_str(), message, true);
+  char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
+  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, MQTT_NAME, strItem);
+  publish(strTopic, strMessage, true);
 }
 
 
@@ -83,7 +93,10 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
   PublishConfig(root, strItem, strTopicType);
 
   // Subscribe to /set messages
-  subscribe((m_strName + "/" + strItem + "/set").c_str(), 1);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+
+  subscribe(strBuf, 1);
 }
 
 
@@ -102,14 +115,15 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
 {
   JsonDocument root;
 
-  String strTopic = String("homeassistant/") + strTopicType + "/" + m_strName + "/" + strItem + "/config";
-
   PublishConfig(root, strItem, strTopicType);
 
   if (bSetter)
   {
     // Unsubscribe setter
-    unsubscribe((m_strName + "/" + strItem + "/set").c_str());
+    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
+    snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+
+    unsubscribe(strBuf);
   }
 }
 
@@ -142,7 +156,10 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 {
   JsonDocument root;
 
-  root["command_topic"] = m_strName + "/" + strItem + "/set";
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+
+  root["command_topic"] = strBuf;
   root["payload_on"] = "1";
   root["payload_off"] = "0";
   root["state_on"] = "1";
@@ -157,7 +174,10 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
 {
   JsonDocument root;
 
-  root["command_topic"] = m_strName + "/" + strItem + "/set";
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  root["command_topic"] = strBuf;
+
   if (strlen(strMin) != 0)
   {
     root["min"] = strMin;
@@ -210,9 +230,12 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /
 }
 
 
-bool CMqttClient::PublishMessage(const char* strItem, const String& strPayload, const bool bRetained /* = true */)
+bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetained /* = true */)
 {
-  return publish((String(MQTT_NAME "/") + strItem).c_str(), strPayload.c_str(), bRetained);
+  char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
+  snprintf(strTopic, sizeof(strTopic), MQTT_NAME "/%s", strItem);
+
+  return publish(strTopic, strPayload, bRetained);
 }
 
 
@@ -227,15 +250,21 @@ void CMqttClient::Init(const uint8_t* serverIp)
 
 bool CMqttClient::ServerConnect()
 {
+  char strBuf[16]; // Enough for IPv4 address / hostname-xxxx
+
 #ifdef MQTT_DEBUG
-  CTermPrint::print(String("Connecting to MQTT server: ") + IPAddress(m_serverIp).toString() + ":" + String(MQTT_PORT) + "...");
+  CTermPrint::print("Connecting to MQTT server: ");
+
+  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_serverIp[0], m_serverIp[1], m_serverIp[2], m_serverIp[3]);
+  CTermPrint::print(strBuf);
+
+  CTermPrint::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
   // Create a random client ID
-  String clientId = HOST_NAME "-";
-  clientId += String(random(0xffff), HEX);
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "-%lx", random(0xffff));
   // Attempt to connect
-//    if (connect(clientId.c_str(), NULL, NULL, "test", 0, false, "not connected", false))
-  if (!connect(clientId.c_str()))
+//  if (connect(strBuf, NULL, NULL, "test", 0, false, "not connected", false))
+  if (!connect(strBuf))
   {
 #ifdef MQTT_DEBUG
     CTermPrint::print("ERROR, rc=");

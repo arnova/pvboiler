@@ -66,14 +66,16 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_PORT                               1883
 #define MQTT_UPDATE_TIME                        1     // Seconds
 #define MQTT_MAX_MESSAGE_SIZE                   1024
+#define MQTT_MAX_TOPIC_ITEM_SIZE                32
+#define MQTT_MAX_CONFIG_TOPIC_SIZE              128
 
-// Control topics
+// Control topic items
 #define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
 
 #define MQTT_SET_POWER_PERCENTAGE                   "power_percentage"
 #define MQTT_SET_POWER_BUDGET                       "power_budget"
 
-// Status topics
+// Status topic items
 #define MQTT_FW_VERSION                             "firmware_version"
 #define MQTT_OUTPUT_POWER                           "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
@@ -86,7 +88,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_ERROR_GAIN                             "error_gain"
 #define MQTT_ERROR_CLAMP                            "error_clamp"
 
-// Diagnostic
+// Diagnostic topic items
 #define MQTT_WIFI_SSID                              "wifi_ssid"
 #define MQTT_IP_ADDRESS                             "ip_address"
 #define MQTT_IP_NETMASK                             "ip_netmask"

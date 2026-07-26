@@ -334,7 +334,7 @@ void CApp::HandleDisplay()
   if (m_displayTimer > 5000)
   {
     m_displayTimer = 0;
-    String strValue;
+    char strValue[22]; // Maximum amount of characters on a single line with this font is 21
 
     switch (m_displayCount)
     {
@@ -348,8 +348,8 @@ void CApp::HandleDisplay()
       case 1 : {
                  m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
 
-                 strValue = WiFi.localIP().toString();
-                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+                 snprintf(strValue, sizeof(strValue), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+                 m_display.WriteDisplayStr(strValue, 1, false);
 
                  if (!m_network.IsConnected())
                  {
@@ -373,32 +373,33 @@ void CApp::HandleDisplay()
                  }
                  else
                  {
-                   strValue = String(m_pvBoiler.GetCurrentPower()) + "W";
-                   m_display.WriteDisplayStr(strValue.c_str(), 0, true);
+                   snprintf(strValue, sizeof(strValue), "%.uW", m_pvBoiler.GetCurrentPower());
+                   m_display.WriteDisplayStr(strValue, 0, true);
                  }
 
                  const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
-                 strValue = String(iPercent) + "%";
-                 m_display.WriteDisplayStr(strValue.c_str(), 1, false);
+                 snprintf(strValue, sizeof(strValue), "%.u%%", iPercent);
 
-                 strValue = "[";
+                 m_display.WriteDisplayStr(strValue, 1, false);
+
+                 strcpy(strValue, "[");
 
                  // Chars are not monospace so need to compensate for smaller spaces with the logic below
                  for (uint8_t iCount = 0; iCount < 100;)
                  {
                    if (iCount < iPercent)
                    {
-                     strValue += "=";
+                     strcat(strValue, "=");
                      iCount += 10;
                    }
                    else
                    {
-                     strValue += " ";
+                     strcat(strValue, " ");
                      iCount += 5; // Spaces are smaller
                    }
                  }
-                 strValue += "]";
-                 m_display.WriteDisplayStr(strValue.c_str(), 2, false);
+                 strcat(strValue, "]");
+                 m_display.WriteDisplayStr(strValue, 2, false);
                }
                break;
 

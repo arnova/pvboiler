@@ -251,20 +251,23 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" ssr_period=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
+  char strBuf[20]; // Enough room for float with 3 decimals
+
   CTermPrint::print(" error_gain=");
-  CTermPrint::print(String(m_pvBoiler.GetErrorGain(), 3));
+  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGain());
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" error_clamp=");
-  CTermPrint::print(String(m_pvBoiler.GetErrorClamp()));
-  CTermPrint::print("%");
+  snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetErrorClamp());
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" net_wd_timeout=");
-  CTermPrint::print(String(m_pvBoiler.GetNetWatchDogTimeout()));
-  CTermPrint::print("s");
+  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" net_wd_recovery=");
-  CTermPrint::print(String(m_pvBoiler.GetNetWatchDogRecovery()));
-  CTermPrint::print("s");
+  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogRecovery());
+  CTermPrint::print(strBuf);
 
   CTermPrint::println("");
 
@@ -289,46 +292,50 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(" mqtt_conn=");
   CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
 
+  char strBuf[20]; // Enough room for float with 3 decimals
+
   CTermPrint::print(" wifi_ip=");
-  CTermPrint::print(WiFi.localIP().toString().c_str());
+  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+  CTermPrint::print(strBuf);
 
   if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
     CTermPrint::print(" perc_set=");
-    CTermPrint::print(m_pvBoiler.GetPowerPercentage());
-    CTermPrint::print("%");
+    snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
+    CTermPrint::print(strBuf);
   }
   else
   {
     CTermPrint::print(" budget_set=");
-    CTermPrint::print(m_pvBoiler.GetPowerBudget());
-    CTermPrint::print("W");
+    snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetPowerBudget());
+    CTermPrint::print(strBuf);
   }
 
   CTermPrint::print(" power_out=");
-  CTermPrint::print(m_pvBoiler.GetCurrentPower());
-  CTermPrint::print("W");
+  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetCurrentPower());
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" perc_out=");
-  CTermPrint::print(m_pvBoiler.GetCurrentPercentage());
-  CTermPrint::print("%");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" net_period=");
-  CTermPrint::print(String(static_cast<float>(m_pvBoiler.GetNetPeriod()) / 1000.0f, 3));
-  CTermPrint::print("ms");
+  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 1000.0f);
+  CTermPrint::print(strBuf);
 
   CTermPrint::print(" zero_cross_window=");
-  CTermPrint::print(String(static_cast<float>(m_pvBoiler.GetZeroCrossWindow()) / 1000.0f, 3));
-  CTermPrint::print("ms");
+  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetZeroCrossWindow()) / 1000.0f);
+  CTermPrint::print(strBuf);
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     CTermPrint::print(" phase_angle=");
-    CTermPrint::print(String(static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f, 3));
-    CTermPrint::print("ms");
+    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
+    CTermPrint::print(strBuf);
 
     CTermPrint::print(" angle_factor=");
-    CTermPrint::print(String(m_pvBoiler.GetTriacAngleFactor(), 4));
+    snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
+    CTermPrint::print(strBuf);
   }
 
   CTermPrint::println("");
