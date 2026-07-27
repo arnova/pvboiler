@@ -199,6 +199,7 @@ WiFiClient& CNetwork::GetSocketServerClient()
 
       char strBuf[16]; // Enough room for a standard IPv4 address
       snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_socketServerClient.remoteIP()[0], m_socketServerClient.remoteIP()[1], m_socketServerClient.remoteIP()[2], m_socketServerClient.remoteIP()[3]);
+      CTermPrint::println(strBuf);
     }
 #endif
   }

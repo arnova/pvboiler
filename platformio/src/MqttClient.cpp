@@ -95,7 +95,6 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
   // Subscribe to /set messages
   char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
   snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
-
   subscribe(strBuf, 1);
 }
 
@@ -122,7 +121,6 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
     // Unsubscribe setter
     char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
     snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
-
     unsubscribe(strBuf);
   }
 }
@@ -158,8 +156,8 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 
   char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
   snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
-
   root["command_topic"] = strBuf;
+
   root["payload_on"] = "1";
   root["payload_off"] = "0";
   root["state_on"] = "1";
@@ -234,7 +232,6 @@ bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, co
 {
   char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
   snprintf(strTopic, sizeof(strTopic), MQTT_NAME "/%s", strItem);
-
   return publish(strTopic, strPayload, bRetained);
 }
 

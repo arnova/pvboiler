@@ -97,6 +97,7 @@ bool CPvBoiler::MqttPublishValues()
   if (m_bPublishOutputPercentage)
   {
     m_bPublishOutputPercentage = false;
+
     snprintf(strBuf, sizeof(strBuf), "%.2f", m_fCurrentPercentage);
     m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, strBuf);
 

@@ -378,13 +378,12 @@ void CApp::HandleDisplay()
                  }
 
                  const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
-                 snprintf(strValue, sizeof(strValue), "%.u%%", iPercent);
 
+                 snprintf(strValue, sizeof(strValue), "%.u%%", iPercent);
                  m_display.WriteDisplayStr(strValue, 1, false);
 
-                 strcpy(strValue, "[");
-
                  // Chars are not monospace so need to compensate for smaller spaces with the logic below
+                 strcpy(strValue, "[");
                  for (uint8_t iCount = 0; iCount < 100;)
                  {
                    if (iCount < iPercent)
