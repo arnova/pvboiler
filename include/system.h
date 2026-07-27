@@ -70,36 +70,36 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
 
 // Control topic items
-#define MQTT_CONTROLLER_ON_OFF                      "controller_enable"
+#define MQTT_CONTROLLER_ON_OFF                  "controller_enable"
 
-#define MQTT_SET_POWER_PERCENTAGE                   "power_percentage"
-#define MQTT_SET_POWER_BUDGET                       "power_budget"
+#define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
+#define MQTT_SET_POWER_BUDGET                   "power_budget"
 
 // Status topic items
-#define MQTT_FW_VERSION                             "firmware_version"
-#define MQTT_OUTPUT_POWER                           "output_power"
-#define MQTT_OUTPUT_PERCENTAGE                      "output_percentage"
+#define MQTT_FW_VERSION                         "firmware_version"
+#define MQTT_OUTPUT_POWER                       "output_power"
+#define MQTT_OUTPUT_PERCENTAGE                  "output_percentage"
 
-#define MQTT_LOGIC_MODE                             "logic_mode"
-#define MQTT_BOILER_POWER                           "boiler_power_rating"
-#define MQTT_BUDGET_MARGIN                          "budget_margin"
-#define MQTT_DIM_STYLE                              "dim_style"
-#define MQTT_SSR_PERIOD_COUNT                       "ssr_period_count"
-#define MQTT_ERROR_GAIN                             "error_gain"
-#define MQTT_ERROR_CLAMP                            "error_clamp"
+#define MQTT_LOGIC_MODE                         "logic_mode"
+#define MQTT_BOILER_POWER                       "boiler_power_rating"
+#define MQTT_BUDGET_MARGIN                      "budget_margin"
+#define MQTT_DIM_STYLE                          "dim_style"
+#define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
+#define MQTT_ERROR_GAIN                         "error_gain"
+#define MQTT_ERROR_CLAMP                        "error_clamp"
 
 // Diagnostic topic items
-#define MQTT_WIFI_SSID                              "wifi_ssid"
-#define MQTT_IP_ADDRESS                             "ip_address"
-#define MQTT_IP_NETMASK                             "ip_netmask"
-#define MQTT_PHASE_ANGLE_FACTOR                     "phase_angle_factor"
-#define MQTT_PHASE_ANGLE                            "phase_angle"
-#define MQTT_NET_PERIOD                             "net_period"
-#define MQTT_ZERO_CROSS_WINDOW                      "zero_cross_window"
-#define MQTT_POWER_ERROR                            "power_error"
-#define MQTT_NET_WD_TIMEOUT                         "network_watchdog_timeout"
-#define MQTT_NET_WD_RECOVERY                        "network_watchdog_recovery"
-#define MQTT_UP_TIME                                "up_time"
+#define MQTT_WIFI_SSID                          "wifi_ssid"
+#define MQTT_IP_ADDRESS                         "ip_address"
+#define MQTT_IP_NETMASK                         "ip_netmask"
+#define MQTT_PHASE_ANGLE_FACTOR                 "phase_angle_factor"
+#define MQTT_PHASE_ANGLE                        "phase_angle"
+#define MQTT_NET_PERIOD                         "net_period"
+#define MQTT_ZERO_CROSS_WINDOW                  "zero_cross_window"
+#define MQTT_POWER_ERROR                        "power_error"
+#define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"
+#define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
+#define MQTT_UP_TIME                            "up_time"
 
 // Socket server settings
 #define SOCKET_SERVER_PORT                      8000
