@@ -28,7 +28,7 @@ class CMqttClient : public PubSubClient
     bool ServerConnect();
 
   private:
-    void ConstructConfigMessage(JsonDocument& root, const char* strItem, const char* strTopicType);
+    void ConstructConfigMessage(JsonDocument& root, const char* strItem);
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
     void PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
     void PublishGetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag = false);

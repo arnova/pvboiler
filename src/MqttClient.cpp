@@ -43,7 +43,7 @@ void CMqttClient::GetFriendlyName(const char* strName, char* strFriendly, const 
 }
 
 
-void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem)
 {
   char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
   GetFriendlyName(strItem, strFriendlyItem, sizeof(strFriendlyItem));
@@ -88,7 +88,7 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
 
 void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
-  ConstructConfigMessage(root, strItem, strTopicType);
+  ConstructConfigMessage(root, strItem);
 
   PublishConfig(root, strItem, strTopicType);
 
@@ -102,7 +102,7 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
 
 void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag /* = false */)
 {
-  ConstructConfigMessage(root, strItem, strTopicType);
+  ConstructConfigMessage(root, strItem);
 
   if (bDiag)
     root["entity_category"] = "diagnostic";
