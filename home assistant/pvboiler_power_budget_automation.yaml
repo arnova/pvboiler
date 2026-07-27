@@ -1,0 +1,15 @@
+alias: PVBoiler Power Budget Update
+description: ""
+triggers:
+  - trigger: time_pattern
+    seconds: /5
+conditions: []
+actions:
+  - action: number.set_value
+    metadata: {}
+    target:
+      entity_id: number.pvboiler_power_budget
+    data:
+      value: "{{ states('sensor.electricity_return_to_net') |float(0) }}"
+mode: single
+
