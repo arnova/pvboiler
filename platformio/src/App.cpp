@@ -373,13 +373,13 @@ void CApp::HandleDisplay()
                  }
                  else
                  {
-                   snprintf(strValue, sizeof(strValue), "%.uW", m_pvBoiler.GetCurrentPower());
+                   snprintf(strValue, sizeof(strValue), "%uW", m_pvBoiler.GetCurrentPower());
                    m_display.WriteDisplayStr(strValue, 0, true);
                  }
 
                  const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
 
-                 snprintf(strValue, sizeof(strValue), "%.u%%", iPercent);
+                 snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
                  m_display.WriteDisplayStr(strValue, 1, false);
 
                  // Chars are not monospace so need to compensate for smaller spaces with the logic below
