@@ -136,160 +136,172 @@ void IRAM_ATTR CApp::TriacGateHandler()
 }
 
 
-void CApp::PollSerial(void)
+void CApp::TerminalHandler(void)
 {
+  char rxChar = 0x00;
+
   if (TERM_SERIAL.available())
   {
-    const char c = TERM_SERIAL.read();
-    if (c != 0)
+    rxChar = TERM_SERIAL.read();
+  }
+  else if (m_network.IsConnected())
+  {
+    WiFiClient& socketServerClient = m_network.GetSocketServerClient();
+    if (socketServerClient && socketServerClient.connected())
     {
-      if (c == '!') // Repeat the previous command but don't execute it yet
+      if (socketServerClient.available()) // Data available?
       {
-        if (m_termCharCount == 0 && *m_strTermOldCommand)
-        {
-          strcpy(m_strTermCommand, m_strTermOldCommand);
-          m_termCharCount = strlen(m_strTermOldCommand);
-
-          if (m_commandHandler.GetLocalEchoEnabled())
-            TERM_SERIAL.print(m_strTermCommand);
-        }
-      }
-      else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
-      {
-        // Linefeed for local echo
-        if (m_commandHandler.GetLocalEchoEnabled())
-          TERM_SERIAL.println("");
-
-        // Don't check empty commands
-        if (m_termCharCount > 0)
-        {
-          m_strTermCommand[m_termCharCount] = '\0';
-
-          // Store in old buffer
-          strcpy(m_strTermOldCommand, m_strTermCommand);
-
-          // Reset counter for next round
-          m_termCharCount = 0;
-
-          // Parse uart command
-          m_commandHandler.ProcessCommand(m_strTermCommand);
-        }
-      }
-      else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
-      {
-        if (m_termCharCount > 0)
-        {
-          if (m_commandHandler.GetLocalEchoEnabled())
-          {
-            // Backspace
-            TERM_SERIAL.write(CH_BACKSPACE);
-            // Blank character
-            TERM_SERIAL.write(' ');
-            // And backspace again since the blank jumps forward
-            TERM_SERIAL.write(CH_BACKSPACE);
-          }
-          m_termCharCount--;
-        }
-      }
-      else if (c >= ' ' && c <= '~') // Limit allowed characters
-      {
-        // Don't overflow + skip leading spaces:
-        if (m_termCharCount < (CMD_BUF_SIZE - 1) && !(m_termCharCount == 0 && c == ' '))
-        {
-          m_strTermCommand[m_termCharCount++] = c;
-
-          if (m_commandHandler.GetLocalEchoEnabled())
-            TERM_SERIAL.write(c);
-        }
+        rxChar = socketServerClient.read(); // Read data from socket
       }
     }
+  }
+
+  // No data?
+  if (rxChar == 0x00)
+    return;
+
+  if (m_pActiveTermRxData->state == RX_STATE_READY)
+    return; // All buffers full
+
+  if (m_pActiveTermRxData->state == RX_STATE_DONE)
+  {
+    m_pActiveTermRxData->buf_count = 0;
+    m_pActiveTermRxData->state = RX_STATE_FILLING;
+  }
+
+  if (rxChar == '!') // Repeat the previous command but don't execute it yet
+  {
+    if (m_pActiveTermRxData->buf_count == 0)
+    {
+      // Swap pointers
+      volatile rx_data_t* p_temp = m_pActiveTermRxData;
+      m_pActiveTermRxData = m_pInactiveTermRxData;
+      m_pInactiveTermRxData = p_temp;
+      m_pActiveTermRxData->state = RX_STATE_FILLING;
+      m_pInactiveTermRxData->state = RX_STATE_DONE;
+
+      if (m_commandHandler.GetLocalEchoEnabled())
+      {
+        TERM_SERIAL.print(const_cast<char*>(m_pActiveTermRxData->buf));
+      }
+    }
+  }
+  else if (rxChar == CH_DELETE || rxChar == CH_BACKSPACE) // Backspace OR delete (sometimes mixed up by terminal programs)
+  {
+    if (m_pActiveTermRxData->buf_count != 0)
+    {
+      if (m_commandHandler.GetLocalEchoEnabled())
+      {
+        // NOTE: Only for serial connection
+
+        // Backspace
+        TERM_SERIAL.write(CH_BACKSPACE);
+        // Blank character
+        TERM_SERIAL.write(' ');
+        // And backspace again since the blank jumps forward
+        TERM_SERIAL.write(CH_BACKSPACE);
+      }
+
+      m_pActiveTermRxData->buf_count--;
+    }
+  }
+  else if (rxChar >= ' ' && rxChar <= '~') // Limit allowed characters
+  {
+    // Don't overflow + skip leading spaces:
+    if (m_pActiveTermRxData->buf_count < (CMD_BUF_SIZE - 1) && !(m_pActiveTermRxData->buf_count == 0 && rxChar == ' '))
+    {
+      m_pActiveTermRxData->buf[m_pActiveTermRxData->buf_count++] = rxChar;
+
+      if (m_commandHandler.GetLocalEchoEnabled() && m_pActiveTermRxData->buf[0] != '[' /* Don't display special sequences that start with [ */)
+      {
+        TERM_SERIAL.write(rxChar);
+      }
+    }
+  }
+
+  if (rxChar == CH_CR || rxChar == CH_LF) // Continue until the command is "entered"
+  {
+    // Linefeed for local echo
+    if (m_commandHandler.GetLocalEchoEnabled())
+    {
+      TERM_SERIAL.println("");
+    }
+
+    // Only check non-empty commands
+    if (m_pActiveTermRxData->buf_count != 0)
+    {
+      m_pActiveTermRxData->state = RX_STATE_READY;
+      m_pActiveTermRxData->buf[m_pActiveTermRxData->buf_count] = '\0';
+
+      if (m_pInactiveTermRxData->state != RX_STATE_READY)
+      {
+        // Swap pointers
+        volatile rx_data_t* p_temp = m_pActiveTermRxData;
+        m_pActiveTermRxData = m_pInactiveTermRxData;
+        m_pInactiveTermRxData = p_temp;
+        m_pActiveTermRxData->state = RX_STATE_DONE;
+      }
+    }
+  }
+
+  // Handling of special commands
+  if (m_pActiveTermRxData->buf_count == 4 && memcmp(const_cast<char*>(m_pActiveTermRxData->buf), "[13~", 4) == 0)  // F3, repeat command without <enter>
+  {
+    if (m_pInactiveTermRxData->state == RX_STATE_DONE && m_pInactiveTermRxData->buf_count != 0)
+    {
+      if (m_commandHandler.GetLocalEchoEnabled())
+      {
+        TERM_SERIAL.println(const_cast<char*>(m_pInactiveTermRxData->buf));
+      }
+
+      m_pInactiveTermRxData->state = RX_STATE_READY;
+    }
+
+    m_pActiveTermRxData->buf_count = 0;
+    m_pActiveTermRxData->state = RX_STATE_DONE;
+  }
+  else if (m_pActiveTermRxData->buf[0] == '[' && m_pActiveTermRxData->buf_count > 4)
+  {
+    m_pActiveTermRxData->buf_count = 0;
+    m_pActiveTermRxData->state = RX_STATE_DONE;
   }
 }
 
 
-void CApp::PollEthernet(void)
+bool CApp::CommandHandler()
 {
-  if (!m_network.IsConnected())
+  // NOTE: Inactive buffer always contains the "next" command to be processed
+  if (m_pInactiveTermRxData->state != RX_STATE_READY)
+    return false;
+
+//  noInterrupts(); // Enter critical section
+
+  char strCommand[CMD_BUF_SIZE];
+  strcpy(strCommand, (char*) m_pInactiveTermRxData->buf);
+  m_pInactiveTermRxData->state = RX_STATE_DONE;
+
+  if (m_pActiveTermRxData->state == RX_STATE_READY)
   {
-    return;
+    // Swap pointers (so the command in the other buffer gets processed the next round
+    volatile rx_data_t* p_temp = m_pActiveTermRxData;
+    m_pActiveTermRxData = m_pInactiveTermRxData;
+    m_pInactiveTermRxData = p_temp;
   }
 
-  WiFiClient& socketServerClient = m_network.GetSocketServerClient();
-  if (socketServerClient && socketServerClient.connected())
+//  interrupts(); // Leave critical section
+
+  // Parse command and get result
+  const result_code_t resultCode = m_commandHandler.ProcessCommand(strCommand);
+
+  // Finally output result-code string (OK or ERROR:)
+  if (resultCode.code != ERR_CODE_OK_NULL)
   {
-    if (socketServerClient.available()) // Data available?
-    {
-      const char c = socketServerClient.read(); // Read data from socket
-      if (c != 0)
-      {
-        if (c == '!') // Repeat the previous command but don't execute it yet
-        {
-          if (m_termCharCount == 0 && *m_strTermOldCommand)
-          {
-            strcpy(m_strTermCommand, m_strTermOldCommand);
-            m_termCharCount = strlen(m_strTermOldCommand);
-
-#if 0
-            if (commandHandler.GetLocalEchoEnabled())
-              socketServerClient.print(strCommand);
-#endif
-          }
-        }
-        else if (c == CH_CR || c == CH_LF)       // if you've gotten to the end of the line, process it
-        {
-#if 0
-          // Linefeed
-          socketServerClient.println("");
-#endif
-
-          // Don't check empty commands
-          if (m_termCharCount > 0)
-          {
-            m_strTermCommand[m_termCharCount] = '\0';
-
-            // Store in old buffer
-            strcpy(m_strTermOldCommand, m_strTermCommand);
-
-            // Reset counter for next round
-            m_termCharCount = 0;
-
-            // Parse client command
-            CTermPrint::SetSocketClient(socketServerClient);
-            m_commandHandler.ProcessCommand(m_strTermCommand);
-          }
-        }
-        else if (c == CH_DELETE || c == CH_BACKSPACE) //backspace OR delete (sometimes mixed up by terminal programs)
-        {
-          if (m_termCharCount > 0)
-          {
-#if 0
-            if (m_commandHandler.GetLocalEchoEnabled())
-            {
-              // Backspace
-              socketServerClient.write(CH_BACKSPACE);
-              // Blank character
-              socketServerClient.write(' ');
-              // And backspace again since the blank jumps forward
-              socketServerClient.write(CH_BACKSPACE);
-            }
-#endif
-            m_termCharCount--;
-          }
-        }
-        else if (c >= ' ' && c <= '~') // Limit allowed characters
-        {
-          // Don't overflow + skip leading spaces:
-          if (m_termCharCount < (CMD_BUF_SIZE - 1) && !(m_termCharCount == 0 && c == ' '))
-          {
-            m_strTermCommand[m_termCharCount++] = c;
-#if 0
-            socketServerClient.write(c);
-#endif
-          }
-        }
-      }
-    }
+    char strResult[RESULT_BUF_SIZE];
+    get_error_string(resultCode, strResult, false);
+    CTermPrint::print(strResult);
   }
+
+  return true;
 }
 
 
@@ -462,11 +474,10 @@ void CApp::Loop()
 
   HandleNetwork();
 
-  // Poll ethernet for commands
-  PollEthernet();
+  // Poll serial & ethernet for commands
+  TerminalHandler();
 
-  // Poll serial for commands
-  PollSerial();
+  CommandHandler();
 
   m_pvBoiler.Loop();
 

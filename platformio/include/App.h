@@ -10,6 +10,21 @@
 class CApp
 {
   public:
+    enum rx_state_e
+    {
+      RX_STATE_DONE = 0,
+      RX_STATE_FILLING,
+      RX_STATE_READY
+    };
+
+    struct rx_data_s
+    {
+      enum rx_state_e state;
+      char buf[CMD_BUF_SIZE];
+      size_t buf_count;
+    };
+    typedef struct rx_data_s rx_data_t;
+
     CApp();
 
     void Init();
@@ -23,8 +38,8 @@ class CApp
     void SetTimerHandle(hw_timer_t* hTriacTimer) { m_hTriacTimer = hTriacTimer; };
 #endif
 
-    void PollSerial();
-    void PollEthernet();
+    void TerminalHandler();
+    bool CommandHandler();
     void HandleNetwork();
     void HandleDisplay();
 
@@ -56,8 +71,10 @@ class CApp
     volatile uint8_t m_iCurrentPercentage = 0;
     volatile CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 
-    uint8_t m_termCharCount = 0;
-    char m_strTermCommand[CMD_BUF_SIZE] = { 0 };
-    char m_strTermOldCommand[CMD_BUF_SIZE] = { 0 };
+    volatile rx_data_t m_termRxData1 = { };
+    volatile rx_data_t m_termRxData2 = { };
+
+    volatile rx_data_t* m_pActiveTermRxData = &m_termRxData1;
+    volatile rx_data_t* m_pInactiveTermRxData = &m_termRxData2;
 };
 #endif // APP_H

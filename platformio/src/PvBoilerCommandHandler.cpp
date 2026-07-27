@@ -209,29 +209,29 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTermPrint::print(" ip=");
   CTermPrint::print(m_network.GetIpAddr()[0]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetIpAddr()[1]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetIpAddr()[2]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetIpAddr()[3]);
 
   CTermPrint::print(" netmask=");
   CTermPrint::print(m_network.GetNetMask()[0]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetNetMask()[1]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetNetMask()[2]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetNetMask()[3]);
 
   CTermPrint::print(" server=");
   CTermPrint::print(m_network.GetServerIp()[0]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetServerIp()[1]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetServerIp()[2]);
-  CTermPrint::print('.');
+  CTermPrint::print(".");
   CTermPrint::print(m_network.GetServerIp()[3]);
 
   CTermPrint::print(" logic_mode=");
@@ -695,14 +695,6 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "netwdr"))
   {
     result = CmdNetWatchdogRecovery(strArgs);
-  }
-
-  // Finally output result-code string (OK or ERROR:)
-  if (result.code != ERR_CODE_OK_NULL)
-  {
-    char strResult[RESULT_BUF_SIZE];
-    get_error_string(result, strResult, false);
-    CTermPrint::print(strResult);
   }
 
   return result;
