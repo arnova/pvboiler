@@ -307,7 +307,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   else
   {
     CTermPrint::print(" budget_set=");
-    snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetPowerBudget());
+    snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
     CTermPrint::print(strBuf);
   }
 
