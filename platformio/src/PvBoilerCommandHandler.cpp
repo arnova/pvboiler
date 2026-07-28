@@ -320,7 +320,11 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTermPrint::print(strBuf);
 
   CTermPrint::print(" net_period=");
-  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 1000.0f);
+  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 500.0f);
+  CTermPrint::print(strBuf);
+
+  CTermPrint::print(" net_freq=");
+  snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(m_pvBoiler.GetNetPeriod()));
   CTermPrint::print(strBuf);
 
   CTermPrint::print(" zero_cross_window=");

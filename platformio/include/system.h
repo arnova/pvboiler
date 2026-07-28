@@ -95,6 +95,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_PHASE_ANGLE_FACTOR                 "phase_angle_factor"
 #define MQTT_PHASE_ANGLE                        "phase_angle"
 #define MQTT_NET_PERIOD                         "net_period"
+#define MQTT_NET_FREQUENCY                      "net_frequency"
 #define MQTT_ZERO_CROSS_WINDOW                  "zero_cross_window"
 #define MQTT_POWER_ERROR                        "power_error"
 #define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"

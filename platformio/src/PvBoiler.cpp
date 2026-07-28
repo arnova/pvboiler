@@ -117,8 +117,12 @@ bool CPvBoiler::MqttPublishValues()
   // FIXME: These are always updated
   m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, m_bError ? "1" : "0");
 
-  snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime);
+  // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
+  snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
   m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
+
+  snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
+  m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
 
   snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
@@ -229,6 +233,8 @@ void CPvBoiler::MqttPublishConfig()
 
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "us", "", "", true);
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_FREQUENCY, "Hz", "", "", true);
 
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
