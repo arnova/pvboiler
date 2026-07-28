@@ -65,6 +65,7 @@ class CApp
     volatile uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
     volatile uint16_t m_iPeriodTime = 65535;
     volatile bool m_bTriacOn = false;
+    volatile bool m_bGateBlanking = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;
     volatile uint16_t m_iTriacDelayUs = 0;
     volatile uint8_t m_iSSRPeriodCount = 0;

@@ -30,14 +30,9 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
    * consider it the zero cross (short) pulse, of it's more consider it the (long) remainder of the period
    */
   const uint32_t iPulseWidth = iNow - m_iLastEventTime;
-  bool bLongPulse = true;
-  if (iPulseWidth < ZERO_CROSS_EDGE_MIN_US)
+  if (iPulseWidth < ZERO_CROSS_EDGE_MIN_US || m_bGateBlanking)
   {
     return; // Filter noise
-  }
-  else if (iPulseWidth < ZERO_CROSS_EDGE_MAX_US)
-  {
-    bLongPulse = false;
   }
 
   // Update last even time
@@ -50,7 +45,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     return;
   }
 
-  if (bLongPulse)
+  if (iPulseWidth >= ZERO_CROSS_EDGE_MAX_US) // Long pulse?
   {
     m_iPeriodTime = iNow - m_iLastZeroCrossTime;
 
@@ -92,7 +87,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
       digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
       // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
-      if (m_iTriacDelayUs > 0)
+      if (m_iTriacDelayUs != 0)
       {
         m_bTriacOn = true;
 
@@ -118,6 +113,7 @@ void IRAM_ATTR CApp::TriacGateHandler()
 {
   if (m_bTriacOn)
   {
+    m_bGateBlanking = true;
     digitalWrite(TRIAC_OUTPUT, HIGH); // On
 
     m_bTriacOn = false;
@@ -132,6 +128,7 @@ void IRAM_ATTR CApp::TriacGateHandler()
   else
   {
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
+    m_bGateBlanking = false;
   }
 }
 
