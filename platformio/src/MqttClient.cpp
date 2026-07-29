@@ -112,9 +112,13 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 
 void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
-  JsonDocument root;
+#ifdef MQTT_DEBUG
+  CTermPrint::println(message); //Prints it out on one line
+#endif
 
-  PublishConfig(root, strItem, strTopicType);
+  char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
+  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, MQTT_NAME, strItem);
+  publish(strTopic, "", true);
 
   if (bSetter)
   {
