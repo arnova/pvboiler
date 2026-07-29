@@ -248,7 +248,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTermPrint::print(" dim_style=");
   CTermPrint::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
-  CTermPrint::print(" ssr_period=");
+  CTermPrint::print(" ssr_period_count=");
   CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
 
   char strBuf[20]; // Enough room for float with 3 decimals

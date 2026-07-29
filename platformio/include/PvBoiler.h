@@ -61,7 +61,7 @@ class CPvBoiler
     void Loop();
     void Reset();
 
-    bool MqttPublishValues();
+    bool MqttPublishValues(const bool bForce = false);
     void MqttPublishConfig();
     void LoadSettings();
 

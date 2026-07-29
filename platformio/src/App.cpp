@@ -310,7 +310,7 @@ void CApp::HandleNetwork()
   {
     // MQTT (re)connection: publish config & values
     m_pvBoiler.MqttPublishConfig();
-    m_pvBoiler.MqttPublishValues();
+    m_pvBoiler.MqttPublishValues(true);
     m_network.MqttPublishValues();
   }
 

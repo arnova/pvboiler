@@ -25,7 +25,7 @@ void CPvBoiler::Loop()
   }
 
   // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_mqttPublishTimer > MQTT_UPDATE_TIME * 1000 && m_network.GetMqttClient().connected())
+  if (m_mqttPublishTimer > MQTT_UPDATE_TIME * 1000 && m_network.IsMqttConnected())
   {
     MqttPublishValues();
 
@@ -51,6 +51,7 @@ void CPvBoiler::Reset()
   m_fCurrentPercentage = 0.0f;
   m_bPublishOutputPercentage = true;
 
+  m_bPublishSettings = true;
   m_bError = false;
 
   m_fTriacAngleFactor = 0.0f;
@@ -62,17 +63,17 @@ void CPvBoiler::Reset()
 }
 
 
-bool CPvBoiler::MqttPublishValues()
+bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 {
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 
-  if (m_bPublishCtrlOnOff)
+  if (m_bPublishCtrlOnOff || bForce)
   {
     m_bPublishCtrlOnOff = false;
     m_network.GetMqttClient().PublishMessage(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
   }
 
-  if (m_bPublishPowerBudget)
+  if (m_bPublishPowerBudget || bForce)
   {
     m_bPublishPowerBudget = false;
 
@@ -83,7 +84,7 @@ bool CPvBoiler::MqttPublishValues()
     }
   }
 
-  if (m_bPublishPowerPercentage)
+  if (m_bPublishPowerPercentage || bForce)
   {
     m_bPublishPowerPercentage = false;
 
@@ -94,7 +95,7 @@ bool CPvBoiler::MqttPublishValues()
     }
   }
 
-  if (m_bPublishOutputPercentage)
+  if (m_bPublishOutputPercentage || bForce)
   {
     m_bPublishOutputPercentage = false;
 
@@ -132,7 +133,7 @@ bool CPvBoiler::MqttPublishValues()
   snprintf(strBuf, sizeof(strBuf), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
   m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
 
-  if (m_bPublishSettings)
+  if (m_bPublishSettings || bForce)
   {
     m_bPublishSettings = false;
 

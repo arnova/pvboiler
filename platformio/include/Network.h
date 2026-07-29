@@ -45,7 +45,7 @@ class CNetwork
     const uint8_t* GetServerIp() { return m_serverIpAddr; };
 
     const bool IsConnected() { return m_bWifiConnected; };
-    const bool IsMqttConnected() { return m_mqttClient.connected(); };
+    const bool IsMqttConnected() { return m_bWifiConnected && m_mqttClient.connected(); };
     bool HandleMqttClient();
 
 #ifdef SOCKET_SERVER_PORT
