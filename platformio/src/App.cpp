@@ -218,15 +218,15 @@ void CApp::TerminalHandler(void)
 
   if (rxChar == CH_CR || rxChar == CH_LF) // Continue until the command is "entered"
   {
-    // Linefeed for local echo
-    if (m_commandHandler.GetLocalEchoEnabled())
-    {
-      TERM_SERIAL.println("");
-    }
-
     // Only check non-empty commands
     if (m_pActiveTermRxData->buf_count != 0)
     {
+      // Linefeed for local echo
+      if (m_commandHandler.GetLocalEchoEnabled())
+      {
+        TERM_SERIAL.println("");
+      }
+
       m_pActiveTermRxData->state = RX_STATE_READY;
       m_pActiveTermRxData->buf[m_pActiveTermRxData->buf_count] = '\0';
 
