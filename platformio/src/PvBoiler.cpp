@@ -192,7 +192,7 @@ void CPvBoiler::MqttPublishConfig()
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
     m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_CLAMP, "%", "power_factor");
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_CLAMP, "%", "");
     m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power");
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
@@ -208,7 +208,7 @@ void CPvBoiler::MqttPublishConfig()
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "power_factor");
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LOGIC_MODE);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER, "W", "power");
