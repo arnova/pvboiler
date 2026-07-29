@@ -138,7 +138,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     m_bPublishSettings = false;
 
     snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
-    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER, strBuf);
+    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
 
     if (m_logicMode == LOGIC_MODE_BUDGET)
     {
@@ -186,14 +186,14 @@ void CPvBoiler::MqttPublishConfig()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
 
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR, true);
 
   if (m_logicMode == CPvBoiler::LOGIC_MODE_BUDGET)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_CLAMP, "%", "");
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power");
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN, "", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_CLAMP, "%", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
   }
@@ -210,14 +210,14 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LOGIC_MODE);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER, "W", "power");
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LOGIC_MODE, "", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE, "", "", "", true);
 
   if (m_dimStyle == DIM_STYLE_SSR)
   {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT, "", "", "", true);
   }
   else
   {
@@ -242,7 +242,7 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
-
+  
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
     m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
