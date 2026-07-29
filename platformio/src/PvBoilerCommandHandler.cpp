@@ -660,6 +660,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetErrorGain(strArgs);
   }
+  else if (STRIEQUALS(strCommand, "eclamp"))
+  {
+    result = CmdSetErrorClamp(strArgs);
+  }
   else if (STRIEQUALS(strCommand, "ssid"))
   {
     result = CmdSetWifiSsid(strArgs);
