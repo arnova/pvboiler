@@ -11,7 +11,7 @@
 
 #include "Network.h"
 #include "MqttClient.h"
-#include "TermPrint.h"
+#include "Terminal.h"
 #include "util.h"
 
 
@@ -67,8 +67,8 @@ void CNetwork::InitWifi(const bool bReconnect)
   if (bReconnect)
   {
 #ifdef WIFI_DEBUG
-    //CTermPrint::println("");
-    //CTermPrint::println(PSTR("Disconnecting WiFi"));
+    //CTerminal::println("");
+    //CTerminal::println(PSTR("Disconnecting WiFi"));
 #endif
 
     if (m_socketServerClient)
@@ -87,9 +87,9 @@ void CNetwork::InitWifi(const bool bReconnect)
     return;
 
 #ifdef WIFI_DEBUG
-  CTermPrint::println("");
-  CTermPrint::print(PSTR("(Re)connecting to WiFi network: "));
-  CTermPrint::println(m_strWifiSsid);
+  CTerminal::println("");
+  CTerminal::print(PSTR("(Re)connecting to WiFi network: "));
+  CTerminal::println(m_strWifiSsid);
 #endif
 
   // Check for dhcp ip
@@ -195,13 +195,13 @@ WiFiClient& CNetwork::GetSocketServerClient()
 #ifdef WIFI_DEBUG
     if (m_socketServerClient)
     {
-      CTermPrint::print("Accepting connection from client: ");
+      CTerminal::print("Accepting connection from client: ");
 
       char strBuf[16]; // Enough room for a standard IPv4 address
       snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_socketServerClient.remoteIP()[0], m_socketServerClient.remoteIP()[1], m_socketServerClient.remoteIP()[2], m_socketServerClient.remoteIP()[3]);
-      CTermPrint::println(strBuf);
+      CTerminal::println(strBuf);
 
-      CTermPrint::SetSocketClient(m_socketServerClient);
+      CTerminal::SetSocketClient(m_socketServerClient);
     }
 #endif
   }
@@ -244,7 +244,7 @@ void CNetwork::Loop()
       // Initialize mDNS
       if (!MDNS.begin(HOST_NAME))
       {
-        CTermPrint::println("ERROR: Unable to start MDNS responder!");
+        CTerminal::println("ERROR: Unable to start MDNS responder!");
       }
 
       // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
@@ -286,7 +286,7 @@ void CNetwork::Loop()
       m_socketServer.setNoDelay(true);
 
 #ifdef WIFI_DEBUG
-      CTermPrint::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
+      CTerminal::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 #endif
     }

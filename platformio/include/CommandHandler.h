@@ -12,16 +12,11 @@ class CCommandHandler
     CCommandHandler() {};   // Empty ctor
     ~CCommandHandler() {};  // Empty dtor
 
-    bool GetLocalEchoEnabled(void) const { return m_bLocalEcho; };
-
     static result_code_t FormatIP(uint8_t *data, char *strResult);
 
   protected:
     result_code_t CmdEchoOnOff(const char *strArgs);
     result_code_t CmdReboot(const char *strArgs);
-
-  private:
-    bool m_bLocalEcho = true;
 };
 
 #endif // COMMAND_HANDLER_H

@@ -1,7 +1,7 @@
 #include "CommandHandler.h"
 #include "system.h"
 #include "util.h"
-#include "TermPrint.h"
+#include "Terminal.h"
 
 #include <string.h>
 #include <Arduino.h>
@@ -42,9 +42,9 @@ result_code_t CCommandHandler::CmdEchoOnOff(const char *strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "on"))
-    m_bLocalEcho = true;
+    CTerminal::SetLocalEcho(true);
   else if (STRIEQUALS(strArgs, "off"))
-    m_bLocalEcho = false;
+    CTerminal::SetLocalEcho(false);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 

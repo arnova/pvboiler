@@ -1,8 +1,8 @@
-#include "TermPrint.h"
+#include "Terminal.h"
 #include "util.h"
 #include "App.h"
 
-CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network)
+CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network), m_terminal(m_network)
 {
   m_iLastZeroCrossTime = m_iLastEventTime = micros();
 }
@@ -133,157 +133,17 @@ void IRAM_ATTR CApp::TriacGateHandler()
 }
 
 
-void CApp::TerminalHandler(void)
-{
-  char rxChar = 0x00;
-
-  if (TERM_SERIAL.available())
-  {
-    rxChar = TERM_SERIAL.read();
-  }
-  else if (m_network.IsConnected())
-  {
-    WiFiClient& socketServerClient = m_network.GetSocketServerClient();
-    if (socketServerClient && socketServerClient.connected())
-    {
-      if (socketServerClient.available()) // Data available?
-      {
-        rxChar = socketServerClient.read(); // Read data from socket
-      }
-    }
-  }
-
-  // No data?
-  if (rxChar == 0x00)
-    return;
-
-  if (m_pActiveTermRxData->state == RX_STATE_READY)
-    return; // All buffers full
-
-  if (m_pActiveTermRxData->state == RX_STATE_DONE)
-  {
-    m_pActiveTermRxData->buf_count = 0;
-    m_pActiveTermRxData->state = RX_STATE_FILLING;
-  }
-
-  if (rxChar == '!') // Repeat the previous command but don't execute it yet
-  {
-    if (m_pActiveTermRxData->buf_count == 0)
-    {
-      // Swap pointers
-      volatile rx_data_t* p_temp = m_pActiveTermRxData;
-      m_pActiveTermRxData = m_pInactiveTermRxData;
-      m_pInactiveTermRxData = p_temp;
-      m_pActiveTermRxData->state = RX_STATE_FILLING;
-      m_pInactiveTermRxData->state = RX_STATE_DONE;
-
-      if (m_commandHandler.GetLocalEchoEnabled())
-      {
-        TERM_SERIAL.print(const_cast<char*>(m_pActiveTermRxData->buf));
-      }
-    }
-  }
-  else if (rxChar == CH_DELETE || rxChar == CH_BACKSPACE) // Backspace OR delete (sometimes mixed up by terminal programs)
-  {
-    if (m_pActiveTermRxData->buf_count != 0)
-    {
-      if (m_commandHandler.GetLocalEchoEnabled())
-      {
-        // NOTE: Only for serial connection
-
-        // Backspace
-        TERM_SERIAL.write(CH_BACKSPACE);
-        // Blank character
-        TERM_SERIAL.write(' ');
-        // And backspace again since the blank jumps forward
-        TERM_SERIAL.write(CH_BACKSPACE);
-      }
-
-      m_pActiveTermRxData->buf_count--;
-    }
-  }
-  else if (rxChar >= ' ' && rxChar <= '~') // Limit allowed characters
-  {
-    // Don't overflow + skip leading spaces:
-    if (m_pActiveTermRxData->buf_count < (CMD_BUF_SIZE - 1) && !(m_pActiveTermRxData->buf_count == 0 && rxChar == ' '))
-    {
-      m_pActiveTermRxData->buf[m_pActiveTermRxData->buf_count++] = rxChar;
-
-      if (m_commandHandler.GetLocalEchoEnabled() && m_pActiveTermRxData->buf[0] != '[' /* Don't display special sequences that start with [ */)
-      {
-        TERM_SERIAL.write(rxChar);
-      }
-    }
-  }
-
-  if (rxChar == CH_CR || rxChar == CH_LF) // Continue until the command is "entered"
-  {
-    // Only check non-empty commands
-    if (m_pActiveTermRxData->buf_count != 0)
-    {
-      // Linefeed for local echo
-      if (m_commandHandler.GetLocalEchoEnabled())
-      {
-        TERM_SERIAL.println("");
-      }
-
-      m_pActiveTermRxData->state = RX_STATE_READY;
-      m_pActiveTermRxData->buf[m_pActiveTermRxData->buf_count] = '\0';
-
-      if (m_pInactiveTermRxData->state != RX_STATE_READY)
-      {
-        // Swap pointers
-        volatile rx_data_t* p_temp = m_pActiveTermRxData;
-        m_pActiveTermRxData = m_pInactiveTermRxData;
-        m_pInactiveTermRxData = p_temp;
-        m_pActiveTermRxData->state = RX_STATE_DONE;
-      }
-    }
-  }
-
-  // Handling of special commands
-  if (m_pActiveTermRxData->buf_count == 4 && memcmp(const_cast<char*>(m_pActiveTermRxData->buf), "[13~", 4) == 0)  // F3, repeat command without <enter>
-  {
-    if (m_pInactiveTermRxData->state == RX_STATE_DONE && m_pInactiveTermRxData->buf_count != 0)
-    {
-      if (m_commandHandler.GetLocalEchoEnabled())
-      {
-        TERM_SERIAL.println(const_cast<char*>(m_pInactiveTermRxData->buf));
-      }
-
-      m_pInactiveTermRxData->state = RX_STATE_READY;
-    }
-
-    m_pActiveTermRxData->buf_count = 0;
-    m_pActiveTermRxData->state = RX_STATE_DONE;
-  }
-  else if (m_pActiveTermRxData->buf[0] == '[' && m_pActiveTermRxData->buf_count > 4)
-  {
-    m_pActiveTermRxData->buf_count = 0;
-    m_pActiveTermRxData->state = RX_STATE_DONE;
-  }
-}
-
-
 bool CApp::CommandHandler()
 {
-  // NOTE: Inactive buffer always contains the "next" command to be processed
-  if (m_pInactiveTermRxData->state != RX_STATE_READY)
+  char* strTermCommand = m_terminal.GetCommand();
+  if (strTermCommand == nullptr)
     return false;
 
 //  noInterrupts(); // Enter critical section
 
+  // Copy command since it *may* be modified by ProcessCommand
   char strCommand[CMD_BUF_SIZE];
-  strcpy(strCommand, (char*) m_pInactiveTermRxData->buf);
-  m_pInactiveTermRxData->state = RX_STATE_DONE;
-
-  if (m_pActiveTermRxData->state == RX_STATE_READY)
-  {
-    // Swap pointers (so the command in the other buffer gets processed the next round
-    volatile rx_data_t* p_temp = m_pActiveTermRxData;
-    m_pActiveTermRxData = m_pInactiveTermRxData;
-    m_pInactiveTermRxData = p_temp;
-  }
+  strcpy(strCommand, strTermCommand);
 
 //  interrupts(); // Leave critical section
 
@@ -295,7 +155,7 @@ bool CApp::CommandHandler()
   {
     char strResult[RESULT_BUF_SIZE];
     get_error_string(resultCode, strResult, false);
-    CTermPrint::print(strResult);
+    CTerminal::print(strResult);
   }
 
   return true;
@@ -472,7 +332,7 @@ void CApp::Loop()
   HandleNetwork();
 
   // Poll serial & ethernet for commands
-  TerminalHandler();
+  m_terminal.Process();
 
   CommandHandler();
 

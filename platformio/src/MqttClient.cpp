@@ -2,14 +2,14 @@
 #include <ArduinoJson.h>
 
 #include "MqttClient.h"
-#include "TermPrint.h"
+#include "Terminal.h"
 #include "util.h"
 
 
 void CMqttClient::PrintDataError(void)
 {
 #ifdef MQTT_DEBUG
-  CTermPrint::println("ERROR: Invalid MQTT data for topic");
+  CTerminal::println("ERROR: Invalid MQTT data for topic");
 #endif
 }
 
@@ -77,7 +77,7 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   serializeJson(root, strMessage);
 
 #ifdef MQTT_DEBUG
-  CTermPrint::println(message); //Prints it out on one line
+  CTerminal::println(message); //Prints it out on one line
 #endif
 
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
@@ -113,7 +113,7 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
 #ifdef MQTT_DEBUG
-  CTermPrint::println(message); //Prints it out on one line
+  CTerminal::println(message); //Prints it out on one line
 #endif
 
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
@@ -254,12 +254,12 @@ bool CMqttClient::ServerConnect()
   char strBuf[16]; // Enough for IPv4 address / hostname-xxxx
 
 #ifdef MQTT_DEBUG
-  CTermPrint::print("Connecting to MQTT server: ");
+  CTerminal::print("Connecting to MQTT server: ");
 
   snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_serverIp[0], m_serverIp[1], m_serverIp[2], m_serverIp[3]);
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(":" STRINGIZE(MQTT_PORT) "...");
+  CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
   // Create a random client ID
   snprintf(strBuf, sizeof(strBuf), HOST_NAME "-%lx", random(0xffff));
@@ -268,14 +268,14 @@ bool CMqttClient::ServerConnect()
   if (!connect(strBuf))
   {
 #ifdef MQTT_DEBUG
-    CTermPrint::print("ERROR, rc=");
-    CTermPrint::println(state());
+    CTerminal::print("ERROR, rc=");
+    CTerminal::println(state());
 #endif
     return false;
   }
 
 #ifdef MQTT_DEBUG
-  CTermPrint::println("OK");
+  CTerminal::println("OK");
 #endif
 
   return true;

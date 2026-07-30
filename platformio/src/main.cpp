@@ -24,7 +24,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "TermPrint.h"
+#include "Terminal.h"
 #include "util.h"
 #include "App.h"
 #include "system.h"
@@ -49,15 +49,15 @@ void IRAM_ATTR TriacTimerISR()
 void MqttCallback(char* topic, byte *payload, const unsigned int length)
 {
 #ifdef MQTT_DEBUG
-  CTermPrint::println("-------new message from broker-----");
-  CTermPrint::print("topic: ");
-  CTermPrint::println(topic);
-  CTermPrint::print("data: ");
+  CTerminal::println("-------new message from broker-----");
+  CTerminal::print("topic: ");
+  CTerminal::println(topic);
+  CTerminal::print("data: ");
   for (unsigned int i = 0; i < length; i++)
   {
-    CTermPrint::print((char) payload[i]);
+    CTerminal::print((char) payload[i]);
   }
-  CTermPrint::println("");
+  CTerminal::println("");
 #endif
   //float fVal;
   //const bool bValidFloat = BytesToFloat(payload, length, fVal);
@@ -159,10 +159,10 @@ void setup()
   delay(1500);
 
   // Have the terminal start with a newline
-  CTermPrint::println("");
+  CTerminal::println("");
 
   // Print out version info
-  CTermPrint::println(FPSTR(VER_STR_P));
+  CTerminal::println(FPSTR(VER_STR_P));
 }
 
 

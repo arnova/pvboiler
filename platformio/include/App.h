@@ -6,25 +6,11 @@
 #include "Network.h"
 #include "PvBoiler.h"
 #include "Ssd1306.h"
+#include "Terminal.h"
 
 class CApp
 {
   public:
-    enum rx_state_e
-    {
-      RX_STATE_DONE = 0,
-      RX_STATE_FILLING,
-      RX_STATE_READY
-    };
-
-    struct rx_data_s
-    {
-      enum rx_state_e state;
-      char buf[CMD_BUF_SIZE];
-      size_t buf_count;
-    };
-    typedef struct rx_data_s rx_data_t;
-
     CApp();
 
     void Init();
@@ -38,7 +24,6 @@ class CApp
     void SetTimerHandle(hw_timer_t* hTriacTimer) { m_hTriacTimer = hTriacTimer; };
 #endif
 
-    void TerminalHandler();
     bool CommandHandler();
     void HandleNetwork();
     void HandleDisplay();
@@ -54,6 +39,7 @@ class CApp
     CNetwork m_network;
     CPvBoiler m_pvBoiler;
     CPvBoilerCommandHandler m_commandHandler;
+    CTerminal m_terminal;
     CSsd1306 m_display;
     uint8_t m_displayCount = 0;
 
@@ -71,11 +57,5 @@ class CApp
     volatile uint8_t m_iSSRPeriodCount = 0;
     volatile uint8_t m_iCurrentPercentage = 0;
     volatile CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
-
-    volatile rx_data_t m_termRxData1 = { };
-    volatile rx_data_t m_termRxData2 = { };
-
-    volatile rx_data_t* m_pActiveTermRxData = &m_termRxData1;
-    volatile rx_data_t* m_pInactiveTermRxData = &m_termRxData2;
 };
 #endif // APP_H

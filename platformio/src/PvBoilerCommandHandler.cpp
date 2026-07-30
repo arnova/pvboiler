@@ -1,6 +1,6 @@
 #include "PvBoilerCommandHandler.h"
 #include "Uptime.h"
-#include "TermPrint.h"
+#include "Terminal.h"
 #include "PvBoiler.h"
 #include "util.h"
 #include "Network.h"
@@ -45,7 +45,7 @@ result_code_t CPvBoilerCommandHandler::CmdShowVersion(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CTermPrint::println(FPSTR(VER_STR_P));
+  CTerminal::println(FPSTR(VER_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -57,7 +57,7 @@ result_code_t CPvBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CTermPrint::println(MY_VERSION);
+  CTerminal::println(MY_VERSION);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -69,7 +69,7 @@ result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
-  CTermPrint::println(FPSTR(HELP_STR_P));
+  CTerminal::println(FPSTR(HELP_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -201,75 +201,75 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CTermPrint::print("ssid=");
-  CTermPrint::print(m_network.GetWifiSsid());
+  CTerminal::print("ssid=");
+  CTerminal::print(m_network.GetWifiSsid());
 
-  CTermPrint::print(" pass=");
-  CTermPrint::print(m_network.GetWifiPassword());
+  CTerminal::print(" pass=");
+  CTerminal::print(m_network.GetWifiPassword());
 
-  CTermPrint::print(" ip=");
-  CTermPrint::print(m_network.GetIpAddr()[0]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetIpAddr()[1]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetIpAddr()[2]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetIpAddr()[3]);
+  CTerminal::print(" ip=");
+  CTerminal::print(m_network.GetIpAddr()[0]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetIpAddr()[1]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetIpAddr()[2]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetIpAddr()[3]);
 
-  CTermPrint::print(" netmask=");
-  CTermPrint::print(m_network.GetNetMask()[0]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetNetMask()[1]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetNetMask()[2]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetNetMask()[3]);
+  CTerminal::print(" netmask=");
+  CTerminal::print(m_network.GetNetMask()[0]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetNetMask()[1]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetNetMask()[2]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetNetMask()[3]);
 
-  CTermPrint::print(" server=");
-  CTermPrint::print(m_network.GetServerIp()[0]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetServerIp()[1]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetServerIp()[2]);
-  CTermPrint::print(".");
-  CTermPrint::print(m_network.GetServerIp()[3]);
+  CTerminal::print(" server=");
+  CTerminal::print(m_network.GetServerIp()[0]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetServerIp()[1]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetServerIp()[2]);
+  CTerminal::print(".");
+  CTerminal::print(m_network.GetServerIp()[3]);
 
-  CTermPrint::print(" logic_mode=");
-  CTermPrint::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
+  CTerminal::print(" logic_mode=");
+  CTerminal::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
 
-  CTermPrint::print(" boiler=");
-  CTermPrint::print(m_pvBoiler.GetBoilerPowerRating());
-  CTermPrint::print("W");
+  CTerminal::print(" boiler=");
+  CTerminal::print(m_pvBoiler.GetBoilerPowerRating());
+  CTerminal::print("W");
 
-  CTermPrint::print(" margin=");
-  CTermPrint::print(m_pvBoiler.GetPowerBudgetMargin());
-  CTermPrint::print("W");
+  CTerminal::print(" margin=");
+  CTerminal::print(m_pvBoiler.GetPowerBudgetMargin());
+  CTerminal::print("W");
 
-  CTermPrint::print(" dim_style=");
-  CTermPrint::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
+  CTerminal::print(" dim_style=");
+  CTerminal::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
-  CTermPrint::print(" ssr_period_count=");
-  CTermPrint::print(m_pvBoiler.GetSsrPeriodCount());
+  CTerminal::print(" ssr_period_count=");
+  CTerminal::print(m_pvBoiler.GetSsrPeriodCount());
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTermPrint::print(" error_gain=");
+  CTerminal::print(" error_gain=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGain());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" error_clamp=");
+  CTerminal::print(" error_clamp=");
   snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetErrorClamp());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" net_wd_timeout=");
+  CTerminal::print(" net_wd_timeout=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" net_wd_recovery=");
+  CTerminal::print(" net_wd_recovery=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogRecovery());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::println("");
+  CTerminal::println("");
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -280,69 +280,69 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CTermPrint::print("on_off=");
-  CTermPrint::print(m_pvBoiler.GetCtrlOnOff() ? "1" : "0");
+  CTerminal::print("on_off=");
+  CTerminal::print(m_pvBoiler.GetCtrlOnOff() ? "1" : "0");
 
-  CTermPrint::print(" error=");
-  CTermPrint::print(m_pvBoiler.GetError() ? "1" : "0");
+  CTerminal::print(" error=");
+  CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
 
-  CTermPrint::print(" wifi_conn=");
-  CTermPrint::print(m_network.IsConnected() ? "1" : "0");
+  CTerminal::print(" wifi_conn=");
+  CTerminal::print(m_network.IsConnected() ? "1" : "0");
 
-  CTermPrint::print(" mqtt_conn=");
-  CTermPrint::print(m_network.IsMqttConnected() ? "1" : "0");
+  CTerminal::print(" mqtt_conn=");
+  CTerminal::print(m_network.IsMqttConnected() ? "1" : "0");
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTermPrint::print(" wifi_ip=");
+  CTerminal::print(" wifi_ip=");
   snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
   if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
-    CTermPrint::print(" perc_set=");
+    CTerminal::print(" perc_set=");
     snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
-    CTermPrint::print(strBuf);
+    CTerminal::print(strBuf);
   }
   else
   {
-    CTermPrint::print(" budget_set=");
+    CTerminal::print(" budget_set=");
     snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
-    CTermPrint::print(strBuf);
+    CTerminal::print(strBuf);
   }
 
-  CTermPrint::print(" power_out=");
+  CTerminal::print(" power_out=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetCurrentPower());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" perc_out=");
+  CTerminal::print(" perc_out=");
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" net_period=");
+  CTerminal::print(" net_period=");
   snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 500.0f);
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" net_freq=");
+  CTerminal::print(" net_freq=");
   snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(m_pvBoiler.GetNetPeriod()));
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
-  CTermPrint::print(" zero_cross_window=");
+  CTerminal::print(" zero_cross_window=");
   snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetZeroCrossWindow()) / 1000.0f);
-  CTermPrint::print(strBuf);
+  CTerminal::print(strBuf);
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    CTermPrint::print(" phase_angle=");
+    CTerminal::print(" phase_angle=");
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
-    CTermPrint::print(strBuf);
+    CTerminal::print(strBuf);
 
-    CTermPrint::print(" angle_factor=");
+    CTerminal::print(" angle_factor=");
     snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
-    CTermPrint::print(strBuf);
+    CTerminal::print(strBuf);
   }
 
-  CTermPrint::println("");
+  CTerminal::println("");
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -357,7 +357,7 @@ result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
   const CUptime::uptime_t upTime = m_pvBoiler.GetUpTime();
   char strTemp[24];
   snprintf(strTemp, sizeof(strTemp), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
-  CTermPrint::println(strTemp);
+  CTerminal::println(strTemp);
 
   return pack_result_code(ERR_CODE_OK);
 }
