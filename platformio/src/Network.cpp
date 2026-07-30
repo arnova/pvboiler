@@ -1,3 +1,13 @@
+/* 
+  Network Class
+  (C) Copyright 2026
+
+  Written by       : Arno van Amersfoort
+  Dependencies     : elapsedMillis Network MqttClient Terminal util
+  Initial date     : July 11, 2026
+  Last modified    : July 30, 2026
+*/
+
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>

@@ -1,3 +1,13 @@
+/* 
+  Uptime Class
+  (C) Copyright 2026
+
+  Written by       : Arno van Amersfoort
+  Dependencies     : (none)
+  Initial date     : July 27, 2026
+  Last modified    : July 27, 2026
+*/
+
 #include "Uptime.h"
 
 void CUptime::Update()
