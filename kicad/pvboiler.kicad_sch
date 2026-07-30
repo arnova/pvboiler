@@ -5,8 +5,8 @@
 	(uuid "6be90aef-3291-4214-8316-dfc913441565")
 	(paper "A4")
 	(title_block
-		(title "ESP PVBoiler")
-		(rev "0")
+		(title "ESP PvBoiler")
+		(rev "1")
 		(company "Arno van Amersfoort (Arnova)")
 	)
 	(lib_symbols
@@ -6177,7 +6177,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_THT:C_Rect_L7.2mm_W2.5mm_P5.00mm"
+		(property "Footprint" "Capacitor_THT:C_Rect_L10.0mm_W4.0mm_P7.50mm_MKS4"
 			(at 147.0152 33.02 0)
 			(hide yes)
 			(show_name no)
