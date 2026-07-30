@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PVBOILER_H
 #define PVBOILER_H
 
