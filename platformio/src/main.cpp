@@ -120,7 +120,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
 
 void setup()
 {
-  EEPROM.begin(128); // Reserve room for eeprom settings
+  EEPROM.begin(256); // Reserve room for eeprom settings
 
   randomSeed(micros());
 

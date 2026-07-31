@@ -73,12 +73,12 @@ class CPvBoiler
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
 
     void SetBoilerPowerRating(const uint16_t iPower);
-    void SetPowerBudgetMargin(const uint16_t iBudget);
+    void SetDeadZone(const float iDeadZone);
     void SetLogicMode(const logic_mode_t logicMode);
     void SetDimStyle(const dim_style_t dimStyle);
     void SetSsrPeriodCount(const uint8_t iPeriod);
     void SetErrorGain(const float fGain);
-    void SetErrorClamp(const uint8_t iClamp);
+    void SetStepClamp(const float fClamp);
     void SetNetWatchDogTimeout(const uint16_t iTimeout);
     void SetNetWatchDogRecovery(const uint16_t iTimeout);
 
@@ -94,12 +94,12 @@ class CPvBoiler
     uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
 
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
-    uint16_t GetPowerBudgetMargin() const { return m_iPowerBudgetMargin; };
+    float GetDeadZone() const { return m_fDeadZonePercent; };
     logic_mode_t GetLogicMode() const { return m_logicMode; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetErrorGain() const { return m_fErrorGain; };
-    uint8_t GetErrorClamp() const { return m_iErrorClamp; };
+    float GetStepClamp() const { return m_fStepClamp; };
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
     bool GetError() const { return m_bError; };
@@ -133,7 +133,7 @@ class CPvBoiler
     bool m_bPublishSettings = true;
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
-    uint16_t m_iPowerBudgetMargin = POWER_BUDGET_MARGIN_DEFAULT;  // Watt
+    float m_fDeadZonePercent = DEAD_ZONE_DEFAULT;  // %
 
     uint16_t m_iNetWatchDogTimeout = 0;
     uint16_t m_iNetWatchDogRecovery = 0;
@@ -156,7 +156,7 @@ class CPvBoiler
     // (Proportional) error gain
     float m_fErrorGain = ERROR_GAIN_DEFAULT;
 
-    uint8_t m_iErrorClamp = ERROR_CLAMP_DEFAULT;
+    float m_fStepClamp = STEP_CLAMP_DEFAULT;
 
     logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 };

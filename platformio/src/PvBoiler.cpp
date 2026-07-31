@@ -3,8 +3,6 @@
 
 #include <EEPROM.h>
 
-#define CONTROL_LOOP_TIME_MS                    200   // ms
-
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network)
 {
 }
@@ -144,14 +142,14 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_LOGIC_MODE, "Budget");
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerBudgetMargin);
-      m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fDeadZonePercent);
+      m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
 
       snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGain);
       m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iErrorClamp);
-      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_CLAMP, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClamp);
+      m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP, strBuf);
     }
     else // Percentage
     {
@@ -192,8 +190,8 @@ void CPvBoiler::MqttPublishConfig()
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
     m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN, "", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_CLAMP, "%", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP, "%", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "%", "", "", true);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
   }
@@ -203,8 +201,8 @@ void CPvBoiler::MqttPublishConfig()
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_BUDGET);
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_ERROR_GAIN);
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_ERROR_CLAMP);
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_BUDGET_MARGIN);
+    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_STEP_CLAMP);
+    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_DEAD_ZONE);
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
@@ -260,6 +258,8 @@ void CPvBoiler::MqttPublishConfig()
 void CPvBoiler::LoadSettings()
 {
   uint16_t iVal16 = 0;
+  float fVal = 0.0f;
+
   EEPROM.get(EEPROM_BP_RATING, iVal16);
   if (iVal16 < 100 || iVal16 > BOILER_POWER_RATING_MAX)
   {
@@ -267,12 +267,12 @@ void CPvBoiler::LoadSettings()
   }
   m_iBoilerPowerRating = iVal16;
 
-  EEPROM.get(EEPROM_PB_MARGIN, iVal16);
-  if (iVal16 > POWER_BUDGET_MARGIN_MAX)
+  EEPROM.get(EEPROM_DEAD_ZONE, fVal);
+  if (fVal < DEAD_ZONE_MIN || fVal > DEAD_ZONE_MAX || isnan(fVal))
   {
-    iVal16 = POWER_BUDGET_MARGIN_DEFAULT;
+    fVal = DEAD_ZONE_DEFAULT;
   }
-  m_iPowerBudgetMargin = iVal16;
+  m_fDeadZonePercent = fVal;
 
   uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
@@ -288,36 +288,33 @@ void CPvBoiler::LoadSettings()
   }
   m_iSsrPeriodCount = iVal8;
 
-  float fErrorGain;
-  EEPROM.get(EEPROM_ERROR_GAIN, fErrorGain);
-  if (fErrorGain < ERROR_GAIN_MIN || fErrorGain > ERROR_GAIN_MAX || isnan(fErrorGain))
+  EEPROM.get(EEPROM_ERROR_GAIN, fVal);
+  if (fVal < ERROR_GAIN_MIN || fVal > ERROR_GAIN_MAX || isnan(fVal))
   {
-    fErrorGain = ERROR_GAIN_DEFAULT;
+    fVal = ERROR_GAIN_DEFAULT;
   }
-  m_fErrorGain = fErrorGain;
+  m_fErrorGain = fVal;
 
-  uint8_t iErrorClamp = 0;
-  EEPROM.get(EEPROM_ERROR_CLAMP, iErrorClamp);
-  if (iErrorClamp < ERROR_CLAMP_MIN || iErrorClamp > ERROR_CLAMP_MAX)
+  EEPROM.get(EEPROM_STEP_CLAMP, fVal);
+  if (fVal < STEP_CLAMP_MIN || fVal > STEP_CLAMP_MAX || isnan(fVal))
   {
-    iErrorClamp = ERROR_CLAMP_DEFAULT;
+    fVal = STEP_CLAMP_DEFAULT;
   }
-  m_iErrorClamp = iErrorClamp;
+  m_fStepClamp = fVal;
 
-  uint16_t iTime = 0;
-  EEPROM.get(EEPROM_NET_WD_TIMEOUT, iTime);
-  if (iTime > NETWORK_WATCHDOG_TIMEOUT_MAX)
+  EEPROM.get(EEPROM_NET_WD_TIMEOUT, iVal16);
+  if (iVal16 > NETWORK_WATCHDOG_TIMEOUT_MAX)
   {
-    iTime = NETWORK_WATCHDOG_TIMEOUT_DEFAULT;
+    iVal16 = NETWORK_WATCHDOG_TIMEOUT_DEFAULT;
   }
-  m_iNetWatchDogTimeout = iTime;
+  m_iNetWatchDogTimeout = iVal16;
 
-  EEPROM.get(EEPROM_NET_WD_RECOVER, iTime);
-  if (iTime > NETWORK_WATCHDOG_RECOVERY_MAX)
+  EEPROM.get(EEPROM_NET_WD_RECOVER, iVal16);
+  if (iVal16 > NETWORK_WATCHDOG_RECOVERY_MAX)
   {
-    iTime = NETWORK_WATCHDOG_RECOVERY_DEFAULT;
+    iVal16 = NETWORK_WATCHDOG_RECOVERY_DEFAULT;
   }
-  m_iNetWatchDogRecovery = iTime;
+  m_iNetWatchDogRecovery = iVal16;
 
   m_bPublishSettings = true;
 }
@@ -334,12 +331,12 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 }
 
 
-void CPvBoiler::SetPowerBudgetMargin(const uint16_t iMargin)
+void CPvBoiler::SetDeadZone(const float fDeadZone)
 {
-  EEPROM.put(EEPROM_PB_MARGIN, iMargin);
+  EEPROM.put(EEPROM_DEAD_ZONE, fDeadZone);
   EEPROM.commit();
 
-  m_iPowerBudgetMargin = iMargin;
+  m_fDeadZonePercent = fDeadZone;
 
   m_bPublishSettings = true;
 }
@@ -389,12 +386,12 @@ void CPvBoiler::SetErrorGain(const float fGain)
 }
 
 
-void CPvBoiler::SetErrorClamp(const uint8_t iClamp)
+void CPvBoiler::SetStepClamp(const float fClamp)
 {
-  EEPROM.put(EEPROM_ERROR_CLAMP, iClamp);
+  EEPROM.put(EEPROM_STEP_CLAMP, fClamp);
   EEPROM.commit();
 
-  m_iErrorClamp = iClamp;
+  m_fStepClamp = fClamp;
 
   m_bPublishSettings = true;
 }
@@ -481,18 +478,28 @@ void CPvBoiler::Update()
 
     if (m_fCurrentPercentage > 0)
     {
-      fNewPercentage--; // Device off or watch-dog triggered: output to 0%
+      fNewPercentage -= m_fStepClamp; // Device off or watch-dog triggered: output to 0%
     }
   }
   else if (m_logicMode == LOGIC_MODE_PERCENT)
   {
     if (m_iPowerPercentage > m_fCurrentPercentage)
     {
-      fNewPercentage++;
+      fNewPercentage += m_fStepClamp;
+
+      if (fNewPercentage > m_iPowerPercentage)
+      {
+        fNewPercentage = m_iPowerPercentage;
+      }
     }
     else if (m_iPowerPercentage < m_fCurrentPercentage)
     {
-      fNewPercentage--;
+      fNewPercentage -= m_fStepClamp;
+
+      if (fNewPercentage < m_iPowerPercentage)
+      {
+        fNewPercentage = m_iPowerPercentage;
+      }
     }
   }
   else
@@ -500,20 +507,32 @@ void CPvBoiler::Update()
     float fErrorStep = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
 
     // Clamp error (step) value
-    if (fErrorStep > m_iErrorClamp)
-      fErrorStep = m_iErrorClamp;
-    else if (fErrorStep < -m_iErrorClamp)
-      fErrorStep = -m_iErrorClamp;
+    if (fErrorStep > m_fStepClamp)
+    {
+      fErrorStep = m_fStepClamp;
+    }
+    else if (fErrorStep < -m_fStepClamp)
+    {
+      fErrorStep = -m_fStepClamp;
+    }
 
-    if (m_iPowerBudget > m_iPowerBudgetMargin || m_iPowerBudget < -m_iPowerBudgetMargin)
+    // Only change value when outside deadzone
+    const int32_t iDeadZonePower = (m_fDeadZonePercent * m_iBoilerPowerRating) / 100.0f;
+    if (m_iPowerBudget > iDeadZonePower || m_iPowerBudget < -iDeadZonePower)
+    {
       fNewPercentage += fErrorStep;
+    }
   }
 
   // Clamp to 0-100%
   if (fNewPercentage > 100.0f)
+  {
     fNewPercentage = 100.0f;
+  }
   else if (fNewPercentage < 0.0f)
+  {
     fNewPercentage = 0.0f;
+  }
 
   if (fNewPercentage != m_fCurrentPercentage)
   {

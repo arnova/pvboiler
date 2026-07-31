@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.01"
+#define MY_VERSION "1.02"
 
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
@@ -15,42 +15,43 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define BOILER_POWER_RATING_MAX                 10000 // Watt
 
 // The amount of +/- margin for power budget
-#define POWER_BUDGET_MARGIN_DEFAULT             10    // Watt
-#define POWER_BUDGET_MARGIN_MAX                 1000  // Watt
+#define DEAD_ZONE_DEFAULT                       1.0f  // %
+#define DEAD_ZONE_MIN                           0.0f  // %
+#define DEAD_ZONE_MAX                          20.0f  // %
 
 // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
 #define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
 #define SSR_PERIOD_COUNT_MAX                    254
 
 // Proportional error gain
-#define ERROR_GAIN_DEFAULT                      0.01f
+#define ERROR_GAIN_DEFAULT                      0.04f
 #define ERROR_GAIN_MIN                          0.0001f
 #define ERROR_GAIN_MAX                          100.0f
 
-#define ERROR_CLAMP_DEFAULT                     10
-#define ERROR_CLAMP_MIN                         1
-#define ERROR_CLAMP_MAX                         100
+#define STEP_CLAMP_DEFAULT                      3.0f    // %
+#define STEP_CLAMP_MIN                          0.01f   // %
+#define STEP_CLAMP_MAX                          100.0f  // %
 
 // Initial value for phase correction time
-#define ZERO_CROSS_WINDOW_DEFAULT               1100 // uS
+#define ZERO_CROSS_WINDOW_DEFAULT               1100  // uS
 
 // Minimum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MIN_US                  500 // us
+#define ZERO_CROSS_EDGE_MIN_US                  500   // us
 
 // Maximum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MAX_US                  2000 // us
+#define ZERO_CROSS_EDGE_MAX_US                  2000  // us
 
 // Maximum net period time
 #define NET_PERIOD_MAX_US                       12000 // us
 
 // Triac gate pulse width
-#define GATE_PULSE_WIDTH                        50 // uS
+#define GATE_PULSE_WIDTH                        50    // uS
 
 // Network watchdog timer settings
-#define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        900  // Seconds = 15 minutes
+#define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        900   // Seconds = 15 minutes
 #define NETWORK_WATCHDOG_TIMEOUT_MAX            65000
 
-#define NETWORK_WATCHDOG_RECOVERY_DEFAULT       60   // Seconds = 1 minute
+#define NETWORK_WATCHDOG_RECOVERY_DEFAULT       60    // Seconds = 1 minute
 #define NETWORK_WATCHDOG_RECOVERY_MAX           65000
 
 // Enable below for additional wifi / mqtt debug messages
@@ -82,12 +83,12 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_OUTPUT_PERCENTAGE                  "output_percentage"
 
 #define MQTT_LOGIC_MODE                         "logic_mode"
-#define MQTT_BOILER_POWER_RATING                       "boiler_power_rating"
-#define MQTT_BUDGET_MARGIN                      "budget_margin"
+#define MQTT_BOILER_POWER_RATING                "boiler_power_rating"
+#define MQTT_DEAD_ZONE                          "dead_zone"
 #define MQTT_DIM_STYLE                          "dim_style"
 #define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
 #define MQTT_ERROR_GAIN                         "error_gain"
-#define MQTT_ERROR_CLAMP                        "error_clamp"
+#define MQTT_STEP_CLAMP                         "step_clamp"
 
 // Diagnostic topic items
 #define MQTT_WIFI_SSID                          "wifi_ssid"
@@ -129,35 +130,37 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // EEprom byte sizes
 #define IP_BYTE_SIZE            4
 #define BP_RATING_SIZE          2
-#define PB_MARGIN_SIZE          2
+#define DEAD_ZONE_SIZE          sizeof(float)
 #define CTRL_MODE_SIZE          1
 #define DIM_STYLE_SIZE          1
 #define SSR_PERIOD_SIZE         1
 #define WIFI_SSID_MAX_SIZE      32
 #define WIFI_PASSWORD_MAX_SIZE  64
 #define ERROR_GAIN_SIZE         sizeof(float)
-#define ERROR_CLAMP_SIZE        1
+#define STEP_CLAMP_SIZE         sizeof(float)
 #define NET_WD_TIMEOUT_SIZE     2
 #define NET_WD_RECOVER_SIZE     2
 
 // EEPROM locations
-#define EEPROM_WIFI_SSID      0                                                   // offset 32
-#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // offset 96
-#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1   // offset 100
-#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE                       // offset 104
-#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE                    // offset 108
-#define EEPROM_BP_RATING      EEPROM_SERVER_IP_ADDR + IP_BYTE_SIZE                // offset 110
-#define EEPROM_PB_MARGIN      EEPROM_BP_RATING + BP_RATING_SIZE                   // offset 112
-#define EEPROM_CTRL_MODE      EEPROM_PB_MARGIN + PB_MARGIN_SIZE                   // offset 113
-#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE                   // offset 114
-#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offset 115
-#define EEPROM_ERROR_GAIN     EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offset 119
-#define EEPROM_ERROR_CLAMP    EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offset 120
-#define EEPROM_NET_WD_TIMEOUT EEPROM_ERROR_CLAMP + ERROR_CLAMP_SIZE               // offset 122
-#define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offset 124
+#define EEPROM_WIFI_SSID      0                                                   // offsets 32
+#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // offsets 96
+#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1   // offsets 100
+#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE                       // offsets 104
+#define EEPROM_SERVER_IP_ADDR EEPROM_IP_NETMASK + IP_BYTE_SIZE                    // offsets 108
+#define EEPROM_BP_RATING      EEPROM_SERVER_IP_ADDR + IP_BYTE_SIZE                // offsets 110
+#define EEPROM_CTRL_MODE      EEPROM_BP_RATING + BP_RATING_SIZE                   // offsets 111
+#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE                   // offsets 112
+#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offsets 113
+#define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offsets 114
+#define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 116
+#define EEPROM_ERROR_GAIN     EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 120
+#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 124
+#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 128
 
 // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
 #define ESP8266_TICKS_PER_US  80
+
+#define CONTROL_LOOP_TIME_MS  1000   // ms
 
 #endif // SYSTEM_H

@@ -55,11 +55,11 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdSetPowerPercentage(const char *strArgs);
 
     result_code_t CmdSetBoilerPowerRating(const char *strArgs);
-    result_code_t CmdSetPowerBudgetMargin(const char *strArgs);
+    result_code_t CmdSetDeadZone(const char *strArgs);
     result_code_t CmdSetLogicMode(const char *strArgs);
     result_code_t CmdSetDimStyle(const char *strArgs);
     result_code_t CmdSetSsrPeriodCount(const char *strArgs);
     result_code_t CmdSetErrorGain(const char *strArgs);
-    result_code_t CmdSetErrorClamp(const char *strArgs);
+    result_code_t CmdSetStepClamp(const char *strArgs);
 };
 #endif // PVBOILER_COMMAND_HANDLER_H

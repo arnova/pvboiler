@@ -23,11 +23,11 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "percent [p]            : For percent logic mode set percentage to [p] %\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [l]          : Set logic mode to [l] (\"percent\" or \"budget\")\r\n"
-                                  "margin [p]             : For budget logic mode set margin to [p] Watt\r\n"
+                                  "deadzone [d]           : For budget logic mode set deadzone to [d]%\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
                                   "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
-                                  "eclamp [c]             : For budget logic mode set error-clamp to value [c]%\r\n"
+                                  "sclamp [c]             : Set step-clamp to value [c]%\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
@@ -201,6 +201,8 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
+  char strBuf[20]; // Enough room for float with 3 decimals
+
   CTerminal::print("ssid=");
   CTerminal::print(m_network.GetWifiSsid());
 
@@ -241,24 +243,23 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(m_pvBoiler.GetBoilerPowerRating());
   CTerminal::print("W");
 
-  CTerminal::print(" margin=");
-  CTerminal::print(m_pvBoiler.GetPowerBudgetMargin());
-  CTerminal::print("W");
-
   CTerminal::print(" dim_style=");
   CTerminal::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
   CTerminal::print(" ssr_period_count=");
-  CTerminal::print(m_pvBoiler.GetSsrPeriodCount());
-
-  char strBuf[20]; // Enough room for float with 3 decimals
+  snprintf(strBuf, sizeof(strBuf), "%u", m_pvBoiler.GetSsrPeriodCount());
+  CTerminal::print(strBuf);
 
   CTerminal::print(" error_gain=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGain());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" error_clamp=");
-  snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetErrorClamp());
+  CTerminal::print(" step_clamp=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClamp());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" dead_zone=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetDeadZone());
   CTerminal::print(strBuf);
 
   CTerminal::print(" net_wd_timeout=");
@@ -431,18 +432,18 @@ result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strAr
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetPowerBudgetMargin(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetDeadZone(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, 1, POWER_BUDGET_MARGIN_MAX, ARG_INT32_NUM1);
+  double fDeadZone;
+  result = get_double_from_string(strArgs, &fDeadZone, DEAD_ZONE_MIN, DEAD_ZONE_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetPowerBudgetMargin(iPower);
+  m_pvBoiler.SetDeadZone(fDeadZone);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -521,18 +522,18 @@ result_code_t CPvBoilerCommandHandler::CmdSetErrorGain(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetErrorClamp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetStepClamp(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  int32_t iClamp;
-  result = get_int32_from_string(strArgs, &iClamp, ERROR_CLAMP_MIN, ERROR_CLAMP_MAX, ARG_INT32_NUM1);
+  double fClamp;
+  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_MIN, STEP_CLAMP_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetErrorClamp(iClamp);
+  m_pvBoiler.SetStepClamp(fClamp);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -640,9 +641,9 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetBoilerPowerRating(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "margin"))
+  else if (STRIEQUALS(strCommand, "deadzone"))
   {
-    result = CmdSetPowerBudgetMargin(strArgs);
+    result = CmdSetDeadZone(strArgs);
   }
   else if (STRIEQUALS(strCommand, "logicmode"))
   {
@@ -660,9 +661,9 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetErrorGain(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "eclamp"))
+  else if (STRIEQUALS(strCommand, "sclamp"))
   {
-    result = CmdSetErrorClamp(strArgs);
+    result = CmdSetStepClamp(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ssid"))
   {
