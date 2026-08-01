@@ -32,6 +32,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
                                   "netwdr [i]             : Set network watchdog recovery time to [i] seconds\r\n"
                                   "exhelp                 : Show expert help\r\n"
+                                  "factoryreset           : Reset all (stored) settings to factory defaults (except network)\r\n"
                                   ;
 
 const char EX_HELP_STR_P[] PROGMEM = "\r\n"
@@ -391,6 +392,17 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+
+  m_pvBoiler.FactoryReset();
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
@@ -636,6 +648,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "reset"))
   {
     result = CmdReset(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "factoryreset"))
+  {
+    result = CmdFactoryReset(strArgs);
   }
   else if (STRIEQUALS(strCommand, "info"))
   {

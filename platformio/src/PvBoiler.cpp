@@ -446,6 +446,23 @@ void CPvBoiler::SetNetWatchDogRecovery(const uint16_t iTime)
 }
 
 
+void CPvBoiler::FactoryReset()
+{
+  SetBoilerPowerRating(BOILER_POWER_RATING_DEFAULT);
+  SetDeadZone(DEAD_ZONE_DEFAULT);
+  SetLogicMode(LOGIC_MODE_BUDGET);
+  SetDimStyle(DIM_STYLE_PHASE_ANGLE);
+  SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
+  SetErrorGain(ERROR_GAIN_DEFAULT);
+  SetStepClamp(STEP_CLAMP_DEFAULT);
+  SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
+  SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
+
+  // Reset controller
+  Reset();
+}
+
+
 uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow)
 {
   m_iPeriodTime = iPeriodTime;

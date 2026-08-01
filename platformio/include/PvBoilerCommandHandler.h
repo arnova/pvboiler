@@ -40,6 +40,7 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdStatus(const char *strArgs);
     result_code_t CmdUpTime(const char *strArgs);
     result_code_t CmdReset(const char *strArgs);
+    result_code_t CmdFactoryReset(const char *strArgs);
 
     result_code_t CmdSetIpAddress(const char *strArgs);
     result_code_t CmdSetNetMask(const char *strArgs);

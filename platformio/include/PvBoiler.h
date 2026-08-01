@@ -65,6 +65,7 @@ class CPvBoiler
     bool MqttPublishValues(const bool bForce = false);
     void MqttPublishConfig();
     void LoadSettings();
+    void FactoryReset();
 
     void TrigNetworkWatchdog() { m_iNetworkWatchdogCounter = 0; };
 
