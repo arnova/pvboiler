@@ -20,14 +20,9 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "enable                 : Enable controller\r\n"
                                   "disable                : Disable controller\r\n"
                                   "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
-                                  "percent [p]            : For percent logic mode set percentage to [p] %\r\n"
+                                  "percent [p]            : For percent logic mode set percentage to [p] percent\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [l]          : Set logic mode to [l] (\"percent\" or \"budget\")\r\n"
-                                  "deadzone [d]           : For budget logic mode set deadzone to [d]%\r\n"
-                                  "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
-                                  "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
-                                  "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
-                                  "sclamp [c]             : Set step-clamp to value [c]%\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
@@ -36,6 +31,15 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "restartnet             : Restart network functions\r\n"
                                   "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
                                   "netwdr [i]             : Set network watchdog recovery time to [i] seconds\r\n"
+                                  "exhelp                 : Show expert help\r\n"
+                                  ;
+
+const char EX_HELP_STR_P[] PROGMEM = "\r\n"
+                                  "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
+                                  "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
+                                  "sclamp [c]             : Set step-clamp to value [c] percent\r\n"
+                                  "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
+                                  "deadzone [d]           : For budget logic mode set deadzone to [d] percent\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -70,6 +74,18 @@ result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   CTerminal::println(FPSTR(HELP_STR_P));
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+// Show expert help screen
+result_code_t CPvBoilerCommandHandler::CmdShowExpertHelp(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+
+  CTerminal::println(FPSTR(EX_HELP_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -608,6 +624,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "help") || STRIEQUALS(strCommand, "?"))
   {
     result = CmdShowHelp(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "exhelp"))
+  {
+    result = CmdShowExpertHelp(strArgs);
   }
   else if (STRIEQUALS(strCommand, "reboot"))
   {

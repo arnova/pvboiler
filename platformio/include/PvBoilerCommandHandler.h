@@ -34,6 +34,7 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdShowVersion(const char *strArgs);
     result_code_t CmdShowFWVersion(const char *strArgs);
     result_code_t CmdShowHelp(const char *strArgs);
+    result_code_t CmdShowExpertHelp(const char *strArgs);
 
     result_code_t CmdInfo(const char *strArgs);
     result_code_t CmdStatus(const char *strArgs);
