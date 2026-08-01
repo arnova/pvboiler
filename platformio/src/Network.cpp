@@ -122,11 +122,14 @@ void CNetwork::InitWifi(const bool bReconnect)
 
 void CNetwork::SetWifiSsid(const char* strSsid)
 {
-  memset(m_strWifiSsid, 0x00, WIFI_SSID_MAX_SIZE + 1);
-  strcpy(m_strWifiSsid, strSsid);
+  if (!STREQUALS(strSsid, m_strWifiSsid))
+  {
+    memset(m_strWifiSsid, 0x00, WIFI_SSID_MAX_SIZE + 1);
+    strcpy(m_strWifiSsid, strSsid);
 
-  EEPROM.put(EEPROM_WIFI_SSID, m_strWifiSsid);
-  EEPROM.commit();
+    EEPROM.put(EEPROM_WIFI_SSID, m_strWifiSsid);
+    EEPROM.commit();
+  }
 
   InitWifi(true);
 }
@@ -134,11 +137,14 @@ void CNetwork::SetWifiSsid(const char* strSsid)
 
 void CNetwork::SetWifiPassword(const char* strPassword)
 {
-  memset(m_strWifiPassword, 0x00, WIFI_PASSWORD_MAX_SIZE + 1);
-  strcpy(m_strWifiPassword, strPassword);
+  if (!STREQUALS(strPassword, m_strWifiPassword))
+  {
+    memset(m_strWifiPassword, 0x00, WIFI_PASSWORD_MAX_SIZE + 1);
+    strcpy(m_strWifiPassword, strPassword);
 
-  EEPROM.put(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
-  EEPROM.commit();
+    EEPROM.put(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
+    EEPROM.commit();
+  }
 
   InitWifi(true);
 }
@@ -146,10 +152,13 @@ void CNetwork::SetWifiPassword(const char* strPassword)
 
 void CNetwork::SetIpAddr(const uint8_t* ipAddress)
 {
-  memcpy(m_ipAddr, ipAddress, sizeof(m_ipAddr));
+  if (memcmp(ipAddress, m_ipAddr, 4) != 0)
+  {
+    memcpy(m_ipAddr, ipAddress, sizeof(m_ipAddr));
 
-  EEPROM.put(EEPROM_IP_ADDR, m_ipAddr);
-  EEPROM.commit();
+    EEPROM.put(EEPROM_IP_ADDR, m_ipAddr);
+    EEPROM.commit();
+  }
 
   InitWifi(true);
 }
@@ -157,10 +166,13 @@ void CNetwork::SetIpAddr(const uint8_t* ipAddress)
 
 void CNetwork::SetNetMask(const uint8_t* ipNetMask)
 {
-  memcpy(m_ipNetmask, ipNetMask, sizeof(m_ipNetmask));
+  if (memcmp(ipNetMask, m_ipNetmask, 4) != 0)
+  {
+    memcpy(m_ipNetmask, ipNetMask, sizeof(m_ipNetmask));
 
-  EEPROM.put(EEPROM_IP_NETMASK, m_ipNetmask);
-  EEPROM.commit();
+    EEPROM.put(EEPROM_IP_NETMASK, m_ipNetmask);
+    EEPROM.commit();
+  }
 
   InitWifi(true);
 }
@@ -181,10 +193,13 @@ void CNetwork::MqttPublishValues()
 
 void CNetwork::MqttUpdateServerIp(const uint8_t* ipAddress)
 {
-  memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
+  if (memcmp(ipAddress, m_serverIpAddr, 4) != 0)
+  {
+    memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
 
-  EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
-  EEPROM.commit();
+    EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
+    EEPROM.commit();
+  }
 
   // Disconnect to current server
   if (m_mqttClient.connected())

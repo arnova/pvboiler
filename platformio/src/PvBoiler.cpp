@@ -322,100 +322,127 @@ void CPvBoiler::LoadSettings()
 
 void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 {
-  EEPROM.put(EEPROM_BP_RATING, iPower);
-  EEPROM.commit();
+  if (iPower != m_iBoilerPowerRating)
+  {
+    EEPROM.put(EEPROM_BP_RATING, iPower);
+    EEPROM.commit();
 
-  m_iBoilerPowerRating = iPower;
+    m_iBoilerPowerRating = iPower;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetDeadZone(const float fDeadZone)
 {
-  EEPROM.put(EEPROM_DEAD_ZONE, fDeadZone);
-  EEPROM.commit();
+  if (fDeadZone != m_fDeadZonePercent)
+  {
+    EEPROM.put(EEPROM_DEAD_ZONE, fDeadZone);
+    EEPROM.commit();
 
-  m_fDeadZonePercent = fDeadZone;
+    m_fDeadZonePercent = fDeadZone;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t logicMode)
 {
-  EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPvBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
-  EEPROM.commit();
+  if (logicMode != m_logicMode)
+  {
+    EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPvBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
+    EEPROM.commit();
 
-  m_logicMode = logicMode;
+    m_logicMode = logicMode;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t dimStyle)
 {
-  EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
-  EEPROM.commit();
+  if (dimStyle != m_dimStyle)
+  {
+    EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
+    EEPROM.commit();
 
-  m_dimStyle = dimStyle;
+    m_dimStyle = dimStyle;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 {
-  EEPROM.put(EEPROM_SSR_PERIOD, iCount);
-  EEPROM.commit();
+  if (iCount != m_iSsrPeriodCount)
+  {
+    EEPROM.put(EEPROM_SSR_PERIOD, iCount);
+    EEPROM.commit();
 
-  m_iSsrPeriodCount = iCount;
+    m_iSsrPeriodCount = iCount;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetErrorGain(const float fGain)
 {
-  EEPROM.put(EEPROM_ERROR_GAIN, fGain);
-  EEPROM.commit();
+  if (fGain != m_fErrorGain)
+  {
+    EEPROM.put(EEPROM_ERROR_GAIN, fGain);
+    EEPROM.commit();
 
-  m_fErrorGain = fGain;
+    m_fErrorGain = fGain;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetStepClamp(const float fClamp)
 {
-  EEPROM.put(EEPROM_STEP_CLAMP, fClamp);
-  EEPROM.commit();
+  if (fClamp != m_fStepClamp)
+  {
+    EEPROM.put(EEPROM_STEP_CLAMP, fClamp);
+    EEPROM.commit();
 
-  m_fStepClamp = fClamp;
+    m_fStepClamp = fClamp;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetNetWatchDogTimeout(const uint16_t iTime)
 {
-  EEPROM.put(EEPROM_NET_WD_TIMEOUT, iTime);
-  EEPROM.commit();
+  if (iTime != m_iNetWatchDogTimeout)
+  {
+    EEPROM.put(EEPROM_NET_WD_TIMEOUT, iTime);
+    EEPROM.commit();
 
-  m_iNetWatchDogTimeout = iTime;
+    m_iNetWatchDogTimeout = iTime;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
 void CPvBoiler::SetNetWatchDogRecovery(const uint16_t iTime)
 {
-  EEPROM.put(EEPROM_NET_WD_RECOVER, iTime);
-  EEPROM.commit();
+  if (iTime != m_iNetWatchDogRecovery)
+  {
+    EEPROM.put(EEPROM_NET_WD_RECOVER, iTime);
+    EEPROM.commit();
 
-  m_iNetWatchDogRecovery = iTime;
+    m_iNetWatchDogRecovery = iTime;
 
-  m_bPublishSettings = true;
+    m_bPublishSettings = true;
+  }
 }
 
 
