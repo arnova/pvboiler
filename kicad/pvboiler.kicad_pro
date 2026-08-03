@@ -524,10 +524,10 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2,
+        "track_width": 0.5,
         "tuning_profile": "",
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
+        "via_diameter": 1.5,
+        "via_drill": 0.75,
         "wire_width": 6
       }
     ],
@@ -667,7 +667,7 @@
         "uuid": "6be90aef-3291-4214-8316-dfc913441565"
       }
     ],
-    "used_designators": "",
+    "used_designators": "R12-15",
     "variants": []
   },
   "sheets": [
