@@ -41,8 +41,9 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // Maximum time for positive/negative zero crossing
 #define ZERO_CROSS_EDGE_MAX_US                  2000  // us
 
-// Maximum net period time
-#define NET_PERIOD_MAX_US                       12000 // us
+// Net period time limits (for (rectified) 48-62 Hz)
+#define NET_PERIOD_MIN_US                       8000  // us
+#define NET_PERIOD_MAX_US                       10500 // us
 
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50    // uS

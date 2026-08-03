@@ -496,7 +496,7 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   }
 
   // Update error state. Note that invalid iZeroCrossWindow-value can never happen (handled in ISR)
-  m_bError = (iPeriodTime == 0 || iPeriodTime > NET_PERIOD_MAX_US);
+  m_bError = (iPeriodTime < NET_PERIOD_MIN_US || iPeriodTime > NET_PERIOD_MAX_US);
 
   // With errors or zero delay return zero so we know we should do "nothing"
   if (m_bError || iDelay == 0)
