@@ -40,7 +40,7 @@ const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
                                   "sclamp [c]             : Set step-clamp to value [c] percent\r\n"
                                   "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
-                                  "deadzone [d]           : For budget logic mode set deadzone to [d] percent\r\n"
+                                  "deadzone [d]           : For budget logic mode set deadzone to [d] Watt\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -257,8 +257,8 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
 
   CTerminal::print(" boiler=");
-  CTerminal::print(m_pvBoiler.GetBoilerPowerRating());
-  CTerminal::print("W");
+  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBoilerPowerRating());
+  CTerminal::print(strBuf);
 
   CTerminal::print(" dim_style=");
   CTerminal::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
@@ -276,7 +276,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(strBuf);
 
   CTerminal::print(" dead_zone=");
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetDeadZone());
+  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetDeadZone());
   CTerminal::print(strBuf);
 
   CTerminal::print(" net_wd_timeout=");
@@ -466,12 +466,12 @@ result_code_t CPvBoilerCommandHandler::CmdSetDeadZone(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  double fDeadZone;
-  result = get_double_from_string(strArgs, &fDeadZone, DEAD_ZONE_MIN, DEAD_ZONE_MAX, ARG_INT32_NUM1);
+  int32_t iDeadZone;
+  result = get_int32_from_string(strArgs, &iDeadZone, DEAD_ZONE_MIN, DEAD_ZONE_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetDeadZone(fDeadZone);
+  m_pvBoiler.SetDeadZone(iDeadZone);
 
   return pack_result_code(ERR_CODE_OK);
 }

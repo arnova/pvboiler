@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.03"
+#define MY_VERSION "1.03a"
 
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
@@ -14,10 +14,10 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define BOILER_POWER_RATING_DEFAULT             2500  // Watt
 #define BOILER_POWER_RATING_MAX                 10000 // Watt
 
-// The amount of +/- margin for power budget
-#define DEAD_ZONE_DEFAULT                       1.0f  // %
-#define DEAD_ZONE_MIN                           0.0f  // %
-#define DEAD_ZONE_MAX                          20.0f  // %
+// The dead zone value represents the window where a change in power budget is ignored
+#define DEAD_ZONE_DEFAULT                       10    // Watt
+#define DEAD_ZONE_MIN                           0     // Watt
+#define DEAD_ZONE_MAX                           255   // Watt
 
 // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
 #define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
@@ -130,16 +130,16 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // EEprom byte sizes
 #define IP_BYTE_SIZE            4
 #define BP_RATING_SIZE          2
-#define DEAD_ZONE_SIZE          sizeof(float)
 #define CTRL_MODE_SIZE          1
 #define DIM_STYLE_SIZE          1
 #define SSR_PERIOD_SIZE         1
 #define WIFI_SSID_MAX_SIZE      32
 #define WIFI_PASSWORD_MAX_SIZE  64
-#define ERROR_GAIN_SIZE         sizeof(float)
-#define STEP_CLAMP_SIZE         sizeof(float)
 #define NET_WD_TIMEOUT_SIZE     2
 #define NET_WD_RECOVER_SIZE     2
+#define ERROR_GAIN_SIZE         sizeof(float)
+#define STEP_CLAMP_SIZE         sizeof(float)
+#define DEAD_ZONE_SIZE          1
 
 // EEPROM locations
 #define EEPROM_WIFI_SSID      0                                                   // offsets 32
@@ -155,7 +155,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 116
 #define EEPROM_ERROR_GAIN     EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 120
 #define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 124
-#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 128
+#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 125
 
 // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.

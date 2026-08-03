@@ -142,7 +142,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     {
       m_network.GetMqttClient().PublishMessage(MQTT_LOGIC_MODE, "Budget");
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fDeadZonePercent);
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
       m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
 
       snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGain);
@@ -191,7 +191,7 @@ void CPvBoiler::MqttPublishConfig()
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
     m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN, "", "", "", true);
     m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP, "%", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "%", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
   }
@@ -257,6 +257,7 @@ void CPvBoiler::MqttPublishConfig()
 
 void CPvBoiler::LoadSettings()
 {
+  uint8_t iVal8 = 0;
   uint16_t iVal16 = 0;
   float fVal = 0.0f;
 
@@ -267,14 +268,13 @@ void CPvBoiler::LoadSettings()
   }
   m_iBoilerPowerRating = iVal16;
 
-  EEPROM.get(EEPROM_DEAD_ZONE, fVal);
-  if (fVal < DEAD_ZONE_MIN || fVal > DEAD_ZONE_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_DEAD_ZONE, iVal8);
+  if (iVal8 < DEAD_ZONE_MIN || iVal8 > DEAD_ZONE_MAX)
   {
-    fVal = DEAD_ZONE_DEFAULT;
+    iVal8 = DEAD_ZONE_DEFAULT;
   }
-  m_fDeadZonePercent = fVal;
+  m_iDeadZone = iVal8;
 
-  uint8_t iVal8 = 0;
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
   m_logicMode = (iVal8 == 0x01) ? CPvBoiler::LOGIC_MODE_PERCENT : CPvBoiler::LOGIC_MODE_BUDGET;
 
@@ -334,14 +334,14 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 }
 
 
-void CPvBoiler::SetDeadZone(const float fDeadZone)
+void CPvBoiler::SetDeadZone(const uint8_t iDeadZone)
 {
-  if (fDeadZone != m_fDeadZonePercent)
+  if (iDeadZone != m_iDeadZone)
   {
-    EEPROM.put(EEPROM_DEAD_ZONE, fDeadZone);
+    EEPROM.put(EEPROM_DEAD_ZONE, iDeadZone);
     EEPROM.commit();
 
-    m_fDeadZonePercent = fDeadZone;
+    m_iDeadZone = iDeadZone;
 
     m_bPublishSettings = true;
   }
@@ -561,8 +561,7 @@ void CPvBoiler::Update()
     }
 
     // Only change value when outside deadzone
-    const int32_t iDeadZonePower = (m_fDeadZonePercent * m_iBoilerPowerRating) / 100.0f;
-    if (m_iPowerBudget > iDeadZonePower || m_iPowerBudget < -iDeadZonePower)
+    if (m_iPowerBudget > m_iDeadZone || m_iPowerBudget < -m_iDeadZone)
     {
       fNewPercentage += fErrorStep;
     }
