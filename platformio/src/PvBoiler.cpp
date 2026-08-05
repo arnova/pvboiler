@@ -140,7 +140,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
     if (m_logicMode == LOGIC_MODE_BUDGET)
     {
-      m_network.GetMqttClient().PublishMessage(MQTT_LOGIC_MODE, "Budget");
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Budget");
 
       snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
       m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
@@ -153,7 +153,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     }
     else // Percentage
     {
-      m_network.GetMqttClient().PublishMessage(MQTT_LOGIC_MODE, "Percentage");
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Percentage");
     }
 
     if (m_dimStyle == DIM_STYLE_SSR)
@@ -208,7 +208,9 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LOGIC_MODE, "", "", "", true);
+  static const char* strSelectValues[] = { "Percentage", "Budget" };
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_LOGIC_MODE, strSelectValues, 2);
+
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE, "", "", "", true);

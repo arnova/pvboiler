@@ -83,7 +83,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_OUTPUT_POWER                       "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                  "output_percentage"
 
-#define MQTT_LOGIC_MODE                         "logic_mode"
+#define MQTT_SET_LOGIC_MODE                     "logic_mode"
 #define MQTT_BOILER_POWER_RATING                "boiler_power_rating"
 #define MQTT_DEAD_ZONE                          "dead_zone"
 #define MQTT_DIM_STYLE                          "dim_style"

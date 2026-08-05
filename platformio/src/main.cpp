@@ -65,6 +65,9 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   int32_t iVal;
   const bool bValidInt = bytes_to_int32(payload, length, &iVal);
 
+  char strVal[32] = { 0 };
+  memcpy(strVal, payload, (length < sizeof(strVal)) ? length : sizeof(strVal) - 1);
+
   if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
   {
     if (bValidInt || length == 0)
@@ -106,6 +109,21 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
       g_app.GetPvBoiler().SetPowerPercentage(iVal);
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
+  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_LOGIC_MODE "/set"))
+  {
+    if (strcasecmp(strVal, "Budget") == 0)
+    {
+      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_BUDGET);
+    }
+    else if (strcasecmp(strVal, "Percentage") == 0)
+    {
+      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
     }
     else
     {

@@ -213,6 +213,23 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
 }
 
 
+void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount)
+{
+  JsonDocument root;
+
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  root["command_topic"] = strBuf;
+
+  for (uint8_t it = 0; it < iCount; it++)
+  {
+    root["options"][it] = strValues[it];
+  }
+
+  PublishSetterConfig(root, strItem, "select");
+}
+
+
 void CMqttClient::PublishBinarySensorConfig(const char* strItem, const bool bDiag /* = false */)
 {
   JsonDocument root;
