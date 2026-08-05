@@ -247,8 +247,19 @@ void CApp::HandleDisplay()
                  }
 
                  const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
+                 if (m_pvBoiler.GetPowerBoost())
+                 {
+                   snprintf(strValue, sizeof(strValue), "Boost - %u%%", iPercent);
+                 }
+                 else if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_BUDGET)
+                 {
+                   snprintf(strValue, sizeof(strValue), "Budget - %u%%", iPercent);
+                 }
+                 else
+                 {
+                   snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
+                 }
 
-                 snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
                  m_display.WriteDisplayStr(strValue, 1, false);
 
                  // Chars are not monospace so need to compensate for smaller spaces with the logic below

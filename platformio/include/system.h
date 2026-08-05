@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.03a"
+#define MY_VERSION "1.04"
 
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
