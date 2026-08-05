@@ -41,9 +41,9 @@ result_code_t CCommandHandler::CmdEchoOnOff(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "on"))
+  if (STRIEQUALS(strArgs, "on") || STRIEQUALS(strArgs, "1"))
     CTerminal::SetLocalEcho(true);
-  else if (STRIEQUALS(strArgs, "off"))
+  else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
     CTerminal::SetLocalEcho(false);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);

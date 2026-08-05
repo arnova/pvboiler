@@ -115,6 +115,31 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
+  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_POWER_BOOST_ON_OFF "/set"))
+  {
+    if (bValidInt || length == 0)
+    {
+      if (iVal == 0 || iVal == 1 || length == 0)
+      {
+        if (iVal == 1 || length == 0)
+        {
+          g_app.GetPvBoiler().SetPowerBoost(true);
+        }
+        else
+        {
+          g_app.GetPvBoiler().SetPowerBoost(false);
+        }
+      }
+      else
+      {
+        CMqttClient::PrintDataError();
+      }
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
   else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_LOGIC_MODE "/set"))
   {
     if (strcasecmp(strVal, "Budget") == 0)

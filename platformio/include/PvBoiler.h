@@ -72,6 +72,7 @@ class CPvBoiler
     void SetCtrlOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlOnOff = true; };
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
+    void SetPowerBoost(const bool bVal) { m_bPowerBoost = bVal; m_bPublishPowerBoost = true; };
 
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
@@ -93,6 +94,7 @@ class CPvBoiler
     bool GetCtrlOnOff() const { return m_bCtrlEnable; };
     int32_t GetPowerBudget() const { return m_iPowerBudget; };
     uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
+    bool GetPowerBoost() const { return m_bPowerBoost; };
 
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
     uint8_t GetDeadZone() const { return m_iDeadZone; };
@@ -127,6 +129,9 @@ class CPvBoiler
 
     uint8_t m_iPowerPercentage = 0;
     bool m_bPublishPowerPercentage = true;
+
+    bool m_bPowerBoost = false;
+    bool m_bPublishPowerBoost = true;
 
     float m_fCurrentPercentage = 0.0f;
     bool m_bPublishOutputPercentage = true;

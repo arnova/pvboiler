@@ -21,6 +21,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "disable                : Disable controller\r\n"
                                   "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent logic mode set percentage to [p] percent\r\n"
+                                  "boost [on|off]         : Turn boost mode (100% output) on or off\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [l]          : Set logic mode to [l] (\"percent\" or \"budget\")\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
@@ -316,6 +317,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
   CTerminal::print(strBuf);
 
+  CTerminal::print(" boost=");
+  CTerminal::print(m_pvBoiler.GetPowerBoost() ? "1" : "0");
+
   if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
     CTerminal::print(" perc_set=");
@@ -438,6 +442,22 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
     return result;
 
   m_pvBoiler.SetPowerPercentage(iPerc);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetPowerBoost(const char *strArgs)
+{
+  if (strArgs == NULL || !*strArgs)
+    return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
+
+  if (STRIEQUALS(strArgs, "on") || STRIEQUALS(strArgs, "1"))
+    m_pvBoiler.SetPowerBoost(true);
+  else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
+    m_pvBoiler.SetPowerBoost(false);
+  else
+    return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -672,6 +692,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "percent"))
   {
     result = CmdSetPowerPercentage(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "boost"))
+  {
+    result = CmdSetPowerBoost(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {

@@ -77,6 +77,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 
 #define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
 #define MQTT_SET_POWER_BUDGET                   "power_budget"
+#define MQTT_POWER_BOOST_ON_OFF                 "power_boost"
 
 // Status topic items
 #define MQTT_FW_VERSION                         "firmware_version"

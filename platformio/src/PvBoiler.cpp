@@ -46,6 +46,9 @@ void CPvBoiler::Reset()
   m_iPowerPercentage = 0;
   m_bPublishPowerPercentage = true;
 
+  m_bPowerBoost = false;
+  m_bPublishPowerBoost = true;
+
   m_fCurrentPercentage = 0.0f;
   m_bPublishOutputPercentage = true;
 
@@ -91,6 +94,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
       m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
     }
+  }
+
+  if (m_bPublishPowerBoost || bForce)
+  {
+    m_bPublishPowerBoost = false;
+    m_network.GetMqttClient().PublishMessage(MQTT_POWER_BOOST_ON_OFF, m_bPowerBoost ? "1" : "0");
   }
 
   if (m_bPublishOutputPercentage || bForce)
@@ -183,6 +192,7 @@ void CPvBoiler::MqttPublishConfig()
 {
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
+  m_network.GetMqttClient().PublishSwitchConfig(MQTT_POWER_BOOST_ON_OFF);
 
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR, true);
 
@@ -526,6 +536,10 @@ void CPvBoiler::Update()
     {
       fNewPercentage -= m_fStepClamp; // Device off or watch-dog triggered: output to 0%
     }
+  }
+  else if (m_bPowerBoost)
+  {
+    fNewPercentage = 100.0f; // Immediately 100% power
   }
   else if (m_logicMode == LOGIC_MODE_PERCENT)
   {
