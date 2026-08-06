@@ -667,7 +667,7 @@
         "uuid": "6be90aef-3291-4214-8316-dfc913441565"
       }
     ],
-    "used_designators": "R12-15",
+    "used_designators": "R12-17,#PWR24-26,TP5",
     "variants": []
   },
   "sheets": [
