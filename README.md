@@ -12,14 +12,23 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Phase angle control (default) or SSR dim style
 - Configuration via USB serial connection or network terminal connection (port 8000)
 - OTA updates (e.g. via PlatformIO)
-- Output control using automatic power budget mode, or manually by setting output power percentage
+- Output control using automatic power budget mode, or manually by setting output power percentage. The "logic-mode" can be dynamically changed using MQTT
+- Boost mode to temporarely set output power to 100%. Can be used for external (eg. using Home Assistant) legionella prevention control
 - Support for an optional OLED 128×64 screen to display output power/percentage and connection status
+- The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while (when eg. network fails), the output will automatically decrease to 0% instead of being stuck on the last value. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.
+
+## Planned features & improvements
+
+- Automatic legionella prevention using an external one wire temperature sensor
+- Improve control loop for budget logic mode
+- Standalone support to directly interface with MQTT P1 providers like DSMR Reader
 
 ## Hardware Assembly Hints
 
-1. Use a sufficiently sized heatsink with a little thermal compound to mount the BTA-triac. The heatsink should have a thermal resistance better than 0.5C/W.
-2. Around some power traces the mask has been intentionally removed. You should solder these traces with extra solder to reduce the power losses due to trace resistance
-3. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own
+1. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own
+2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0C/W when using a ~2500W boiler
+3. Around some power traces the mask has been intentionally removed. You should solder these traces with extra solder to reduce the power losses due to trace resistance
+4. It is recommended to use 1.5mm2 wires for internal wiring
 
 ## First Time Use
 
@@ -34,8 +43,7 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 
 > **Notes**
 > - Only change other settings when you understand what they do!
-> - When using budget logic mode, you must regularly (5 second intervals are recommended) tell the PvBoiler controller how much "budget" (= excess solar PV electricity) is available, e.g. from Home Assistant. A sample automation for Home Assistant can be found in the `home assistant` folder.
-> - The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while, the output will automatically decrease to 0%. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.
+> - When using budget logic mode, you must regularly (at least 5 second intervals are recommended) tell the PvBoiler controller how much "budget" (= excess solar PV electricity) is available, e.g. from Home Assistant. A sample automation for Home Assistant can be found in the `home assistant` folder.
 
 ---
 
