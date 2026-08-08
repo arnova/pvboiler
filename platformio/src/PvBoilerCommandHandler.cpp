@@ -254,10 +254,9 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(".");
   CTerminal::print(m_network.GetServerIp()[3]);
 
-  CTerminal::print(" logic_mode=");
-  CTerminal::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
+  CTerminal::println("");
 
-  CTerminal::print(" boiler=");
+  CTerminal::print("boiler_rating=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBoilerPowerRating());
   CTerminal::print(strBuf);
 
@@ -268,7 +267,9 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%u", m_pvBoiler.GetSsrPeriodCount());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" error_gain=");
+  CTerminal::println("");
+
+  CTerminal::print("error_gain=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGain());
   CTerminal::print(strBuf);
 
@@ -280,7 +281,9 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetDeadZone());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" net_wd_timeout=");
+  CTerminal::println("");
+
+  CTerminal::print("net_wd_timeout=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
   CTerminal::print(strBuf);
 
@@ -288,6 +291,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogRecovery());
   CTerminal::print(strBuf);
 
+  CTerminal::println("");
   CTerminal::println("");
 
   return pack_result_code(ERR_CODE_OK);
@@ -305,7 +309,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(" error=");
   CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
 
-  CTerminal::print(" wifi_conn=");
+  CTerminal::println("");
+
+  CTerminal::print("wifi_conn=");
   CTerminal::print(m_network.IsConnected() ? "1" : "0");
 
   CTerminal::print(" mqtt_conn=");
@@ -317,8 +323,10 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
   CTerminal::print(strBuf);
 
-  CTerminal::print(" boost=");
-  CTerminal::print(m_pvBoiler.GetPowerBoost() ? "1" : "0");
+  CTerminal::println("");
+
+  CTerminal::print("logic_mode=");
+  CTerminal::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
 
   if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
   {
@@ -333,7 +341,12 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(strBuf);
   }
 
-  CTerminal::print(" power_out=");
+  CTerminal::print(" boost=");
+  CTerminal::print(m_pvBoiler.GetPowerBoost() ? "1" : "0");
+
+  CTerminal::println("");
+
+  CTerminal::print("power_out=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetCurrentPower());
   CTerminal::print(strBuf);
 
@@ -341,7 +354,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" net_period=");
+  CTerminal::println("");
+
+  CTerminal::print("net_period=");
   snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 500.0f);
   CTerminal::print(strBuf);
 
@@ -355,7 +370,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    CTerminal::print(" phase_angle=");
+    CTerminal::println("");
+
+    CTerminal::print("phase_angle=");
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
     CTerminal::print(strBuf);
 
@@ -364,6 +381,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(strBuf);
   }
 
+  CTerminal::println("");
   CTerminal::println("");
 
   return pack_result_code(ERR_CODE_OK);
