@@ -329,7 +329,12 @@ void CApp::UpdateValues()
   m_iCurrentPercentage = iCurrentPercentage;
   m_iSSRPeriodCount = iSSRPeriodCount;
   m_dimStyle = dimStyle;
-  m_iTriacDelayUs = iTriacDelayUs;
+
+  // Only update value when no errors (else fallback to previous value)
+  if (!m_pvBoiler.GetError())
+  {
+    m_iTriacDelayUs = iTriacDelayUs;
+  }
 
   interrupts(); // Leave critical section
 }

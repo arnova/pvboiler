@@ -105,7 +105,7 @@ class CPvBoiler
     float GetStepClamp() const { return m_fStepClamp; };
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
-    bool GetError() const { return m_bError; };
+    bool GetError() const { return m_iErrorCount > ERROR_MAX; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
@@ -143,7 +143,7 @@ class CPvBoiler
 
     uint16_t m_iNetWatchDogTimeout = 0;
     uint16_t m_iNetWatchDogRecovery = 0;
-    bool m_bError = false;
+    uint8_t m_iErrorCount = 0;
 
     // Keep track of up-time
     CUptime m_upTime;

@@ -53,7 +53,7 @@ void CPvBoiler::Reset()
   m_bPublishOutputPercentage = true;
 
   m_bPublishSettings = true;
-  m_bError = false;
+  m_iErrorCount = 0;
 
   m_fTriacAngleFactor = 0.0f;
   m_iTriacPhaseAngle = 0;
@@ -123,7 +123,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
   }
 
   // FIXME: These are always updated
-  m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, m_bError ? "1" : "0");
+  m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetError() ? "1" : "0");
 
   // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
   snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
@@ -508,10 +508,25 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   }
 
   // Update error state. Note that invalid iZeroCrossWindow-value can never happen (handled in ISR)
-  m_bError = (iPeriodTime < NET_PERIOD_MIN_US || iPeriodTime > NET_PERIOD_MAX_US);
+  if (iPeriodTime < NET_PERIOD_MIN_US || iPeriodTime > NET_PERIOD_MAX_US)
+  {
+    if (m_iErrorCount < 255)
+    {
+      m_iErrorCount++;
+    }
 
-  // With errors or zero delay return zero so we know we should do "nothing"
-  if (m_bError || iDelay == 0)
+    return 0;
+  }
+  else
+  {
+    if (m_iErrorCount > 0)
+    {
+      m_iErrorCount--;
+    }
+  }
+
+  // With zero delay return zero so we know we should do "nothing"
+  if (iDelay == 0)
   {
     return 0;
   }
@@ -525,7 +540,7 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable || m_bError)
+  if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable || GetError())
   {
     if (!m_bCtrlEnable)
     {
