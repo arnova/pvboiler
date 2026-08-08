@@ -191,7 +191,7 @@ void CNetwork::MqttPublishValues()
 }
 
 
-void CNetwork::MqttUpdateServerIp(const uint8_t* ipAddress)
+void CNetwork::SetMqttServerIp(const uint8_t* ipAddress)
 {
   if (memcmp(ipAddress, m_serverIpAddr, 4) != 0)
   {

@@ -29,6 +29,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
                                   "netmask [mask]         : Set [mask] for device IP netmask\r\n"
                                   "serverip [ip]          : Set MQTT server IP address to [ip]\r\n"
+                                  "mqttinterval [s]       : Set MQTT update interval to [s] seconds\r\n"
                                   "restartnet             : Restart network functions\r\n"
                                   "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
                                   "netwdr [i]             : Set network watchdog recovery time to [i] seconds\r\n"
@@ -139,7 +140,24 @@ result_code_t CPvBoilerCommandHandler::CmdSetServerIp(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return pack_result_code(ERR_CODE_INVALID_IPV4);
 
-  m_network.MqttUpdateServerIp(ipAddress);
+  m_network.SetMqttServerIp(ipAddress);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetMqttUpdateInterval(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iInterval;
+  result = get_int32_from_string(strArgs, &iInterval, MQTT_UPDATE_TIME_MIN, MQTT_UPDATE_TIME_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetMqttUpdateInterval(iInterval);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -283,7 +301,11 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("net_wd_timeout=");
+  CTerminal::print("mqtt_update_interval=");
+  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetMqttUpdateInterval());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" net_wd_timeout=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
   CTerminal::print(strBuf);
 
@@ -762,6 +784,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "serverip"))
   {
     result = CmdSetServerIp(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "mqttint") || STRIEQUALS(strCommand, "mqttinterval"))
+  {
+    result = CmdSetMqttUpdateInterval(strArgs);
   }
   else if (STRIEQUALS(strCommand, "restartnet"))
   {

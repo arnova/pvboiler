@@ -35,9 +35,9 @@ class CNetwork
     void SetWifiPassword(const char* strPassword);
     void SetIpAddr(const uint8_t* ipAddress);
     void SetNetMask(const uint8_t* ipNetMask);
+    void SetMqttServerIp(const uint8_t* ipAddress);
 
     void MqttPublishValues();
-    void MqttUpdateServerIp(const uint8_t* ipAddress);
 
     const char* GetWifiSsid() { return m_strWifiSsid; };
     const char* GetWifiPassword() { return m_strWifiPassword; };

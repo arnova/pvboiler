@@ -67,10 +67,13 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 
 // MQTT settings
 #define MQTT_PORT                               1883
-#define MQTT_UPDATE_TIME                        15    // Seconds
 #define MQTT_MAX_MESSAGE_SIZE                   1024
 #define MQTT_MAX_TOPIC_ITEM_SIZE                32
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
+
+#define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
+#define MQTT_UPDATE_TIME_MIN                    1      // Seconds
+#define MQTT_UPDATE_TIME_MAX                    254    // Seconds
 
 // Control topic items
 #define MQTT_CONTROLLER_ON_OFF                  "controller_enable"
@@ -102,6 +105,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_NET_FREQUENCY                      "net_frequency"
 #define MQTT_ZERO_CROSS_WINDOW                  "zero_cross_window"
 #define MQTT_POWER_ERROR                        "power_error"
+#define MQTT_UPDATE_INTERVAL                    "update_interval"
 #define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"
 #define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
 #define MQTT_UP_TIME                            "up_time"
@@ -142,6 +146,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define ERROR_GAIN_SIZE         sizeof(float)
 #define STEP_CLAMP_SIZE         sizeof(float)
 #define DEAD_ZONE_SIZE          1
+#define MQTT_INTERVAL_SIZE      1
 
 // EEPROM locations
 #define EEPROM_WIFI_SSID      0                                                   // offsets 32
@@ -158,6 +163,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_ERROR_GAIN     EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 120
 #define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 124
 #define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 125
+#define EEPROM_MQTT_INTERVAL  EEPROM_DEAD_ZONE + MQTT_INTERVAL_SIZE               // offsets 126
 
 // Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.

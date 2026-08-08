@@ -81,6 +81,7 @@ class CPvBoiler
     void SetSsrPeriodCount(const uint8_t iPeriod);
     void SetErrorGain(const float fGain);
     void SetStepClamp(const float fClamp);
+    void SetMqttUpdateInterval(const uint8_t iInterval);
     void SetNetWatchDogTimeout(const uint16_t iTimeout);
     void SetNetWatchDogRecovery(const uint16_t iTimeout);
 
@@ -108,6 +109,7 @@ class CPvBoiler
     bool GetError() const { return m_iErrorCount > ERROR_MAX; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
+    uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
 
   private:
@@ -141,8 +143,10 @@ class CPvBoiler
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint8_t m_iDeadZone = DEAD_ZONE_DEFAULT;  // Watt
 
+    uint8_t m_iMqttUpdateInterval = 0;
     uint16_t m_iNetWatchDogTimeout = 0;
     uint16_t m_iNetWatchDogRecovery = 0;
+
     uint8_t m_iErrorCount = 0;
 
     // Keep track of up-time

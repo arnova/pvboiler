@@ -45,13 +45,15 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdSetIpAddress(const char *strArgs);
     result_code_t CmdSetNetMask(const char *strArgs);
     result_code_t CmdSetServerIp(const char *strArgs);
+    result_code_t CmdSetMqttUpdateInterval(const char *strArgs);
     result_code_t CmdSetWifiSsid(const char *strArgs);
     result_code_t CmdSetWifiPassword(const char *strArgs);
-    result_code_t CmdRestartNet(const char *strArgs);
-    result_code_t CmdEnable(const char *strArgs);
-    result_code_t CmdDisable(const char *strArgs);
     result_code_t CmdNetWatchdogTimeout(const char *strArgs);
     result_code_t CmdNetWatchdogRecovery(const char *strArgs);
+    result_code_t CmdRestartNet(const char *strArgs);
+
+    result_code_t CmdEnable(const char *strArgs);
+    result_code_t CmdDisable(const char *strArgs);
 
     result_code_t CmdSetPowerBudget(const char *strArgs);
     result_code_t CmdSetPowerPercentage(const char *strArgs);

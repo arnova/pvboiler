@@ -23,7 +23,7 @@ void CPvBoiler::Loop()
   }
 
   // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_mqttPublishTimer > MQTT_UPDATE_TIME * 1000 && m_network.IsMqttConnected())
+  if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000 && m_network.IsMqttConnected())
   {
     MqttPublishValues();
 
@@ -177,6 +177,9 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "Phase-angle");
     }
 
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iMqttUpdateInterval);
+    m_network.GetMqttClient().PublishMessage(MQTT_UPDATE_INTERVAL, strBuf);
+
     snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogTimeout);
     m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_TIMEOUT, strBuf);
 
@@ -250,6 +253,7 @@ void CPvBoiler::MqttPublishConfig()
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
 
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
   
@@ -327,6 +331,12 @@ void CPvBoiler::LoadSettings()
     iVal16 = NETWORK_WATCHDOG_RECOVERY_DEFAULT;
   }
   m_iNetWatchDogRecovery = iVal16;
+
+  EEPROM.get(EEPROM_MQTT_INTERVAL, m_iMqttUpdateInterval);
+  if (m_iMqttUpdateInterval < MQTT_UPDATE_TIME_MIN || m_iMqttUpdateInterval > MQTT_UPDATE_TIME_MAX)
+  {
+    m_iMqttUpdateInterval = MQTT_UPDATE_TIME_DEFAULT;
+  }
 
   m_bPublishSettings = true;
 }
@@ -425,6 +435,20 @@ void CPvBoiler::SetStepClamp(const float fClamp)
 
     m_fStepClamp = fClamp;
 
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetMqttUpdateInterval(const uint8_t iInterval)
+{
+  if (iInterval != m_iMqttUpdateInterval)
+  {
+    EEPROM.put(EEPROM_MQTT_INTERVAL, iInterval);
+    EEPROM.commit();
+
+    m_iMqttUpdateInterval = iInterval;
+  
     m_bPublishSettings = true;
   }
 }
