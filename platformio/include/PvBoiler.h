@@ -106,7 +106,7 @@ class CPvBoiler
     float GetStepClamp() const { return m_fStepClamp; };
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
-    bool GetError() const { return m_iErrorCount > ERROR_MAX; };
+    bool GetError() const { return m_lastErrorTimer > ERROR_TIME_MAX; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
@@ -120,6 +120,7 @@ class CPvBoiler
 
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
+    elapsedMillis m_lastErrorTimer = 0;
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
@@ -146,8 +147,6 @@ class CPvBoiler
     uint8_t m_iMqttUpdateInterval = 0;
     uint16_t m_iNetWatchDogTimeout = 0;
     uint16_t m_iNetWatchDogRecovery = 0;
-
-    uint8_t m_iErrorCount = 0;
 
     // Keep track of up-time
     CUptime m_upTime;

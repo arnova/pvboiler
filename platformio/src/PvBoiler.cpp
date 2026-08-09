@@ -53,7 +53,7 @@ void CPvBoiler::Reset()
   m_bPublishOutputPercentage = true;
 
   m_bPublishSettings = true;
-  m_iErrorCount = 0;
+  m_lastErrorTimer = 0;
 
   m_fTriacAngleFactor = 0.0f;
   m_iTriacPhaseAngle = 0;
@@ -534,19 +534,11 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   // Update error state. Note that invalid iZeroCrossWindow-value can never happen (handled in ISR)
   if (iPeriodTime < NET_PERIOD_MIN_US || iPeriodTime > NET_PERIOD_MAX_US)
   {
-    if (m_iErrorCount < 255)
-    {
-      m_iErrorCount++;
-    }
-
-    return 0;
+    return 0; // Flag error
   }
   else
   {
-    if (m_iErrorCount > 0)
-    {
-      m_iErrorCount--;
-    }
+    m_lastErrorTimer = 0; // Reset error timer
   }
 
   // With zero delay return zero so we know we should do "nothing"

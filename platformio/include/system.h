@@ -169,9 +169,9 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
 #define ESP8266_TICKS_PER_US  80
 
-#define CONTROL_LOOP_TIME_MS  1000   // ms
+#define CONTROL_LOOP_TIME_MS  1000  // ms
 
-// Maximum amount of errors before we consider it an actual error
-#define ERROR_MAX             5
+// Maximum time elapsed before we flag an actual error
+#define ERROR_TIME_MAX        1000  // ms
 
 #endif // SYSTEM_H
