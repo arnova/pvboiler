@@ -35,11 +35,14 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 1. Flash the ESP firmware using e.g. PlatformIO (future firmware updates can be done over-the-air (OTA)). You may need to customize `platform` and `board` in `platformio.ini` for your specific ESP board.
 2. After the initial flash, you can change the firmware upload mechanism in `platformio.ini` from serial to OTA by uncommenting `upload_protocol = espota` and `upload_port = pvboiler.local`. Note that you *may* need to substitute the controller's IP address for `pvboiler.local` in case mDNS is not available in your network (or it's failing somehow).
 3. Connect to the microcontroller's terminal interface, either via the USB connection or a socket connection to the device's IP at port 8000, using a terminal program (e.g. PuTTY).
-4. In the command terminal, `help` (+ <kbd>Enter</kbd>) will show all available commands with their descriptions. Initially, these settings must be configured:
-   - Set boiler power rating with the `boiler`-command, providing the power rating of your boiler as an argument (the factory default is 2500W).
+4. In the command terminal, `help` (+ <kbd>Enter</kbd>) will show all available commands with their descriptions. Initially, these operations must be performed:
+   - Reset all settings to default with the `factoryreset`-command.
    - Set your WiFi network SSID with the `ssid`-command, providing the name of your network as an argument.
-   - Set your WiFi network password with the `pass`-command, providing your network's security password as an argument.
+   - Set your WiFi network password with the `pass`-command, providing your network's security password as an argument. You may provide a zero-length value when your network requires no password.
    - Set your MQTT server IP with the `serverip`-command, providing the server IP as an argument.
+   - Set your MQTT server username with the `mqttuser`-command. You may provide a zero-length value when your server requires no username.
+   - Set your MQTT server password with the `mqttpass`-command. You may provide a zero-length value when your server requires no password.
+   - Set boiler power rating with the `boiler`-command, providing the power rating of your boiler as an argument (the factory default is 2500W).
 
 > **Notes**
 > - Only change other settings when you understand what they do!
