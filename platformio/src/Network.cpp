@@ -40,9 +40,9 @@ void CNetwork::Init()
 
   InitWifi(false);
 
-  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0))
+  if (IPAddress(m_mqttIpAddr) != IPAddress(0, 0, 0, 0))
   {
-    m_mqttClient.Init(m_serverIpAddr);
+    m_mqttClient.Init(m_mqttIpAddr, m_strMqttUser, m_strMqttPassword);
   }
 }
 
@@ -58,14 +58,23 @@ void CNetwork::LoadSettings()
 
   EEPROM.get(EEPROM_IP_NETMASK, m_ipNetmask);
 
-  EEPROM.get(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
-  if (IPAddress(m_serverIpAddr) == IPAddress(255, 255, 255, 255))
+  EEPROM.get(EEPROM_MQTT_IP_ADDR, m_mqttIpAddr);
+  if (IPAddress(m_mqttIpAddr) == IPAddress(255, 255, 255, 255))
   {
-    memset(m_serverIpAddr, 0x00, 4);
+    memset(m_mqttIpAddr, 0x00, 4);
   }
 
   EEPROM.get(EEPROM_WIFI_SSID, m_strWifiSsid);
+  m_strWifiSsid[WIFI_SSID_MAX_SIZE] = '\0'; // Always null terminate
+
   EEPROM.get(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
+  m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE] = '\0'; // Always null terminate
+
+  EEPROM.get(EEPROM_MQTT_USER, m_strMqttUser);
+  m_strMqttUser[MQTT_USER_MAX_SIZE] = '\0'; // Always null terminate
+
+  EEPROM.get(EEPROM_MQTT_PASSWORD, m_strMqttPassword);
+  m_strMqttPassword[MQTT_PASSWORD_MAX_SIZE] = '\0'; // Always null terminate
 }
 
 
@@ -116,7 +125,14 @@ void CNetwork::InitWifi(const bool bReconnect)
 
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(HOST_NAME);
-  WiFi.begin(m_strWifiSsid, m_strWifiPassword);
+  if (strlen(m_strWifiPassword) != 0)
+  {
+    WiFi.begin(m_strWifiSsid, m_strWifiPassword);
+  }
+  else
+  {
+    WiFi.begin(m_strWifiSsid);
+  }
 }
 
 
@@ -178,6 +194,62 @@ void CNetwork::SetNetMask(const uint8_t* ipNetMask)
 }
 
 
+void CNetwork::ReinitMqtt()
+{
+  // Disconnect to current server
+  if (m_mqttClient.connected())
+  {
+    m_mqttClient.disconnect();
+  }
+
+  m_mqttClient.Init(m_mqttIpAddr, m_strMqttUser, m_strMqttPassword);
+}
+
+
+void CNetwork::SetMqttServerIp(const uint8_t* ipAddress)
+{
+  if (memcmp(ipAddress, m_mqttIpAddr, 4) != 0)
+  {
+    memcpy(m_mqttIpAddr, ipAddress, sizeof(m_mqttIpAddr));
+
+    EEPROM.put(EEPROM_MQTT_IP_ADDR, m_mqttIpAddr);
+    EEPROM.commit();
+  }
+
+  ReinitMqtt();
+}
+
+
+void CNetwork::SetMqttUser(const char* strUser)
+{
+  if (!STREQUALS(strUser, m_strMqttUser))
+  {
+    memset(m_strMqttUser, 0x00, MQTT_USER_MAX_SIZE + 1);
+    strcpy(m_strMqttUser, strUser);
+
+    EEPROM.put(EEPROM_MQTT_USER, m_strMqttUser);
+    EEPROM.commit();
+  }
+
+  ReinitMqtt();
+}
+
+
+void CNetwork::SetMqttPassword(const char* strPassword)
+{
+  if (!STREQUALS(strPassword, m_strMqttPassword))
+  {
+    memset(m_strMqttPassword, 0x00, MQTT_PASSWORD_MAX_SIZE + 1);
+    strcpy(m_strMqttPassword, strPassword);
+
+    EEPROM.put(EEPROM_MQTT_PASSWORD, m_strMqttPassword);
+    EEPROM.commit();
+  }
+
+  ReinitMqtt();
+}
+
+
 void CNetwork::MqttPublishValues()
 {
   m_mqttClient.PublishMessage(MQTT_WIFI_SSID, m_strWifiSsid);
@@ -188,26 +260,6 @@ void CNetwork::MqttPublishValues()
 
 //  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.net()[0], WiFi.net()[1], WiFi.net()[2], WiFi.net()[3]);
 //  m_mqttClient.PublishMessage(MQTT_IP_NETMASK, strBuf);
-}
-
-
-void CNetwork::SetMqttServerIp(const uint8_t* ipAddress)
-{
-  if (memcmp(ipAddress, m_serverIpAddr, 4) != 0)
-  {
-    memcpy(m_serverIpAddr, ipAddress, sizeof(m_serverIpAddr));
-
-    EEPROM.put(EEPROM_SERVER_IP_ADDR, m_serverIpAddr);
-    EEPROM.commit();
-  }
-
-  // Disconnect to current server
-  if (m_mqttClient.connected())
-  {
-    m_mqttClient.disconnect();
-  }
-
-  m_mqttClient.Init(m_serverIpAddr);
 }
 
 
@@ -239,7 +291,7 @@ WiFiClient& CNetwork::GetSocketServerClient()
 bool CNetwork::HandleMqttClient()
 {
   // Handle MQTT client-server connection
-  if (IPAddress(m_serverIpAddr) != IPAddress(0, 0, 0, 0) && m_bWifiConnected)
+  if (IPAddress(m_mqttIpAddr) != IPAddress(0, 0, 0, 0) && m_bWifiConnected)
   {
     if (m_mqttClient.connected())
     {

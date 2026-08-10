@@ -35,7 +35,11 @@ class CNetwork
     void SetWifiPassword(const char* strPassword);
     void SetIpAddr(const uint8_t* ipAddress);
     void SetNetMask(const uint8_t* ipNetMask);
+
+    void ReinitMqtt();
     void SetMqttServerIp(const uint8_t* ipAddress);
+    void SetMqttUser(const char* strUser);
+    void SetMqttPassword(const char* strPassword);
 
     void MqttPublishValues();
 
@@ -43,7 +47,9 @@ class CNetwork
     const char* GetWifiPassword() { return m_strWifiPassword; };
     const uint8_t* GetIpAddr() { return m_ipAddr; };
     const uint8_t* GetNetMask() { return m_ipNetmask; };
-    const uint8_t* GetServerIp() { return m_serverIpAddr; };
+    const uint8_t* GetMqttIpAddr() { return m_mqttIpAddr; };
+    const char* GetMqttUser() { return m_strMqttUser; };
+    const char* GetMqttPassword() { return m_strMqttPassword; };
 
     const bool IsConnected() { return m_bWifiConnected; };
     const bool IsMqttConnected() { return m_bWifiConnected && m_mqttClient.connected(); };
@@ -58,9 +64,11 @@ class CNetwork
   private:
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
     char m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
+    char m_strMqttUser[MQTT_USER_MAX_SIZE + 1] = { 0 };
+    char m_strMqttPassword[MQTT_PASSWORD_MAX_SIZE + 1] = { 0 };
     uint8_t m_ipAddr[4] = { 0 };
     uint8_t m_ipNetmask[4] = { 0 };
-    uint8_t m_serverIpAddr[4] = { 0 };
+    uint8_t m_mqttIpAddr[4] = { 0 };
 
     bool m_bWifiConnected = false;
     elapsedMillis m_wifiTimeoutTimer = 0;

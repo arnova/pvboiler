@@ -26,7 +26,7 @@ class CMqttClient : public PubSubClient
 
     bool PublishMessage(const char* strItem, const char* strPayload, const bool bRetained = true);
 
-    void Init(const uint8_t* serverIp);
+    void Init(const uint8_t* serverIp, const char* strUser, const char* strPassword);
     bool ServerConnect();
 
   private:
@@ -37,5 +37,7 @@ class CMqttClient : public PubSubClient
     void UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter = false);
 
     uint8_t m_serverIp[4] = { 0 };
+    char m_strUser[MQTT_USER_MAX_SIZE + 1] = { 0 };
+    char m_strPassword[MQTT_PASSWORD_MAX_SIZE + 1] = { 0 };
 };
 #endif // MQTT_CLIENT_H

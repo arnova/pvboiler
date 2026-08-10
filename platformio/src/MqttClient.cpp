@@ -266,12 +266,22 @@ bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, co
 }
 
 
-void CMqttClient::Init(const uint8_t* serverIp)
+void CMqttClient::Init(const uint8_t* serverIp, const char* strUser, const char* strPassword)
 {
   memcpy(m_serverIp, serverIp, 4);
 
   setBufferSize(MQTT_MAX_MESSAGE_SIZE);
   setServer(m_serverIp, MQTT_PORT);
+
+  if (strUser != NULL)
+  {
+    strcpy(m_strUser, strUser);
+  }
+
+  if (strPassword != NULL)
+  {
+    strcpy(m_strPassword, strPassword);
+  }
 }
 
 
@@ -289,9 +299,22 @@ bool CMqttClient::ServerConnect()
 #endif
   // Create a random client ID
   snprintf(strBuf, sizeof(strBuf), HOST_NAME "-%lx", random(0xffff));
+
+  char* strUser = NULL;
+  if (strlen(m_strUser) != 0)
+  {
+    strUser = m_strUser;
+  }
+
+  char* strPassword = NULL;
+  if (strlen(m_strPassword) != 0)
+  {
+    strPassword = m_strPassword;
+  }
+
   // Attempt to connect
 //  if (connect(strBuf, NULL, NULL, "test", 0, false, "not connected", false))
-  if (!connect(strBuf))
+  if (!connect(strBuf, strUser, strPassword))
   {
 #ifdef MQTT_DEBUG
     CTerminal::print("ERROR, rc=");

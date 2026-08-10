@@ -29,6 +29,8 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
                                   "netmask [mask]         : Set [mask] for device IP netmask\r\n"
                                   "serverip [ip]          : Set MQTT server IP address to [ip]\r\n"
+                                  "mqttuser [u]           : Set MQTT server user to [u] (may be empty)\r\n"
+                                  "mqttpass [p]           : Set MQTT server password to [p] (may be empty)\r\n"
                                   "mqttinterval [s]       : Set MQTT update interval to [s] seconds\r\n"
                                   "restartnet             : Restart network functions\r\n"
                                   "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
@@ -130,7 +132,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetNetMask(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetServerIp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetMqttIpAddress(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
@@ -182,20 +184,44 @@ result_code_t CPvBoilerCommandHandler::CmdSetWifiSsid(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetWifiPassword(const char *strArgs)
 {
-  if (strArgs == NULL || !*strArgs)
-    return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
-
-  if (strlen(strArgs) > WIFI_PASSWORD_MAX_SIZE)
+  if (strArgs && strlen(strArgs) > WIFI_PASSWORD_MAX_SIZE)
   {
     result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MAX, ARG_INT32_NUM1);
     return store_arg1_int32(resultCode, WIFI_PASSWORD_MAX_SIZE);
   }
 
-  m_network.SetWifiPassword(strArgs);
+  m_network.SetWifiPassword((strArgs == NULL) ? "" : strArgs);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
+
+result_code_t CPvBoilerCommandHandler::CmdSetMqttUser(const char *strArgs)
+{
+  if (strArgs && strlen(strArgs) > MQTT_USER_MAX_SIZE)
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MAX, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, MQTT_USER_MAX_SIZE);
+  }
+
+  m_network.SetMqttUser((strArgs == NULL) ? "" : strArgs);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetMqttPassword(const char *strArgs)
+{
+  if (strArgs && strlen(strArgs) > MQTT_PASSWORD_MAX_SIZE)
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MAX, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, MQTT_PASSWORD_MAX_SIZE);
+  }
+
+  m_network.SetMqttPassword((strArgs == NULL) ? "" : strArgs);
+
+  return pack_result_code(ERR_CODE_OK);
+}
 
 
 result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
@@ -239,11 +265,12 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTerminal::print("ssid=");
+  CTerminal::print("wifi_ssid=");
   CTerminal::print(m_network.GetWifiSsid());
 
-  CTerminal::print(" pass=");
-  CTerminal::print(m_network.GetWifiPassword());
+  CTerminal::print(" wifi_pass=");
+  const char* strWifiPass = m_network.GetWifiPassword();
+  CTerminal::print((strlen(strWifiPass) == 0) ? "(empty)" : strWifiPass);
 
   CTerminal::print(" ip=");
   CTerminal::print(m_network.GetIpAddr()[0]);
@@ -263,14 +290,22 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(".");
   CTerminal::print(m_network.GetNetMask()[3]);
 
-  CTerminal::print(" server=");
-  CTerminal::print(m_network.GetServerIp()[0]);
+  CTerminal::print(" mqtt_server=");
+  CTerminal::print(m_network.GetMqttIpAddr()[0]);
   CTerminal::print(".");
-  CTerminal::print(m_network.GetServerIp()[1]);
+  CTerminal::print(m_network.GetMqttIpAddr()[1]);
   CTerminal::print(".");
-  CTerminal::print(m_network.GetServerIp()[2]);
+  CTerminal::print(m_network.GetMqttIpAddr()[2]);
   CTerminal::print(".");
-  CTerminal::print(m_network.GetServerIp()[3]);
+  CTerminal::print(m_network.GetMqttIpAddr()[3]);
+
+  CTerminal::print(" mqtt_user=");
+  const char* strMqttUser = m_network.GetMqttUser();
+  CTerminal::print((strlen(strMqttUser) == 0) ? "(empty)" : strMqttUser);
+
+  CTerminal::print(" mqtt_password=");
+  const char* strMqttPass = m_network.GetMqttPassword();
+  CTerminal::print((strlen(strMqttPass) == 0) ? "(empty)" : strMqttPass);
 
   CTerminal::println("");
 
@@ -765,15 +800,15 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetStepClamp(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "ssid"))
+  else if (STRIEQUALS(strCommand, "ssid") || STRIEQUALS(strCommand, "wssid") || STRIEQUALS(strCommand, "wifissid"))
   {
     result = CmdSetWifiSsid(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "pass"))
+  else if (STRIEQUALS(strCommand, "pass") || STRIEQUALS(strCommand, "wpass") || STRIEQUALS(strCommand, "wifipass"))
   {
     result = CmdSetWifiPassword(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "ipaddr"))
+  else if (STRIEQUALS(strCommand, "ipaddr") || STRIEQUALS(strCommand, "ip"))
   {
     result = CmdSetIpAddress(strArgs);
   }
@@ -781,11 +816,19 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetNetMask(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "serverip"))
+  else if (STRIEQUALS(strCommand, "serverip") || STRIEQUALS(strCommand, "mqttip"))
   {
-    result = CmdSetServerIp(strArgs);
+    result = CmdSetMqttIpAddress(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "mqttint") || STRIEQUALS(strCommand, "mqttinterval"))
+  else if (STRIEQUALS(strCommand, "mqttuser") || STRIEQUALS(strCommand, "muser"))
+  {
+    result = CmdSetMqttUser(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "mqttpass") || STRIEQUALS(strCommand, "mpass"))
+  {
+    result = CmdSetMqttPassword(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "mqttint") || STRIEQUALS(strCommand, "mqttinterval") || STRIEQUALS(strCommand, "minterval"))
   {
     result = CmdSetMqttUpdateInterval(strArgs);
   }
