@@ -62,6 +62,8 @@ class CNetwork
     CMqttClient& GetMqttClient() { return m_mqttClient; };
 
   private:
+    static bool IsValidAlpha(const char* str);
+
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
     char m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
     char m_strMqttUser[MQTT_USER_MAX_SIZE + 1] = { 0 };

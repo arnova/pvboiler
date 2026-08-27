@@ -47,6 +47,20 @@ void CNetwork::Init()
 }
 
 
+bool CNetwork::IsValidAlpha(const char* str)
+{
+  for (; *str; ++str)
+  {
+    if (*str < 32 || *str > 126)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
 void CNetwork::LoadSettings()
 {
     // Obtain our IP
@@ -66,15 +80,31 @@ void CNetwork::LoadSettings()
 
   EEPROM.get(EEPROM_WIFI_SSID, m_strWifiSsid);
   m_strWifiSsid[WIFI_SSID_MAX_SIZE] = '\0'; // Always null terminate
+  if (!IsValidAlpha(m_strWifiSsid))
+  {
+    strcpy(m_strWifiSsid, "");
+  }
 
   EEPROM.get(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
   m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE] = '\0'; // Always null terminate
+  if (!IsValidAlpha(m_strWifiPassword))
+  {
+    strcpy(m_strWifiPassword, "");
+  }
 
   EEPROM.get(EEPROM_MQTT_USER, m_strMqttUser);
   m_strMqttUser[MQTT_USER_MAX_SIZE] = '\0'; // Always null terminate
+  if (!IsValidAlpha(m_strMqttUser))
+  {
+    strcpy(m_strMqttUser, "");
+  }
 
   EEPROM.get(EEPROM_MQTT_PASSWORD, m_strMqttPassword);
   m_strMqttPassword[MQTT_PASSWORD_MAX_SIZE] = '\0'; // Always null terminate
+  if (!IsValidAlpha(m_strMqttPassword))
+  {
+    strcpy(m_strMqttPassword, "");
+  }
 }
 
 
