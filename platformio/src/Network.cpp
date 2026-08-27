@@ -302,13 +302,13 @@ WiFiClient& CNetwork::GetSocketServerClient()
 #ifdef WIFI_DEBUG
     if (m_socketServerClient)
     {
+      CTerminal::SetSocketClient(m_socketServerClient);
+
       CTerminal::print("Accepting connection from client: ");
 
       char strBuf[16]; // Enough room for a standard IPv4 address
       snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_socketServerClient.remoteIP()[0], m_socketServerClient.remoteIP()[1], m_socketServerClient.remoteIP()[2], m_socketServerClient.remoteIP()[3]);
       CTerminal::println(strBuf);
-
-      CTerminal::SetSocketClient(m_socketServerClient);
     }
 #endif
   }
@@ -393,7 +393,7 @@ void CNetwork::Loop()
       m_socketServer.setNoDelay(true);
 
 #ifdef WIFI_DEBUG
-      CTerminal::println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
+      TERM_SERIAL.println("Listening for terminal connections on TCP port: " STRINGIZE(SOCKET_SERVER_PORT));
 #endif
 #endif
     }
