@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.04"
+#define MY_VERSION "1.05"
 
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
@@ -17,7 +17,12 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 // The dead zone value represents the window where a change in power budget is ignored
 #define DEAD_ZONE_DEFAULT                       10    // Watt
 #define DEAD_ZONE_MIN                           0     // Watt
-#define DEAD_ZONE_MAX                           255   // Watt
+#define DEAD_ZONE_MAX                           254   // Watt
+
+// The budget margin represents the margin used to prevent grid power use
+#define BUDGET_MARGIN_DEFAULT                   50    // Watt
+#define BUDGET_MARGIN_MIN                       0     // Watt
+#define BUDGET_MARGIN_MAX                       5000  // Watt
 
 // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
 #define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
@@ -90,6 +95,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_SET_LOGIC_MODE                     "logic_mode"
 #define MQTT_BOILER_POWER_RATING                "boiler_power_rating"
 #define MQTT_DEAD_ZONE                          "dead_zone"
+#define MQTT_BUDGET_MARGIN                      "budget_margin"
 #define MQTT_DIM_STYLE                          "dim_style"
 #define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
 #define MQTT_ERROR_GAIN                         "error_gain"
@@ -149,6 +155,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define STEP_CLAMP_SIZE         sizeof(float)
 #define DEAD_ZONE_SIZE          1
 #define MQTT_INTERVAL_SIZE      1
+#define BUDGET_MARGIN_SIZE      2
 
 // EEPROM locations
 #define EEPROM_WIFI_SSID      0                                                   // offsets 33
@@ -164,12 +171,13 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offsets 213
 #define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offsets 215
 #define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 217
-#define EEPROM_ERROR_GAIN     EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 221
-#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 225
-#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 226
-#define EEPROM_MQTT_INTERVAL  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 227
+#define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 218
+#define EEPROM_ERROR_GAIN     EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 222
+#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 226
+#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 227
+#define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 229
 
-// Timer1 at DIV1 (80 MHz clock) → 80 ticks per µs on esp8266
+// Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
 #define ESP8266_TICKS_PER_US  80
 

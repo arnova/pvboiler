@@ -43,8 +43,9 @@ const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
                                   "sclamp [c]             : Set step-clamp to value [c] percent\r\n"
-                                  "egain [g]              : For budget logic mode set error-gain to value [g]\r\n"
-                                  "deadzone [d]           : For budget logic mode set deadzone to [d] Watt\r\n"
+                                  "egain [g]              : For budget mode set error-gain to value [g]\r\n"
+                                  "deadzone [d]           : For budget mode set deadzone to [d] Watt\r\n"
+                                  "bmargin [m]            : For budget mode set margin to [m] Watt\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -334,6 +335,10 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetDeadZone());
   CTerminal::print(strBuf);
 
+  CTerminal::print(" budget_margin=");
+  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBudgetMargin());
+  CTerminal::print(strBuf);
+
   CTerminal::println("");
 
   CTerminal::print("mqtt_update_interval=");
@@ -572,6 +577,23 @@ result_code_t CPvBoilerCommandHandler::CmdSetDeadZone(const char *strArgs)
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdSetBudgetMargin(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iMargin;
+  result = get_int32_from_string(strArgs, &iMargin, BUDGET_MARGIN_MIN, BUDGET_MARGIN_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetBudgetMargin(iMargin);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdSetLogicMode(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
@@ -779,6 +801,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "deadzone"))
   {
     result = CmdSetDeadZone(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "bmargin"))
+  {
+    result = CmdSetBudgetMargin(strArgs);
   }
   else if (STRIEQUALS(strCommand, "logicmode"))
   {

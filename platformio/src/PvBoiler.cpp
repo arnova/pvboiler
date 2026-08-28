@@ -154,6 +154,9 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
       m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
 
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
+      m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
+
       snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGain);
       m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN, strBuf);
 
@@ -205,6 +208,7 @@ void CPvBoiler::MqttPublishConfig()
     m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN, "", "", "", true);
     m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP, "%", "", "", true);
     m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
   }
@@ -213,9 +217,10 @@ void CPvBoiler::MqttPublishConfig()
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100", false);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_BUDGET);
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_ERROR_GAIN);
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_STEP_CLAMP);
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_DEAD_ZONE);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_ERROR_GAIN);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_STEP_CLAMP);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_DEAD_ZONE);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_BUDGET_MARGIN);
   }
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
@@ -291,6 +296,13 @@ void CPvBoiler::LoadSettings()
   }
   m_iDeadZone = iVal8;
 
+  EEPROM.get(EEPROM_BUDGET_MARGIN, iVal16);
+  if (iVal16 < BUDGET_MARGIN_MIN || iVal16 > BUDGET_MARGIN_MAX)
+  {
+    iVal16 = BUDGET_MARGIN_DEFAULT;
+  }
+  m_iBudgetMargin = iVal16;
+
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
   m_logicMode = (iVal8 == 0x01) ? CPvBoiler::LOGIC_MODE_PERCENT : CPvBoiler::LOGIC_MODE_BUDGET;
 
@@ -364,6 +376,20 @@ void CPvBoiler::SetDeadZone(const uint8_t iDeadZone)
     EEPROM.commit();
 
     m_iDeadZone = iDeadZone;
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetBudgetMargin(const uint16_t iMargin)
+{
+  if (iMargin != m_iBudgetMargin)
+  {
+    EEPROM.put(EEPROM_BUDGET_MARGIN, iMargin);
+    EEPROM.commit();
+
+    m_iBudgetMargin = iMargin;
 
     m_bPublishSettings = true;
   }
@@ -486,6 +512,7 @@ void CPvBoiler::FactoryReset()
 {
   SetBoilerPowerRating(BOILER_POWER_RATING_DEFAULT);
   SetDeadZone(DEAD_ZONE_DEFAULT);
+  SetBudgetMargin(BUDGET_MARGIN_DEFAULT);
   SetLogicMode(LOGIC_MODE_BUDGET);
   SetDimStyle(DIM_STYLE_PHASE_ANGLE);
   SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
@@ -595,7 +622,7 @@ void CPvBoiler::Update()
   }
   else
   {
-    float fErrorStep = (m_fErrorGain * 100.0f * m_iPowerBudget) / m_iBoilerPowerRating;
+    float fErrorStep = (m_fErrorGain * 100.0f * (m_iPowerBudget - m_iBudgetMargin)) / m_iBoilerPowerRating;
 
     // Clamp error (step) value
     if (fErrorStep > m_fStepClamp)

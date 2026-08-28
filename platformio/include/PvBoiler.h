@@ -76,6 +76,7 @@ class CPvBoiler
 
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
+    void SetBudgetMargin(const uint16_t iMargin);
     void SetLogicMode(const logic_mode_t logicMode);
     void SetDimStyle(const dim_style_t dimStyle);
     void SetSsrPeriodCount(const uint8_t iPeriod);
@@ -99,6 +100,7 @@ class CPvBoiler
 
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
     uint8_t GetDeadZone() const { return m_iDeadZone; };
+    uint16_t GetBudgetMargin() const { return m_iBudgetMargin; };
     logic_mode_t GetLogicMode() const { return m_logicMode; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
@@ -143,6 +145,7 @@ class CPvBoiler
 
     uint16_t m_iBoilerPowerRating = BOILER_POWER_RATING_DEFAULT;  // Watt
     uint8_t m_iDeadZone = DEAD_ZONE_DEFAULT;  // Watt
+    uint16_t m_iBudgetMargin = BUDGET_MARGIN_DEFAULT; // Watt
 
     uint8_t m_iMqttUpdateInterval = 0;
     uint16_t m_iNetWatchDogTimeout = 0;
