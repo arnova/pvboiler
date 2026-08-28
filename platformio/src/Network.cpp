@@ -3,7 +3,7 @@
   (C) Copyright 2026
 
   Written by       : Arno van Amersfoort
-  Dependencies     : elapsedMillis Network MqttClient Terminal util
+  Dependencies     : elapsedMillis MqttClient Terminal util
   Initial date     : July 11, 2026
   Last modified    : July 30, 2026
 */
@@ -20,7 +20,6 @@
 #include <EEPROM.h>
 
 #include "Network.h"
-#include "MqttClient.h"
 #include "Terminal.h"
 #include "util.h"
 
