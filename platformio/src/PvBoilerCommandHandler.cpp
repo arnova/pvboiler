@@ -32,7 +32,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "mqttuser [u]           : Set MQTT server user to [u] (may be empty)\r\n"
                                   "mqttpass [p]           : Set MQTT server password to [p] (may be empty)\r\n"
                                   "mqttinterval [s]       : Set MQTT update interval to [s] seconds\r\n"
-                                  "restartnet             : Restart network functions\r\n"
+                                  "restartnet             : Restart network (after eg. WiFi/IP settings changes)\r\n"
                                   "netwdt [i]             : Set network watchdog timeout to [i] seconds (0 or \"off\" to disable)\r\n"
                                   "netwdr [i]             : Set network watchdog recovery time to [i] seconds\r\n"
                                   "exhelp                 : Show expert help\r\n"
@@ -113,7 +113,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetIpAddress(const char *strArgs)
 
   m_network.SetIpAddr(ipAddress);
 
-  return pack_result_code(ERR_CODE_OK);
+  return pack_result_code(ERR_CODE_OK_AFTER_RESTART);
 }
 
 
@@ -129,7 +129,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetNetMask(const char *strArgs)
 
   m_network.SetNetMask(ipAddress);
 
-  return pack_result_code(ERR_CODE_OK);
+  return pack_result_code(ERR_CODE_OK_AFTER_RESTART);
 }
 
 
@@ -179,7 +179,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetWifiSsid(const char *strArgs)
 
   m_network.SetWifiSsid(strArgs);
 
-  return pack_result_code(ERR_CODE_OK);
+  return pack_result_code(ERR_CODE_OK_AFTER_RESTART);
 }
 
 
@@ -193,7 +193,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetWifiPassword(const char *strArgs)
 
   m_network.SetWifiPassword((strArgs == NULL) ? "" : strArgs);
 
-  return pack_result_code(ERR_CODE_OK);
+  return pack_result_code(ERR_CODE_OK_AFTER_RESTART);
 }
 
 

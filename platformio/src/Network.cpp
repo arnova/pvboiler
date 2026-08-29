@@ -175,8 +175,6 @@ void CNetwork::SetWifiSsid(const char* strSsid)
     EEPROM.put(EEPROM_WIFI_SSID, m_strWifiSsid);
     EEPROM.commit();
   }
-
-  InitWifi(true);
 }
 
 
@@ -190,8 +188,6 @@ void CNetwork::SetWifiPassword(const char* strPassword)
     EEPROM.put(EEPROM_WIFI_PASSWORD, m_strWifiPassword);
     EEPROM.commit();
   }
-
-  InitWifi(true);
 }
 
 
@@ -204,8 +200,6 @@ void CNetwork::SetIpAddr(const uint8_t* ipAddress)
     EEPROM.put(EEPROM_IP_ADDR, m_ipAddr);
     EEPROM.commit();
   }
-
-  InitWifi(true);
 }
 
 
@@ -218,8 +212,6 @@ void CNetwork::SetNetMask(const uint8_t* ipNetMask)
     EEPROM.put(EEPROM_IP_NETMASK, m_ipNetmask);
     EEPROM.commit();
   }
-
-  InitWifi(true);
 }
 
 

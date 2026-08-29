@@ -340,9 +340,9 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
     return;
   }
 
-  if (resultCode.code  == ERR_CODE_OK_AFTER_REBOOT)
+  if (resultCode.code  == ERR_CODE_OK_AFTER_RESTART)
   {
-    STRCAT_PSTR(strResult, "OK (Will take effect after reboot)\r\n");
+    STRCAT_PSTR(strResult, "OK (Will take effect after restart)\r\n");
     return;
   }
 
