@@ -140,42 +140,44 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define SOCKET_CLIENT_TIMEOUT_MS      100 // ms
 
 // EEprom byte sizes
+#define CHECKSUM_SIZE           2
+#define WIFI_SSID_MAX_SIZE      32
+#define WIFI_PASSWORD_MAX_SIZE  64
+#define MQTT_USER_MAX_SIZE      32
+#define MQTT_PASSWORD_MAX_SIZE  64
 #define IP_BYTE_SIZE            4
 #define BP_RATING_SIZE          2
 #define CTRL_MODE_SIZE          1
 #define DIM_STYLE_SIZE          1
 #define SSR_PERIOD_SIZE         1
-#define WIFI_SSID_MAX_SIZE      32
-#define WIFI_PASSWORD_MAX_SIZE  64
-#define MQTT_USER_MAX_SIZE      32
-#define MQTT_PASSWORD_MAX_SIZE  64
 #define NET_WD_TIMEOUT_SIZE     2
 #define NET_WD_RECOVER_SIZE     2
+#define MQTT_INTERVAL_SIZE      1
 #define ERROR_GAIN_SIZE         sizeof(float)
 #define STEP_CLAMP_SIZE         sizeof(float)
 #define DEAD_ZONE_SIZE          1
-#define MQTT_INTERVAL_SIZE      1
 #define BUDGET_MARGIN_SIZE      2
 
 // EEPROM locations
-#define EEPROM_WIFI_SSID      0                                                   // offsets 33
-#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // offsets 98
-#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1   // offsets 102
-#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE                       // offsets 106
-#define EEPROM_MQTT_IP_ADDR   EEPROM_IP_NETMASK + IP_BYTE_SIZE                    // offsets 110
-#define EEPROM_MQTT_USER      EEPROM_MQTT_IP_ADDR + IP_BYTE_SIZE                  // offsets 143
-#define EEPROM_MQTT_PASSWORD  EEPROM_MQTT_USER + MQTT_USER_MAX_SIZE + 1           // offsets 208
-#define EEPROM_BP_RATING      EEPROM_MQTT_PASSWORD + MQTT_PASSWORD_MAX_SIZE + 1   // offsets 210
-#define EEPROM_CTRL_MODE      EEPROM_BP_RATING + BP_RATING_SIZE                   // offsets 211
-#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE                   // offsets 212
-#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offsets 213
-#define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offsets 215
-#define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 217
-#define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 218
-#define EEPROM_ERROR_GAIN     EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 222
-#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 226
-#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 227
-#define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 229
+#define EEPROM_CHECKSUM       0                                                   // offsets 2
+#define EEPROM_WIFI_SSID      EEPROM_CHECKSUM + CHECKSUM_SIZE                     // offsets 35
+#define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // offsets 100
+#define EEPROM_IP_ADDR        EEPROM_WIFI_PASSWORD + WIFI_PASSWORD_MAX_SIZE + 1   // offsets 104
+#define EEPROM_IP_NETMASK     EEPROM_IP_ADDR + IP_BYTE_SIZE                       // offsets 108
+#define EEPROM_MQTT_IP_ADDR   EEPROM_IP_NETMASK + IP_BYTE_SIZE                    // offsets 112
+#define EEPROM_MQTT_USER      EEPROM_MQTT_IP_ADDR + IP_BYTE_SIZE                  // offsets 145
+#define EEPROM_MQTT_PASSWORD  EEPROM_MQTT_USER + MQTT_USER_MAX_SIZE + 1           // offsets 210
+#define EEPROM_BP_RATING      EEPROM_MQTT_PASSWORD + MQTT_PASSWORD_MAX_SIZE + 1   // offsets 212
+#define EEPROM_CTRL_MODE      EEPROM_BP_RATING + BP_RATING_SIZE                   // offsets 213
+#define EEPROM_DIM_STYLE      EEPROM_CTRL_MODE + CTRL_MODE_SIZE                   // offsets 214
+#define EEPROM_SSR_PERIOD     EEPROM_DIM_STYLE + DIM_STYLE_SIZE                   // offsets 215
+#define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offsets 217
+#define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 219
+#define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 220
+#define EEPROM_ERROR_GAIN     EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 224
+#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 228
+#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 229
+#define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 231
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
