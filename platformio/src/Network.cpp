@@ -287,9 +287,21 @@ void CNetwork::MqttPublishValues()
 #ifdef SOCKET_SERVER_PORT
 WiFiClient& CNetwork::GetSocketServerClient()
 {
-  if (!m_socketServerClient || !m_socketServerClient.connected())
+  // Check for new client connections
+  WiFiClient newClient = m_socketServer.accept();
+
+  if (newClient)
   {
-    m_socketServerClient = m_socketServer.accept(); // Check for new client connections
+    if (m_socketServerClient && m_socketServerClient.connected())
+    {
+#ifdef WIFI_DEBUG
+      CTerminal::println("Terminating existing client connection for new client");
+#endif
+      m_socketServerClient.stop();
+    }
+
+    m_socketServerClient = newClient;
+
 #ifdef WIFI_DEBUG
     if (m_socketServerClient)
     {
