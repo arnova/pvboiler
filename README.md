@@ -1,6 +1,6 @@
-# PvBoiler
+# Open-source ESP PV-Boiler Controller
 
-This open-source project is a complete hardware, firmware & software solution to turn your "dumb" electronic domestic hot water boiler into a smart **PV-Boiler**. It aims to optimize the amount of surplus solar electricity that can be stored in a boiler as hot water using as little grid power as possible.
+This project is a complete hardware, firmware & software solution to turn your "dumb" electronic domestic hot water boiler into a smart **PV-Boiler**. It aims to optimize the amount of surplus solar electricity that can be stored in a boiler as hot water using as little grid power as possible.
 
 Most other solutions use SSR modules for power control. This design uses a (BTA25/BTA40) **triac** for power control to enable **phase-angle control**, which allows for more accurate power control than with a normal SSR.
 
@@ -27,10 +27,10 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 
 1. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own device
 2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0C/W when using a ~2500W boiler
-3. Around some power traces the mask has been intentionally removed. You should solder these traces with extra solder to reduce the power losses due to trace resistance
+3. Around some power traces the mask has been intentionally left out. You should solder these traces with extra solder to reduce the power losses due to trace resistance
 4. It is recommended to use 1.5mm2 wires for internal wiring
 5. The electronics are designed for ~230VAC grids for other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
-6. Note that only truely "dumb" boilers are supported. Boilers featuring any kind of (digital) electronics (except for a thermostat) can not be used directly
+6. Note that only truely "dumb" hot water boilers are supported. Boilers featuring any kind of (digital) electronics (except for an analog thermostat) can not be used directly
 
 ## First Time Use
 
