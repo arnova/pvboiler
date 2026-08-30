@@ -80,8 +80,10 @@ class CPvBoiler
     void SetLogicMode(const logic_mode_t logicMode);
     void SetDimStyle(const dim_style_t dimStyle);
     void SetSsrPeriodCount(const uint8_t iPeriod);
-    void SetErrorGain(const float fGain);
-    void SetStepClamp(const float fClamp);
+    void SetPosErrorGain(const float fGain);
+    void SetNegErrorGain(const float fGain);
+    void SetPosStepClamp(const float fClamp);
+    void SetNegStepClamp(const float fClamp);
     void SetMqttUpdateInterval(const uint8_t iInterval);
     void SetNetWatchDogTimeout(const uint16_t iTimeout);
     void SetNetWatchDogRecovery(const uint16_t iTimeout);
@@ -104,8 +106,10 @@ class CPvBoiler
     logic_mode_t GetLogicMode() const { return m_logicMode; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
-    float GetErrorGain() const { return m_fErrorGain; };
-    float GetStepClamp() const { return m_fStepClamp; };
+    float GetPosErrorGain() const { return m_fPosErrorGain; };
+    float GetNegErrorGain() const { return m_fNegErrorGain; };
+    float GetPosStepClamp() const { return m_fPosStepClamp; };
+    float GetNegStepClamp() const { return m_fNegStepClamp; };
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
     bool GetError() const { return m_lastErrorTimer > ERROR_TIME_MAX; };
@@ -165,10 +169,12 @@ class CPvBoiler
     uint16_t m_iPeriodTime = 65535; // us
     uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
 
-    // (Proportional) error gain
-    float m_fErrorGain = ERROR_GAIN_DEFAULT;
+    // (Proportional) error gains
+    float m_fPosErrorGain = POS_ERROR_GAIN_DEFAULT;
+    float m_fNegErrorGain = NEG_ERROR_GAIN_DEFAULT;
 
-    float m_fStepClamp = STEP_CLAMP_DEFAULT;
+    float m_fPosStepClamp = POS_STEP_CLAMP_DEFAULT;
+    float m_fNegStepClamp = NEG_STEP_CLAMP_DEFAULT;
 
     logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 };

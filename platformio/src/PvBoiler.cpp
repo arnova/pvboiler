@@ -157,11 +157,17 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
       m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGain);
-      m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fPosErrorGain);
+      m_network.GetMqttClient().PublishMessage(MQTT_POS_ERROR_GAIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClamp);
-      m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fNegErrorGain);
+      m_network.GetMqttClient().PublishMessage(MQTT_NEG_ERROR_GAIN, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fPosStepClamp);
+      m_network.GetMqttClient().PublishMessage(MQTT_POS_STEP_CLAMP, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fNegStepClamp);
+      m_network.GetMqttClient().PublishMessage(MQTT_NEG_STEP_CLAMP, strBuf);
     }
     else // Percentage
     {
@@ -205,8 +211,10 @@ void CPvBoiler::MqttPublishConfig()
   if (m_logicMode == CPvBoiler::LOGIC_MODE_BUDGET)
   {
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN, "", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP, "%", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_ERROR_GAIN, "", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_ERROR_GAIN, "", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_STEP_CLAMP, "%", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_STEP_CLAMP, "%", "", "", true);
     m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
     m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
@@ -217,8 +225,10 @@ void CPvBoiler::MqttPublishConfig()
     m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100", false);
 
     m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_BUDGET);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_ERROR_GAIN);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_STEP_CLAMP);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_POS_ERROR_GAIN);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_NEG_ERROR_GAIN);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_POS_STEP_CLAMP);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_NEG_STEP_CLAMP);
     m_network.GetMqttClient().UnpublishSensorConfig(MQTT_DEAD_ZONE);
     m_network.GetMqttClient().UnpublishSensorConfig(MQTT_BUDGET_MARGIN);
   }
@@ -316,19 +326,33 @@ void CPvBoiler::LoadSettings()
   }
   m_iSsrPeriodCount = iVal8;
 
-  EEPROM.get(EEPROM_ERROR_GAIN, fVal);
-  if (fVal < ERROR_GAIN_MIN || fVal > ERROR_GAIN_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_POS_ERROR_GAIN, fVal);
+  if (fVal < POS_ERROR_GAIN_MIN || fVal > POS_ERROR_GAIN_MAX || isnan(fVal))
   {
-    fVal = ERROR_GAIN_DEFAULT;
+    fVal = POS_ERROR_GAIN_DEFAULT;
   }
-  m_fErrorGain = fVal;
+  m_fPosErrorGain = fVal;
 
-  EEPROM.get(EEPROM_STEP_CLAMP, fVal);
-  if (fVal < STEP_CLAMP_MIN || fVal > STEP_CLAMP_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_NEG_ERROR_GAIN, fVal);
+  if (fVal < NEG_ERROR_GAIN_MIN || fVal > NEG_ERROR_GAIN_MAX || isnan(fVal))
   {
-    fVal = STEP_CLAMP_DEFAULT;
+    fVal = NEG_ERROR_GAIN_DEFAULT;
   }
-  m_fStepClamp = fVal;
+  m_fNegErrorGain = fVal;
+
+  EEPROM.get(EEPROM_POS_STEP_CLAMP, fVal);
+  if (fVal < POS_STEP_CLAMP_MIN || fVal > POS_STEP_CLAMP_MAX || isnan(fVal))
+  {
+    fVal = POS_STEP_CLAMP_DEFAULT;
+  }
+  m_fPosStepClamp = fVal;
+
+  EEPROM.get(EEPROM_NEG_STEP_CLAMP, fVal);
+  if (fVal < NEG_STEP_CLAMP_MIN || fVal > NEG_STEP_CLAMP_MAX || isnan(fVal))
+  {
+    fVal = NEG_STEP_CLAMP_DEFAULT;
+  }
+  m_fNegStepClamp = fVal;
 
   EEPROM.get(EEPROM_NET_WD_TIMEOUT, iVal16);
   if (iVal16 > NETWORK_WATCHDOG_TIMEOUT_MAX)
@@ -438,28 +462,56 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 }
 
 
-void CPvBoiler::SetErrorGain(const float fGain)
+void CPvBoiler::SetPosErrorGain(const float fGain)
 {
-  if (fGain != m_fErrorGain)
+  if (fGain != m_fPosErrorGain)
   {
-    EEPROM.put(EEPROM_ERROR_GAIN, fGain);
+    EEPROM.put(EEPROM_POS_ERROR_GAIN, fGain);
     EEPROM.commit();
 
-    m_fErrorGain = fGain;
+    m_fPosErrorGain = fGain;
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetStepClamp(const float fClamp)
+void CPvBoiler::SetNegErrorGain(const float fGain)
 {
-  if (fClamp != m_fStepClamp)
+  if (fGain != m_fNegErrorGain)
   {
-    EEPROM.put(EEPROM_STEP_CLAMP, fClamp);
+    EEPROM.put(EEPROM_NEG_ERROR_GAIN, fGain);
     EEPROM.commit();
 
-    m_fStepClamp = fClamp;
+    m_fNegErrorGain = fGain;
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetPosStepClamp(const float fClamp)
+{
+  if (fClamp != m_fPosStepClamp)
+  {
+    EEPROM.put(EEPROM_POS_STEP_CLAMP, fClamp);
+    EEPROM.commit();
+
+    m_fPosStepClamp = fClamp;
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetNegStepClamp(const float fClamp)
+{
+  if (fClamp != m_fNegStepClamp)
+  {
+    EEPROM.put(EEPROM_NEG_STEP_CLAMP, fClamp);
+    EEPROM.commit();
+
+    m_fNegStepClamp = fClamp;
 
     m_bPublishSettings = true;
   }
@@ -516,8 +568,10 @@ void CPvBoiler::FactoryReset()
   SetLogicMode(LOGIC_MODE_BUDGET);
   SetDimStyle(DIM_STYLE_PHASE_ANGLE);
   SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
-  SetErrorGain(ERROR_GAIN_DEFAULT);
-  SetStepClamp(STEP_CLAMP_DEFAULT);
+  SetPosErrorGain(POS_ERROR_GAIN_DEFAULT);
+  SetNegErrorGain(NEG_ERROR_GAIN_DEFAULT);
+  SetPosStepClamp(POS_STEP_CLAMP_DEFAULT);
+  SetNegStepClamp(NEG_STEP_CLAMP_DEFAULT);
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
 
@@ -592,7 +646,7 @@ void CPvBoiler::Update()
 
     if (m_fCurrentPercentage > 0)
     {
-      fNewPercentage -= m_fStepClamp; // Device off or watch-dog triggered: output to 0%
+      fNewPercentage -= m_fNegStepClamp; // Device off or watch-dog triggered: output to 0%
     }
   }
   else if (m_bPowerBoost)
@@ -603,7 +657,7 @@ void CPvBoiler::Update()
   {
     if (m_iPowerPercentage > m_fCurrentPercentage)
     {
-      fNewPercentage += m_fStepClamp;
+      fNewPercentage += m_fPosStepClamp;
 
       if (fNewPercentage > m_iPowerPercentage)
       {
@@ -612,7 +666,7 @@ void CPvBoiler::Update()
     }
     else if (m_iPowerPercentage < m_fCurrentPercentage)
     {
-      fNewPercentage -= m_fStepClamp;
+      fNewPercentage -= m_fNegStepClamp;
 
       if (fNewPercentage < m_iPowerPercentage)
       {
@@ -622,16 +676,18 @@ void CPvBoiler::Update()
   }
   else
   {
-    float fErrorStep = (m_fErrorGain * 100.0f * (m_iPowerBudget - m_iBudgetMargin)) / m_iBoilerPowerRating;
+    // Calculate error step (percentage)
+    float fErrorStep = (100.0f * (m_iPowerBudget - m_iBudgetMargin)) / m_iBoilerPowerRating;
+    fErrorStep *= (fErrorStep > 0.0f) ? m_fPosErrorGain : m_fNegErrorGain;
 
     // Clamp error (step) value
-    if (fErrorStep > m_fStepClamp)
+    if (fErrorStep > m_fPosStepClamp)
     {
-      fErrorStep = m_fStepClamp;
+      fErrorStep = m_fPosStepClamp;
     }
-    else if (fErrorStep < -m_fStepClamp)
+    else if (fErrorStep < -m_fNegStepClamp)
     {
-      fErrorStep = -m_fStepClamp;
+      fErrorStep = -m_fNegStepClamp;
     }
 
     // Only change value when outside deadzone

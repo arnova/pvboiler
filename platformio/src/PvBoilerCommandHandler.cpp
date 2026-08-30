@@ -42,10 +42,12 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
 const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
                                   "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
-                                  "sclamp [c]             : Set step-clamp to value [c] percent\r\n"
-                                  "egain [g]              : For budget mode set error-gain to value [g]\r\n"
-                                  "deadzone [d]           : For budget mode set deadzone to [d] Watt\r\n"
-                                  "bmargin [m]            : For budget mode set margin to [m] Watt\r\n"
+                                  "scp [c]                : Set positive step-clamp to value [c] percent\r\n"
+                                  "scn [c]                : Set negative step-clamp to value [c] percent\r\n"
+                                  "egp [g]                : Set budget mode positive error-gain to value [g]\r\n"
+                                  "egn [g]                : Set budget mode negative error-gain to value [g]\r\n"
+                                  "bmargin [m]            : Set budget mode margin to [m] Watt\r\n"
+                                  "deadzone [d]           : Set budget mode deadzone to [d] Watt\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -323,12 +325,20 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("error_gain=");
-  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGain());
+  CTerminal::print("pos_error_gain=");
+  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetPosErrorGain());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" step_clamp=");
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClamp());
+  CTerminal::print(" neg_error_gain=");
+  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetNegErrorGain());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" pos_step_clamp=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetPosStepClamp());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" neg_step_clamp=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetNegStepClamp());
   CTerminal::print(strBuf);
 
   CTerminal::print(" dead_zone=");
@@ -650,35 +660,69 @@ result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
 
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetErrorGain(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetPosErrorGain(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_MIN, ERROR_GAIN_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, POS_ERROR_GAIN_MIN, POS_ERROR_GAIN_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetErrorGain(fGain);
+  m_pvBoiler.SetPosErrorGain(fGain);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetStepClamp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetNegErrorGain(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  double fGain;
+  result = get_double_from_string(strArgs, &fGain, POS_ERROR_GAIN_MIN, POS_ERROR_GAIN_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetNegErrorGain(fGain);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetPosStepClamp(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_MIN, STEP_CLAMP_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fClamp, POS_STEP_CLAMP_MIN, POS_STEP_CLAMP_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetStepClamp(fClamp);
+  m_pvBoiler.SetPosStepClamp(fClamp);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetNegStepClamp(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  double fClamp;
+  result = get_double_from_string(strArgs, &fClamp, POS_STEP_CLAMP_MIN, POS_STEP_CLAMP_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetNegStepClamp(fClamp);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -818,13 +862,21 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetSsrPeriodCount(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "egain"))
+  else if (STRIEQUALS(strCommand, "egp") || STRIEQUALS(strCommand, "egainp"))
   {
-    result = CmdSetErrorGain(strArgs);
+    result = CmdSetPosErrorGain(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "sclamp"))
+  else if (STRIEQUALS(strCommand, "egn") || STRIEQUALS(strCommand, "egainn"))
   {
-    result = CmdSetStepClamp(strArgs);
+    result = CmdSetNegErrorGain(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "scp") || STRIEQUALS(strCommand, "sclampp"))
+  {
+    result = CmdSetPosStepClamp(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "scn") || STRIEQUALS(strCommand, "sclampn"))
+  {
+    result = CmdSetNegStepClamp(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ssid") || STRIEQUALS(strCommand, "wssid") || STRIEQUALS(strCommand, "wifissid"))
   {

@@ -28,14 +28,23 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
 #define SSR_PERIOD_COUNT_MAX                    254
 
-// Proportional error gain
-#define ERROR_GAIN_DEFAULT                      0.04f
-#define ERROR_GAIN_MIN                          0.0001f
-#define ERROR_GAIN_MAX                          100.0f
+// Positive error gain
+#define POS_ERROR_GAIN_DEFAULT                  0.05f
+#define POS_ERROR_GAIN_MIN                      0.0001f
+#define POS_ERROR_GAIN_MAX                      100.0f
 
-#define STEP_CLAMP_DEFAULT                      3.0f    // %
-#define STEP_CLAMP_MIN                          0.01f   // %
-#define STEP_CLAMP_MAX                          100.0f  // %
+// Negative error gain
+#define NEG_ERROR_GAIN_DEFAULT                  0.2f
+#define NEG_ERROR_GAIN_MIN                      0.0001f
+#define NEG_ERROR_GAIN_MAX                      100.0f
+
+#define POS_STEP_CLAMP_DEFAULT                  3.0f    // %
+#define POS_STEP_CLAMP_MIN                      0.01f   // %
+#define POS_STEP_CLAMP_MAX                      100.0f  // %
+
+#define NEG_STEP_CLAMP_DEFAULT                  3.0f    // %
+#define NEG_STEP_CLAMP_MIN                      0.01f   // %
+#define NEG_STEP_CLAMP_MAX                      100.0f  // %
 
 // Initial value for phase correction time
 #define ZERO_CROSS_WINDOW_DEFAULT               1100  // uS
@@ -98,8 +107,10 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_BUDGET_MARGIN                      "budget_margin"
 #define MQTT_DIM_STYLE                          "dim_style"
 #define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
-#define MQTT_ERROR_GAIN                         "error_gain"
-#define MQTT_STEP_CLAMP                         "step_clamp"
+#define MQTT_POS_ERROR_GAIN                     "positive_error_gain"
+#define MQTT_NEG_ERROR_GAIN                     "negative_error_gain"
+#define MQTT_POS_STEP_CLAMP                     "positive_step_clamp"
+#define MQTT_NEG_STEP_CLAMP                     "negative_step_clamp"
 
 // Diagnostic topic items
 #define MQTT_WIFI_SSID                          "wifi_ssid"
@@ -174,10 +185,12 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // offsets 217
 #define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 219
 #define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 220
-#define EEPROM_ERROR_GAIN     EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 224
-#define EEPROM_STEP_CLAMP     EEPROM_ERROR_GAIN + ERROR_GAIN_SIZE                 // offsets 228
-#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP + STEP_CLAMP_SIZE                 // offsets 229
-#define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 231
+#define EEPROM_POS_ERROR_GAIN EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 224
+#define EEPROM_NEG_ERROR_GAIN EEPROM_POS_ERROR_GAIN + MQTT_INTERVAL_SIZE          // offsets 228
+#define EEPROM_POS_STEP_CLAMP EEPROM_NEG_ERROR_GAIN + ERROR_GAIN_SIZE             // offsets 232
+#define EEPROM_NEG_STEP_CLAMP EEPROM_POS_STEP_CLAMP + STEP_CLAMP_SIZE             // offsets 236
+#define EEPROM_DEAD_ZONE      EEPROM_NEG_STEP_CLAMP + STEP_CLAMP_SIZE             // offsets 237
+#define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // offsets 239
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
