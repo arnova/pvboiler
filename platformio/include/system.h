@@ -20,7 +20,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define DEAD_ZONE_MAX                           254   // Watt
 
 // The budget margin represents the margin used to prevent grid power use
-#define BUDGET_MARGIN_DEFAULT                   50    // Watt
+#define BUDGET_MARGIN_DEFAULT                   100   // Watt
 #define BUDGET_MARGIN_MIN                       0     // Watt
 #define BUDGET_MARGIN_MAX                       5000  // Watt
 
