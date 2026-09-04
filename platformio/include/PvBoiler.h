@@ -3,6 +3,8 @@
 #define PVBOILER_H
 
 #include <elapsedMillis.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 #include "system.h"
 #include "Uptime.h"
@@ -117,6 +119,7 @@ class CPvBoiler
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
+    float GetBoilerTemperature() const { return m_fBoilerTemperature; };
 
   private:
     void Update();
@@ -177,5 +180,9 @@ class CPvBoiler
     float m_fNegStepClamp = NEG_STEP_CLAMP_DEFAULT;
 
     logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
+
+    OneWire m_oneWire;
+    DallasTemperature m_tempSensors;
+    float m_fBoilerTemperature = -1.0f;
 };
 #endif // PVBOILER_H

@@ -426,6 +426,10 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
   CTerminal::print(strBuf);
 
+  CTerminal::print(" boiler_t=");
+  snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
+  CTerminal::print(strBuf);
+
   CTerminal::println("");
 
   CTerminal::print("net_period=");

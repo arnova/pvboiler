@@ -126,6 +126,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"
 #define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
 #define MQTT_UP_TIME                            "up_time"
+#define MQTT_BOILER_TEMPERATURE                 "boiler_temperature"
 
 // Socket server settings
 #define SOCKET_SERVER_PORT                      8000
@@ -138,13 +139,15 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define HA_DEVICE_MODEL                        "PVBoiler Controller"
 #define HA_MANUFACTURER                        "Arnova"
 
-/**************************
- * Output i/o pin numbers *
- **************************/
+/********************
+ * GPIO pin numbers *
+ ********************/
 #define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)
-#define TRIAC_OUTPUT 13     // Output to optocoupler + triac (GPIO13 / D7  on NodeMCUv2)
+#define ONE_WIRE 12         // One-wire temperature sensor (GPIO12 / D6 on NodeMCUv2)
+#define TRIAC_OUTPUT 13     // Output to optocoupler + triac (GPIO13 / D7 on NodeMCUv2)
 #define ZERO_CROSS_INPUT 14 // Input for zero-cross detection (GPIO14 / D5 on NodeMCUv2)
 
+// UART/socket settings
 #define BAUD_RATE                     115200
 #define CMD_BUF_SIZE                  80
 #define RESULT_BUF_SIZE               80

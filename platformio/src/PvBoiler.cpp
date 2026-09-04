@@ -3,8 +3,11 @@
 
 #include <EEPROM.h>
 
-CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network)
+CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
+  m_tempSensors.begin();
+  m_tempSensors.setResolution(12);
+  m_tempSensors.setWaitForConversion(false); // Do not block but poll
 }
 
 
@@ -18,6 +21,21 @@ void CPvBoiler::Loop()
   {
     CheckNetworkWatchDog();
     Update();
+
+    if (m_tempSensors.getDeviceCount() > 0)
+    {
+      const float fTemperature = m_tempSensors.getTempCByIndex(0); // first sensor on the bus
+      if (fTemperature != DEVICE_DISCONNECTED_C)
+      {
+        m_fBoilerTemperature = fTemperature;
+      }
+      else
+      {
+        m_fBoilerTemperature = -1.0f;
+      }
+
+      m_tempSensors.requestTemperatures();
+    }
 
     m_loopTimer = 0;
   }
@@ -59,6 +77,8 @@ void CPvBoiler::Reset()
   m_iTriacPhaseAngle = 0;
   m_iPeriodTime = 65535;
   m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
+
+  m_fBoilerTemperature = -1.0f;
 
   LoadSettings();
 }
@@ -131,6 +151,9 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
   snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
   m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
+
+  snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
+  m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
 
   snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
@@ -264,6 +287,8 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "us", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_FREQUENCY, "Hz", "", "", true);
+
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
 
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
