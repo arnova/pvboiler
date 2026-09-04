@@ -57,14 +57,14 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
   GetFriendlyName(strItem, strFriendlyItem, sizeof(strFriendlyItem));
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 2];
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s", strItem);
   root["state_topic"] = strBuf;
 
   root["name"] = strFriendlyItem;
 
-  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 2];
-  snprintf(strBuf2, sizeof(strBuf2), HOST_NAME "_%s", strItem);
+  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
+  snprintf(strBuf2, sizeof(strBuf2), MQTT_NAME "_%s", strItem);
   root["unique_id"] = strBuf2;
   
   root["retain"] = true;
@@ -102,8 +102,8 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
   PublishConfig(root, strItem, strTopicType);
 
   // Subscribe to /set messages
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
   subscribe(strBuf, 1);
 }
 
@@ -132,8 +132,8 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
   if (bSetter)
   {
     // Unsubscribe setter
-    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
-    snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
+    snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
     unsubscribe(strBuf);
   }
 }
@@ -167,8 +167,8 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
   root["command_topic"] = strBuf;
 
   root["payload_on"] = "1";
@@ -185,8 +185,8 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
   root["command_topic"] = strBuf;
 
   if (strlen(strMin) != 0)
@@ -217,8 +217,8 @@ void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValue
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(HOST_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
   root["command_topic"] = strBuf;
 
   for (uint8_t it = 0; it < iCount; it++)
@@ -298,7 +298,7 @@ bool CMqttClient::ServerConnect()
   CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
   // Create a random client ID
-  snprintf(strBuf, sizeof(strBuf), HOST_NAME "-%lx", random(0xffff));
+  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "-%lx", random(0xffff));
 
   char* strUser = NULL;
   if (strlen(m_strUser) != 0)
