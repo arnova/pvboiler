@@ -153,7 +153,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define RESULT_BUF_SIZE               80
 #define SOCKET_CLIENT_TIMEOUT_MS      100 // ms
 
-// EEprom byte sizes
+// EEPROM byte sizes
 #define CHECKSUM_SIZE           2
 #define WIFI_SSID_MAX_SIZE      32
 #define WIFI_PASSWORD_MAX_SIZE  64
@@ -189,7 +189,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // offsets 219
 #define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // offsets 220
 #define EEPROM_POS_ERROR_GAIN EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // offsets 224
-#define EEPROM_NEG_ERROR_GAIN EEPROM_POS_ERROR_GAIN + MQTT_INTERVAL_SIZE          // offsets 228
+#define EEPROM_NEG_ERROR_GAIN EEPROM_POS_ERROR_GAIN + ERROR_GAIN_SIZE             // offsets 228
 #define EEPROM_POS_STEP_CLAMP EEPROM_NEG_ERROR_GAIN + ERROR_GAIN_SIZE             // offsets 232
 #define EEPROM_NEG_STEP_CLAMP EEPROM_POS_STEP_CLAMP + STEP_CLAMP_SIZE             // offsets 236
 #define EEPROM_DEAD_ZONE      EEPROM_NEG_STEP_CLAMP + STEP_CLAMP_SIZE             // offsets 237
