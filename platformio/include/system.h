@@ -15,7 +15,7 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define BOILER_POWER_RATING_MAX                 10000 // Watt
 
 // The dead zone value represents the window where a change in power budget is ignored
-#define DEAD_ZONE_DEFAULT                       10    // Watt
+#define DEAD_ZONE_DEFAULT                       0     // Watt
 #define DEAD_ZONE_MIN                           0     // Watt
 #define DEAD_ZONE_MAX                           254   // Watt
 
