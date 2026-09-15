@@ -160,7 +160,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
   // Publish uptime
   const CUptime::uptime_t upTime = GetUpTime();
-  snprintf(strBuf, sizeof(strBuf), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+  snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
   m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
 
   if (m_bPublishSettings || bForce)

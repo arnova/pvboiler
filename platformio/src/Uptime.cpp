@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : (none)
   Initial date     : July 27, 2026
-  Last modified    : July 27, 2026
+  Last modified    : September 15, 2026
 */
 
 #include "Uptime.h"
@@ -26,7 +26,6 @@ CUptime::uptime_t CUptime::GetBreakdown() const
   uint32_t iSeconds = m_iSeconds;
 
   uptime_t upTime;
-  upTime.iYears    = iSeconds / 31536000;  iSeconds %= 31536000;   // 365-day year
   upTime.iDays     = iSeconds / 86400;     iSeconds %= 86400;
   upTime.iHours    = iSeconds / 3600;      iSeconds %= 3600;
   upTime.iMinutes  = iSeconds / 60;        iSeconds %= 60;

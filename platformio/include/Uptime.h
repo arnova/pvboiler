@@ -13,7 +13,6 @@ class CUptime
       uint8_t iMinutes;
       uint8_t iHours;
       uint16_t iDays;
-      uint8_t iYears;
     };
     typedef struct uptime_s uptime_t;
 

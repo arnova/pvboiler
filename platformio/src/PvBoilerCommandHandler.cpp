@@ -472,7 +472,7 @@ result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
   // Publish uptime
   const CUptime::uptime_t upTime = m_pvBoiler.GetUpTime();
   char strTemp[24];
-  snprintf(strTemp, sizeof(strTemp), "%uy %ud %02u:%02u:%02u", upTime.iYears, upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+  snprintf(strTemp, sizeof(strTemp), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
   CTerminal::println(strTemp);
 
   return pack_result_code(ERR_CODE_OK);
