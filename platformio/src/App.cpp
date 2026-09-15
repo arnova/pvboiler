@@ -283,12 +283,44 @@ void CApp::HandleDisplay()
                break;
 
       case 3 : {
+                 const float fTemperature = m_pvBoiler.GetBoilerTemperature();
+                 if (fTemperature < 0.0f)
+                 {
+                   m_display.WriteDisplayStr("Unknown temperature", 0, true);
+                 }
+                 else
+                 {
+                   snprintf(strValue, sizeof(strValue), "%.1fC", fTemperature);
+                   m_display.WriteDisplayStr(strValue, 0, true);
+                 }
+
+                 // Chars are not monospace so need to compensate for smaller spaces with the logic below
+                 strcpy(strValue, "[");
+                 for (uint8_t iCount = 0; iCount < 100;)
+                 {
+                   if (iCount < fTemperature) // Range 0C - 100C
+                   {
+                     strcat(strValue, "=");
+                     iCount += 10;
+                   }
+                   else
+                   {
+                     strcat(strValue, " ");
+                     iCount += 5; // Spaces are smaller
+                   }
+                 }
+                 strcat(strValue, "]");
+                 m_display.WriteDisplayStr(strValue, 2, false);
+               }
+               break;
+
+      case 4 : {
                  m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
                }
                break;
     }
 
-    if (++m_displayCount > 3)
+    if (++m_displayCount > 4)
     {
       m_displayCount = 0;
     }
