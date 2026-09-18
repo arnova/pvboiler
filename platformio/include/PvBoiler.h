@@ -183,6 +183,9 @@ class CPvBoiler
 
     OneWire m_oneWire;
     DallasTemperature m_tempSensors;
+    
     float m_fBoilerTemperature = -1.0f;
+    bool m_bPublishBoilerTemperature = true;
+    uint16_t m_iBoilerTemperatureRetryCount = 0;
 };
 #endif // PVBOILER_H

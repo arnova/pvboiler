@@ -6,8 +6,9 @@
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
   m_tempSensors.begin();
-  m_tempSensors.setResolution(12);
+  m_tempSensors.setResolution(9);
   m_tempSensors.setWaitForConversion(false); // Do not block but poll
+  m_tempSensors.requestTemperatures(); // Request first temperature
 }
 
 
@@ -25,13 +26,15 @@ void CPvBoiler::Loop()
     if (m_tempSensors.getDeviceCount() > 0)
     {
       const float fTemperature = m_tempSensors.getTempCByIndex(0); // first sensor on the bus
-      if (fTemperature != DEVICE_DISCONNECTED_C)
+      if (m_fBoilerTemperature != fTemperature)
       {
-        m_fBoilerTemperature = fTemperature;
-      }
-      else
-      {
-        m_fBoilerTemperature = -1.0f;
+        if ((fTemperature != DEVICE_DISCONNECTED_C && fTemperature != 85.0f) || 
+            ++m_iBoilerTemperatureRetryCount == 5)
+        {
+          m_bPublishBoilerTemperature = true;
+          m_fBoilerTemperature = fTemperature;
+          m_iBoilerTemperatureRetryCount = 0;
+        }
       }
 
       m_tempSensors.requestTemperatures();
@@ -79,6 +82,7 @@ void CPvBoiler::Reset()
   m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
 
   m_fBoilerTemperature = -1.0f;
+  m_bPublishBoilerTemperature = true;
 
   LoadSettings();
 }
@@ -142,6 +146,13 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     }
   }
 
+  if (m_bPublishBoilerTemperature || bForce)
+  {
+    m_bPublishBoilerTemperature = false;
+    snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
+    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
+  }
+
   // FIXME: These are always updated
   m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetError() ? "1" : "0");
 
@@ -151,9 +162,6 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
   snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
   m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
-  m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
 
   snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
   m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
