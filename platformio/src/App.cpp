@@ -286,12 +286,12 @@ void CApp::HandleDisplay()
                  const float fTemperature = m_pvBoiler.GetBoilerTemperature();
                  if (fTemperature < 0.0f)
                  {
-                   m_display.WriteDisplayStr("Unknown temperature", 0, true);
+                   m_display.WriteDisplayStr("Unknown temperature", 1, true);
                  }
                  else
                  {
                    snprintf(strValue, sizeof(strValue), "%.1fC", fTemperature);
-                   m_display.WriteDisplayStr(strValue, 0, true);
+                   m_display.WriteDisplayStr(strValue, 1, true);
                  }
 
                  // Chars are not monospace so need to compensate for smaller spaces with the logic below
