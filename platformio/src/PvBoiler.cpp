@@ -670,24 +670,7 @@ void CPvBoiler::Update()
   }
   else if (m_logicMode == LOGIC_MODE_PERCENT)
   {
-    if (m_iPowerPercentage > m_fCurrentPercentage)
-    {
-      fNewPercentage += m_fPosStepClamp;
-
-      if (fNewPercentage > m_iPowerPercentage)
-      {
-        fNewPercentage = m_iPowerPercentage;
-      }
-    }
-    else if (m_iPowerPercentage < m_fCurrentPercentage)
-    {
-      fNewPercentage -= m_fNegStepClamp;
-
-      if (fNewPercentage < m_iPowerPercentage)
-      {
-        fNewPercentage = m_iPowerPercentage;
-      }
-    }
+    fNewPercentage = m_iPowerPercentage;
   }
   else
   {
