@@ -181,7 +181,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 }
 
 
-void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /* = "" */, const char* strMin /* = "" */, const char* strMax /* = "" */, const bool bBox /* = true */)
+void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1 */, const float fMin /* = 0 */, const float fMax /* = 100 */, const bool bBox /* = true */)
 {
   JsonDocument root;
 
@@ -189,25 +189,11 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const char* strStep /
   snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
   root["command_topic"] = strBuf;
 
-  if (strlen(strMin) != 0)
-  {
-    root["min"] = strMin;
-  }
+  root["min"] = fMin;
+  root["max"] = fMax;
+  root["step"] = fStep;
 
-  if (strlen(strMax) != 0)
-  {
-    root["max"] = strMax;
-  }
-
-  if (strlen(strStep) != 0)
-  {
-    root["step"] = strStep;
-  }
-
-  if (bBox)
-  {
-    root["mode"] = "box";
-  }
+  root["mode"] = bBox ? "box" : "slider";
 
   PublishSetterConfig(root, strItem, "number");
 }

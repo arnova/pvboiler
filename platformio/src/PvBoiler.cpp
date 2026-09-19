@@ -102,22 +102,16 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
   {
     m_bPublishPowerBudget = false;
 
-    if (m_logicMode == LOGIC_MODE_BUDGET)
-    {
-      snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
-    }
+    snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
+    m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
   }
 
   if (m_bPublishPowerPercentage || bForce)
   {
     m_bPublishPowerPercentage = false;
 
-    if (m_logicMode == LOGIC_MODE_PERCENT)
-    {
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
-    }
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
+    m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
   }
 
   if (m_bPublishPowerBoost || bForce)
@@ -239,30 +233,15 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR, true);
 
-  if (m_logicMode == CPvBoiler::LOGIC_MODE_BUDGET)
-  {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, "1", "-100000", "100000");
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_ERROR_GAIN, "", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_ERROR_GAIN, "", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_STEP_CLAMP, "%", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_STEP_CLAMP, "%", "", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1, -100000, 100000);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1, 0, 100, false);
 
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_PERCENTAGE);
-  }
-  else // Percentage
-  {
-    m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, "1", "0", "100", false);
-
-    m_network.GetMqttClient().UnpublishNumberConfig(MQTT_SET_POWER_BUDGET);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_POS_ERROR_GAIN);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_NEG_ERROR_GAIN);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_POS_STEP_CLAMP);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_NEG_STEP_CLAMP);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_DEAD_ZONE);
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_BUDGET_MARGIN);
-  }
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_ERROR_GAIN, "", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_ERROR_GAIN, "", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_STEP_CLAMP, "%", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_STEP_CLAMP, "%", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
