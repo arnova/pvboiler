@@ -40,15 +40,9 @@ void CPvBoiler::Loop()
       m_tempSensors.requestTemperatures();
     }
 
-    m_loopTimer = 0;
-  }
-
-  // Publish new MQTT values (if any) when timer expires (and connected)
-  if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000 && m_network.IsMqttConnected())
-  {
     MqttPublishValues();
 
-    m_mqttPublishTimer = 0;
+    m_loopTimer = 0;
   }
 }
 
@@ -90,6 +84,9 @@ void CPvBoiler::Reset()
 
 bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 {
+  if (!m_network.IsMqttConnected())
+    return false;
+
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 
   if (m_bPublishCtrlOnOff || bForce)
@@ -98,72 +95,11 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     m_network.GetMqttClient().PublishMessage(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
   }
 
-  if (m_bPublishPowerBudget || bForce)
-  {
-    m_bPublishPowerBudget = false;
-
-    snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
-    m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
-  }
-
-  if (m_bPublishPowerPercentage || bForce)
-  {
-    m_bPublishPowerPercentage = false;
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
-    m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
-  }
-
   if (m_bPublishPowerBoost || bForce)
   {
     m_bPublishPowerBoost = false;
     m_network.GetMqttClient().PublishMessage(MQTT_POWER_BOOST_ON_OFF, m_bPowerBoost ? "1" : "0");
   }
-
-  if (m_bPublishOutputPercentage || bForce)
-  {
-    m_bPublishOutputPercentage = false;
-
-    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fCurrentPercentage);
-    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", GetCurrentPower());
-    m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", GetTriacPhaseAngle());
-    m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, strBuf);
-
-    if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
-    {
-      snprintf(strBuf, sizeof(strBuf), "%.4f", GetTriacAngleFactor());
-      m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, strBuf);
-    }
-  }
-
-  if (m_bPublishBoilerTemperature || bForce)
-  {
-    m_bPublishBoilerTemperature = false;
-    snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
-    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
-  }
-
-  // FIXME: These are always updated
-  m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetError() ? "1" : "0");
-
-  // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
-  snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
-  m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
-  m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
-  m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
-
-  // Publish uptime
-  const CUptime::uptime_t upTime = GetUpTime();
-  snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
-  m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
 
   if (m_bPublishSettings || bForce)
   {
@@ -219,6 +155,73 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
     snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogRecovery);
     m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, strBuf);
+  }
+
+  // Publish these MQTT values (if any) when timer expires (and connected)
+  // FIXME: These are always updated
+  if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000)
+  {
+    m_mqttPublishTimer = 0;
+
+    if (m_bPublishPowerBudget || bForce)
+    {
+      m_bPublishPowerBudget = false;
+
+      snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
+    }
+
+    if (m_bPublishPowerPercentage || bForce)
+    {
+      m_bPublishPowerPercentage = false;
+
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
+    }
+
+    if (m_bPublishOutputPercentage || bForce)
+    {
+      m_bPublishOutputPercentage = false;
+
+      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fCurrentPercentage);
+      m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%u", GetCurrentPower());
+      m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, strBuf);
+
+      snprintf(strBuf, sizeof(strBuf), "%u", GetTriacPhaseAngle());
+      m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, strBuf);
+
+      if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
+      {
+        snprintf(strBuf, sizeof(strBuf), "%.4f", GetTriacAngleFactor());
+        m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, strBuf);
+      }
+    }
+
+    if (m_bPublishBoilerTemperature || bForce)
+    {
+      m_bPublishBoilerTemperature = false;
+      snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
+      m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
+    }
+
+    m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetError() ? "1" : "0");
+
+    // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
+    m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
+    m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
+
+    // Publish uptime
+    const CUptime::uptime_t upTime = GetUpTime();
+    snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
+    m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
   }
 
   return true;
