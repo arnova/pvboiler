@@ -34,8 +34,8 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 
 ## First Time Use
 
-1. Flash the ESP firmware using e.g. PlatformIO (future firmware updates can be done over-the-air (OTA)). You may need to customize `platform` and `board` in `platformio.ini` for your specific ESP board.
-2. After the initial flash, you can change the firmware upload mechanism in `platformio.ini` from serial to OTA by uncommenting `upload_protocol = espota` and `upload_port = pvboiler.local`. Note that you *may* need to substitute the controller's IP address for `pvboiler.local` in case mDNS is not available in your network (or it's failing somehow).
+1. Flash the ESP firmware using e.g. PlatformIO (future firmware updates can be done over-the-air (OTA)). The initial flash needs to be performed using the USB serial connection. For this you need to (temporarely) comment (prefix with #) `upload_protocol = espota` and `upload_port = pvboiler.local` in platformio.ini . You may also need to customize `platform` and `board` in `platformio.ini` for your specific ESP board.
+2. After the initial flash, you can change back the firmware upload mechanism in `platformio.ini` from serial USB to OTA by uncommenting `upload_protocol = espota` and `upload_port = pvboiler.local` again. Note that you *may* need to substitute the controller's IP address for `pvboiler.local` in case mDNS is not available in your network (or it's failing somehow).
 3. Connect to the microcontroller's terminal interface, either via the USB connection or a socket connection to the device's IP at port 8000, using a terminal program (e.g. PuTTY).
 4. In the command terminal, `help` (+ <kbd>Enter</kbd>) will show all available commands with their descriptions. Initially, these operations must be performed:
    - Reset all settings to default with the `factoryreset`-command.
