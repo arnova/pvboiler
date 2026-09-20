@@ -5,10 +5,10 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.05"
+#define MY_VERSION "1.06"
 
 // Firmware version string
-const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
+const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
 
 // Boiler power rating
 #define BOILER_POWER_RATING_DEFAULT             2500  // Watt
@@ -90,18 +90,15 @@ const char VER_STR_P[] PROGMEM = "PvBoiler " MY_VERSION " - (C) 2026 Arno van Am
 #define MQTT_UPDATE_TIME_MAX                    254    // Seconds
 
 // Control topic items
-#define MQTT_CONTROLLER_ON_OFF                  "controller_enable"
-
+#define MQTT_SET_LOGIC_MODE                     "logic_mode"
 #define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
 #define MQTT_SET_POWER_BUDGET                   "power_budget"
-#define MQTT_POWER_BOOST_ON_OFF                 "power_boost"
 
 // Status topic items
 #define MQTT_FW_VERSION                         "firmware_version"
 #define MQTT_OUTPUT_POWER                       "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                  "output_percentage"
 
-#define MQTT_SET_LOGIC_MODE                     "logic_mode"
 #define MQTT_BOILER_POWER_RATING                "boiler_power_rating"
 #define MQTT_DEAD_ZONE                          "dead_zone"
 #define MQTT_BUDGET_MARGIN                      "budget_margin"

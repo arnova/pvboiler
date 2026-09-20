@@ -52,17 +52,11 @@ void CPvBoiler::Reset()
   m_iNetworkWatchdogCounter = 0;
   m_iNetworkWatchdogRecoveryCounter = 0;
 
-  m_bCtrlEnable = true;
-  m_bPublishCtrlOnOff = true;
-
   m_iPowerBudget = 0;
   m_bPublishPowerBudget = true;
 
   m_iPowerPercentage = 0;
   m_bPublishPowerPercentage = true;
-
-  m_bPowerBoost = false;
-  m_bPublishPowerBoost = true;
 
   m_fCurrentPercentage = 0.0f;
   m_bPublishOutputPercentage = true;
@@ -89,18 +83,6 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 
-  if (m_bPublishCtrlOnOff || bForce)
-  {
-    m_bPublishCtrlOnOff = false;
-    m_network.GetMqttClient().PublishMessage(MQTT_CONTROLLER_ON_OFF, m_bCtrlEnable ? "1" : "0");
-  }
-
-  if (m_bPublishPowerBoost || bForce)
-  {
-    m_bPublishPowerBoost = false;
-    m_network.GetMqttClient().PublishMessage(MQTT_POWER_BOOST_ON_OFF, m_bPowerBoost ? "1" : "0");
-  }
-
   if (m_bPublishSettings || bForce)
   {
     m_bPublishSettings = false;
@@ -108,31 +90,49 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
     m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
 
-    if (m_logicMode == LOGIC_MODE_BUDGET)
+    switch(m_logicMode)
     {
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Budget");
+      case LOGIC_MODE_BUDGET:
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Budget");
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
-      m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
+        m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
-      m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
+        m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fPosErrorGain);
-      m_network.GetMqttClient().PublishMessage(MQTT_POS_ERROR_GAIN, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fPosErrorGain);
+        m_network.GetMqttClient().PublishMessage(MQTT_POS_ERROR_GAIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.3f", m_fNegErrorGain);
-      m_network.GetMqttClient().PublishMessage(MQTT_NEG_ERROR_GAIN, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fNegErrorGain);
+        m_network.GetMqttClient().PublishMessage(MQTT_NEG_ERROR_GAIN, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fPosStepClamp);
-      m_network.GetMqttClient().PublishMessage(MQTT_POS_STEP_CLAMP, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fPosStepClamp);
+        m_network.GetMqttClient().PublishMessage(MQTT_POS_STEP_CLAMP, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fNegStepClamp);
-      m_network.GetMqttClient().PublishMessage(MQTT_NEG_STEP_CLAMP, strBuf);
-    }
-    else // Percentage
-    {
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Percentage");
+        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fNegStepClamp);
+        m_network.GetMqttClient().PublishMessage(MQTT_NEG_STEP_CLAMP, strBuf);
+      }
+      break;
+
+      case LOGIC_MODE_PERCENT:
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Percentage");
+      }
+      break;
+
+      case LOGIC_MODE_OFF:
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Off");
+      }
+      break;
+
+      case LOGIC_MODE_BOOST:
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Boost");
+      }
+      break;
     }
 
     if (m_dimStyle == DIM_STYLE_SSR)
@@ -231,9 +231,6 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 void CPvBoiler::MqttPublishConfig()
 {
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  m_network.GetMqttClient().PublishSwitchConfig(MQTT_CONTROLLER_ON_OFF);
-  m_network.GetMqttClient().PublishSwitchConfig(MQTT_POWER_BOOST_ON_OFF);
-
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR, true);
 
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1, -100000, 100000);
@@ -249,8 +246,8 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  static const char* strSelectValues[] = { "Percentage", "Budget" };
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_LOGIC_MODE, strSelectValues, 2);
+  static const char* strSelectValues[] = { "Percentage", "Budget", "Off", "Boost" };
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_LOGIC_MODE, strSelectValues, 4);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -652,9 +649,9 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || !m_bCtrlEnable || GetError())
+  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_logicMode == LOGIC_MODE_OFF || GetError())
   {
-    if (!m_bCtrlEnable)
+    if (m_logicMode == LOGIC_MODE_OFF)
     {
       m_iNetworkWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
@@ -664,7 +661,7 @@ void CPvBoiler::Update()
       fNewPercentage -= m_fNegStepClamp; // Device off or watch-dog triggered: output to 0%
     }
   }
-  else if (m_bPowerBoost)
+  else if (m_logicMode == LOGIC_MODE_BOOST)
   {
     fNewPercentage = 100.0f; // Immediately 100% power
   }

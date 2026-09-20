@@ -17,11 +17,8 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
                                   "uptime                 : Show device uptime\r\n"
-                                  "enable                 : Enable controller\r\n"
-                                  "disable                : Disable controller\r\n"
                                   "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent logic mode set percentage to [p] percent\r\n"
-                                  "boost [on|off]         : Turn boost mode (100% output) on or off\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "logicmode [l]          : Set logic mode to [l] (\"percent\" or \"budget\")\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
@@ -238,29 +235,6 @@ result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 }
 
 
-
-result_code_t CPvBoilerCommandHandler::CmdEnable(const char *strArgs)
-{
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
-
-  m_pvBoiler.SetCtrlOnOff(true);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CPvBoilerCommandHandler::CmdDisable(const char *strArgs)
-{
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
-
-  m_pvBoiler.SetCtrlOnOff(false);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
 result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
@@ -375,9 +349,6 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CTerminal::print("on_off=");
-  CTerminal::print(m_pvBoiler.GetCtrlOnOff() ? "1" : "0");
-
   CTerminal::print(" error=");
   CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
 
@@ -398,23 +369,40 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   CTerminal::print("logic_mode=");
-  CTerminal::print(m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT ? "percent" : "budget");
-
-  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
+  switch(m_pvBoiler.GetLogicMode())
   {
-    CTerminal::print(" perc_set=");
-    snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
-    CTerminal::print(strBuf);
-  }
-  else
-  {
-    CTerminal::print(" budget_set=");
-    snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
-    CTerminal::print(strBuf);
+    case CPvBoiler::LOGIC_MODE_PERCENT:
+    {
+      CTerminal::print("percent");
+    }
+    break;
+
+    case CPvBoiler::LOGIC_MODE_BUDGET:
+    {
+      CTerminal::print("budget");
+    }
+    break;
+
+    case CPvBoiler::LOGIC_MODE_BOOST:
+    {
+      CTerminal::print("boost");
+    }
+    break;
+
+    case CPvBoiler::LOGIC_MODE_OFF:
+    {
+      CTerminal::print("off");
+    }
+    break;
   }
 
-  CTerminal::print(" boost=");
-  CTerminal::print(m_pvBoiler.GetPowerBoost() ? "1" : "0");
+  CTerminal::print(" perc_set=");
+  snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" budget_set=");
+  snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
+  CTerminal::print(strBuf);
 
   CTerminal::println("");
 
@@ -507,9 +495,6 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_PERCENT)
-    return pack_result_code(ERR_CODE_CMD_INVALID);
-   
   int32_t iPower;
   result = get_int32_from_string(strArgs, &iPower, INT32_MIN, INT32_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
@@ -527,31 +512,12 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
   if (result.code != ERR_CODE_OK)
     return result;
 
-  if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_BUDGET)
-    return pack_result_code(ERR_CODE_CMD_INVALID);
-
   int32_t iPerc;
   result = get_int32_from_string(strArgs, &iPerc, 0, 100, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   m_pvBoiler.SetPowerPercentage(iPerc);
-
-  return pack_result_code(ERR_CODE_OK);
-}
-
-
-result_code_t CPvBoilerCommandHandler::CmdSetPowerBoost(const char *strArgs)
-{
-  if (strArgs == NULL || !*strArgs)
-    return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
-
-  if (STRIEQUALS(strArgs, "on") || STRIEQUALS(strArgs, "1"))
-    m_pvBoiler.SetPowerBoost(true);
-  else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
-    m_pvBoiler.SetPowerBoost(false);
-  else
-    return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -617,6 +583,10 @@ result_code_t CPvBoilerCommandHandler::CmdSetLogicMode(const char *strArgs)
     m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
   else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
     m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_BUDGET);
+  else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
+    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_OFF);
+  else if (STRIEQUALS(strArgs, "boost") || STRIEQUALS(strArgs, "1"))
+    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_BOOST);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
@@ -838,10 +808,6 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetPowerPercentage(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "boost"))
-  {
-    result = CmdSetPowerBoost(strArgs);
-  }
   else if (STRIEQUALS(strCommand, "boiler"))
   {
     result = CmdSetBoilerPowerRating(strArgs);
@@ -917,14 +883,6 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "restartnet"))
   {
     result = CmdRestartNet(strArgs);
-  }
-  else if (STRIEQUALS(strCommand, "enable"))
-  {
-    result = CmdEnable(strArgs);
-  }
-  else if (STRIEQUALS(strCommand, "disable"))
-  {
-    result = CmdDisable(strArgs);
   }
   else if (STRIEQUALS(strCommand, "netwdt"))
   {

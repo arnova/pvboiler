@@ -207,117 +207,137 @@ void CApp::HandleDisplay()
 
     switch (m_displayCount)
     {
-      case 0 : {
-                 m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
-                 m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
-                 m_display.WriteDisplayStr("(C) Arnova", 2, false);
-               } 
-               break;
+      case 0:
+      {
+        m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
+        m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
+        m_display.WriteDisplayStr("(C) Arnova", 2, false);
+      } 
+      break;
 
-      case 1 : {
-                 m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
+      case 1:
+      {
+        m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
 
-                 snprintf(strValue, sizeof(strValue), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-                 m_display.WriteDisplayStr(strValue, 1, false);
+        snprintf(strValue, sizeof(strValue), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        m_display.WriteDisplayStr(strValue, 1, false);
 
-                 if (!m_network.IsConnected())
-                 {
-                   m_display.WriteDisplayStr("WiFi error", 2, false);
-                 }
-                 else if (!m_network.IsMqttConnected())
-                 {
-                   m_display.WriteDisplayStr("MQTT error", 2, false);
-                 }
-                 else
-                 {
-                   m_display.WriteDisplayStr("Connection OK", 2, false);
-                 }
-               }
-               break;
+        if (!m_network.IsConnected())
+        {
+          m_display.WriteDisplayStr("WiFi error", 2, false);
+        }
+        else if (!m_network.IsMqttConnected())
+        {
+          m_display.WriteDisplayStr("MQTT error", 2, false);
+        }
+        else
+        {
+          m_display.WriteDisplayStr("Connection OK", 2, false);
+        }
+      }
+      break;
 
-      case 2 : {
-                 if (m_pvBoiler.GetError())
-                 {
-                   m_display.WriteDisplayStr("Power error", 0, true);
-                 }
-                 else
-                 {
-                   snprintf(strValue, sizeof(strValue), "%uW", m_pvBoiler.GetCurrentPower());
-                   m_display.WriteDisplayStr(strValue, 0, true);
-                 }
+      case 2:
+      {
+        if (m_pvBoiler.GetError())
+        {
+          m_display.WriteDisplayStr("Power error", 0, true);
+        }
+        else
+        {
+          snprintf(strValue, sizeof(strValue), "%uW", m_pvBoiler.GetCurrentPower());
+          m_display.WriteDisplayStr(strValue, 0, true);
+        }
 
-                 const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
-                 if (m_pvBoiler.GetPowerBoost())
-                 {
-                   snprintf(strValue, sizeof(strValue), "Boost - %u%%", iPercent);
-                 }
-                 else if (m_pvBoiler.GetLogicMode() == CPvBoiler::LOGIC_MODE_BUDGET)
-                 {
-                   snprintf(strValue, sizeof(strValue), "Budget - %u%%", iPercent);
-                 }
-                 else
-                 {
-                   snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
-                 }
+        const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
 
-                 m_display.WriteDisplayStr(strValue, 1, false);
+        switch (m_pvBoiler.GetLogicMode())
+        {
+          case CPvBoiler::LOGIC_MODE_BOOST:
+          {
+            strcpy(strValue, "Boost - 100%");
+          }
+          break;
 
-                 // Chars are not monospace so need to compensate for smaller spaces with the logic below
-                 strcpy(strValue, "[");
-                 for (uint8_t iCount = 0; iCount < 100;)
-                 {
-                   if (iCount < iPercent)
-                   {
-                     strcat(strValue, "=");
-                     iCount += 10;
-                   }
-                   else
-                   {
-                     strcat(strValue, " ");
-                     iCount += 5; // Spaces are smaller
-                   }
-                 }
-                 strcat(strValue, "]");
-                 m_display.WriteDisplayStr(strValue, 2, false);
-               }
-               break;
+          case CPvBoiler::LOGIC_MODE_BUDGET:
+          {
+            snprintf(strValue, sizeof(strValue), "Budget - %u%%", iPercent);
+          }
+          break;
 
-      case 3 : {
-                 const float fTemperature = m_pvBoiler.GetBoilerTemperature();
-                 if (fTemperature < 0.0f)
-                 {
-                   m_display.WriteDisplayStr("Unknown temperature", 1, true);
-                 }
-                 else
-                 {
-                   snprintf(strValue, sizeof(strValue), "%.1fC", fTemperature);
-                   m_display.WriteDisplayStr(strValue, 1, true);
-                 }
+          case CPvBoiler::LOGIC_MODE_PERCENT:
+          {
+            snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
+          }
+          break;
 
-                 // Chars are not monospace so need to compensate for smaller spaces with the logic below
-                 strcpy(strValue, "[");
-                 for (uint8_t iCount = 0; iCount < 100;)
-                 {
-                   if (iCount < fTemperature) // Range 0C - 100C
-                   {
-                     strcat(strValue, "=");
-                     iCount += 10;
-                   }
-                   else
-                   {
-                     strcat(strValue, " ");
-                     iCount += 5; // Spaces are smaller
-                   }
-                 }
-                 strcat(strValue, "]");
-                 m_display.WriteDisplayStr(strValue, 2, false);
-               }
-               break;
+          case CPvBoiler::LOGIC_MODE_OFF:
+          {
+            strcpy(strValue, "Off - 0%");
+          }
+          break;
+        }
 
-      case 4 : {
-                 m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
-               }
-               break;
+        m_display.WriteDisplayStr(strValue, 1, false);
+
+        // Chars are not monospace so need to compensate for smaller spaces with the logic below
+        strcpy(strValue, "[");
+        for (uint8_t iCount = 0; iCount < 100;)
+        {
+          if (iCount < iPercent)
+          {
+            strcat(strValue, "=");
+            iCount += 10;
+          }
+          else
+          {
+            strcat(strValue, " ");
+            iCount += 5; // Spaces are smaller
+          }
+        }
+        strcat(strValue, "]");
+        m_display.WriteDisplayStr(strValue, 2, false);
+      }
+      break;
+
+      case 3:
+      {
+        const float fTemperature = m_pvBoiler.GetBoilerTemperature();
+        if (fTemperature < 0.0f)
+        {
+          m_display.WriteDisplayStr("Unknown temperature", 1, true);
+        }
+        else
+        {
+          snprintf(strValue, sizeof(strValue), "%.1fC", fTemperature);
+          m_display.WriteDisplayStr(strValue, 1, true);
+        }
+
+        // Chars are not monospace so need to compensate for smaller spaces with the logic below
+        strcpy(strValue, "[");
+        for (uint8_t iCount = 0; iCount < 100;)
+        {
+          if (iCount < fTemperature) // Range 0C - 100C
+          {
+            strcat(strValue, "=");
+            iCount += 10;
+          }
+          else
+          {
+            strcat(strValue, " ");
+            iCount += 5; // Spaces are smaller
+          }
+        }
+        strcat(strValue, "]");
+        m_display.WriteDisplayStr(strValue, 2, false);
+      }
+      break;
+
+      case 4:
+      {
+        m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
+      }
+      break;
     }
 
     if (++m_displayCount > 4)

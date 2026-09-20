@@ -56,12 +56,8 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdNetWatchdogRecovery(const char *strArgs);
     result_code_t CmdRestartNet(const char *strArgs);
 
-    result_code_t CmdEnable(const char *strArgs);
-    result_code_t CmdDisable(const char *strArgs);
-
     result_code_t CmdSetPowerBudget(const char *strArgs);
     result_code_t CmdSetPowerPercentage(const char *strArgs);
-    result_code_t CmdSetPowerBoost(const char *strArgs);
 
     result_code_t CmdSetBoilerPowerRating(const char *strArgs);
     result_code_t CmdSetDeadZone(const char *strArgs);

@@ -57,7 +57,9 @@ class CPvBoiler
     enum logic_mode_e
     {
       LOGIC_MODE_BUDGET = 0,
-      LOGIC_MODE_PERCENT
+      LOGIC_MODE_PERCENT,
+      LOGIC_MODE_OFF,
+      LOGIC_MODE_BOOST
     };
     typedef enum logic_mode_e logic_mode_t;
 
@@ -71,10 +73,8 @@ class CPvBoiler
 
     void TrigNetworkWatchdog() { m_iNetworkWatchdogCounter = 0; };
 
-    void SetCtrlOnOff(const bool bVal) { m_bCtrlEnable = bVal; m_bPublishCtrlOnOff = true; };
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
-    void SetPowerBoost(const bool bVal) { m_bPowerBoost = bVal; m_bPublishPowerBoost = true; };
 
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
@@ -97,10 +97,8 @@ class CPvBoiler
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };
     uint16_t GetTriacPhaseAngle() const { return m_iTriacPhaseAngle; };
 
-    bool GetCtrlOnOff() const { return m_bCtrlEnable; };
     int32_t GetPowerBudget() const { return m_iPowerBudget; };
     uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
-    bool GetPowerBoost() const { return m_bPowerBoost; };
 
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
     uint8_t GetDeadZone() const { return m_iDeadZone; };
@@ -133,17 +131,11 @@ class CPvBoiler
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
-    bool m_bCtrlEnable = true;
-    bool m_bPublishCtrlOnOff = true;
-
     int32_t m_iPowerBudget = 0;
     bool m_bPublishPowerBudget = true;
 
     uint8_t m_iPowerPercentage = 0;
     bool m_bPublishPowerPercentage = true;
-
-    bool m_bPowerBoost = false;
-    bool m_bPublishPowerBoost = true;
 
     float m_fCurrentPercentage = 0.0f;
     bool m_bPublishOutputPercentage = true;

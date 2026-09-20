@@ -68,32 +68,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   char strVal[32] = { 0 };
   memcpy(strVal, payload, (length < sizeof(strVal)) ? length : sizeof(strVal) - 1);
 
-  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_CONTROLLER_ON_OFF "/set"))
-  {
-    if (bValidInt || length == 0)
-    {
-      if (iVal == 0 || iVal == 1 || length == 0)
-      {
-        if (iVal == 1 || length == 0)
-        {
-          g_app.GetPvBoiler().SetCtrlOnOff(true);
-        }
-        else
-        {
-          g_app.GetPvBoiler().SetCtrlOnOff(false);
-        }
-      }
-      else
-      {
-        CMqttClient::PrintDataError();
-      }
-    }
-    else
-    {
-      CMqttClient::PrintDataError();
-    }
-  }
-  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
@@ -115,32 +90,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_POWER_BOOST_ON_OFF "/set"))
-  {
-    if (bValidInt || length == 0)
-    {
-      if (iVal == 0 || iVal == 1 || length == 0)
-      {
-        if (iVal == 1 || length == 0)
-        {
-          g_app.GetPvBoiler().SetPowerBoost(true);
-        }
-        else
-        {
-          g_app.GetPvBoiler().SetPowerBoost(false);
-        }
-      }
-      else
-      {
-        CMqttClient::PrintDataError();
-      }
-    }
-    else
-    {
-      CMqttClient::PrintDataError();
-    }
-  }
-  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_LOGIC_MODE "/set"))
+  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_LOGIC_MODE "/set"))
   {
     if (strcasecmp(strVal, "Budget") == 0)
     {
@@ -149,6 +99,14 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     else if (strcasecmp(strVal, "Percentage") == 0)
     {
       g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
+    }
+    else if (strcasecmp(strVal, "Off") == 0)
+    {
+      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_OFF);
+    }
+    else if (strcasecmp(strVal, "Boost") == 0)
+    {
+      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_BOOST);
     }
     else
     {
