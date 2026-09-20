@@ -251,27 +251,27 @@ void CApp::HandleDisplay()
 
         const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
 
-        switch (m_pvBoiler.GetLogicMode())
+        switch (m_pvBoiler.GetMode())
         {
-          case CPvBoiler::LOGIC_MODE_BOOST:
+          case CPvBoiler::MODE_BOOST:
           {
             strcpy(strValue, "Boost - 100%");
           }
           break;
 
-          case CPvBoiler::LOGIC_MODE_BUDGET:
+          case CPvBoiler::MODE_BUDGET:
           {
             snprintf(strValue, sizeof(strValue), "Budget - %u%%", iPercent);
           }
           break;
 
-          case CPvBoiler::LOGIC_MODE_PERCENT:
+          case CPvBoiler::MODE_PERCENT:
           {
             snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
           }
           break;
 
-          case CPvBoiler::LOGIC_MODE_OFF:
+          case CPvBoiler::MODE_OFF:
           {
             strcpy(strValue, "Off - 0%");
           }

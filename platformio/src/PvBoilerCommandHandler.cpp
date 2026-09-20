@@ -17,10 +17,10 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
                                   "uptime                 : Show device uptime\r\n"
-                                  "budget [p]             : For budget logic mode set available budget to [p] Watt\r\n"
-                                  "percent [p]            : For percent logic mode set percentage to [p] percent\r\n"
+                                  "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
+                                  "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
-                                  "logicmode [l]          : Set logic mode to [l] (\"percent\" or \"budget\")\r\n"
+                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"boost\", \"off\")\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
@@ -368,28 +368,28 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("logic_mode=");
-  switch(m_pvBoiler.GetLogicMode())
+  CTerminal::print("mode=");
+  switch(m_pvBoiler.GetMode())
   {
-    case CPvBoiler::LOGIC_MODE_PERCENT:
+    case CPvBoiler::MODE_PERCENT:
     {
       CTerminal::print("percent");
     }
     break;
 
-    case CPvBoiler::LOGIC_MODE_BUDGET:
+    case CPvBoiler::MODE_BUDGET:
     {
       CTerminal::print("budget");
     }
     break;
 
-    case CPvBoiler::LOGIC_MODE_BOOST:
+    case CPvBoiler::MODE_BOOST:
     {
       CTerminal::print("boost");
     }
     break;
 
-    case CPvBoiler::LOGIC_MODE_OFF:
+    case CPvBoiler::MODE_OFF:
     {
       CTerminal::print("off");
     }
@@ -574,23 +574,23 @@ result_code_t CPvBoilerCommandHandler::CmdSetBudgetMargin(const char *strArgs)
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetLogicMode(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
 {
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
   if (STRIEQUALS(strArgs, "percent") || STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
+    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT);
   else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
-    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_BUDGET);
+    m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET);
   else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
-    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_OFF);
+    m_pvBoiler.SetMode(CPvBoiler::MODE_OFF);
   else if (STRIEQUALS(strArgs, "boost") || STRIEQUALS(strArgs, "1"))
-    m_pvBoiler.SetLogicMode(CPvBoiler::LOGIC_MODE_BOOST);
+    m_pvBoiler.SetMode(CPvBoiler::MODE_BOOST);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
-  // Logic-mode changed so need to publish config
+  // Mode changed so need to publish config
   m_pvBoiler.MqttPublishConfig();
 
   return pack_result_code(ERR_CODE_OK);
@@ -820,9 +820,9 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetBudgetMargin(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "logicmode"))
+  else if (STRIEQUALS(strCommand, "mode"))
   {
-    result = CmdSetLogicMode(strArgs);
+    result = CmdSetMode(strArgs);
   }
   else if (STRIEQUALS(strCommand, "dimstyle"))
   {

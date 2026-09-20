@@ -54,14 +54,14 @@ class CPvBoiler
     };
     typedef enum dim_style_e dim_style_t;
 
-    enum logic_mode_e
+    enum mode_e
     {
-      LOGIC_MODE_BUDGET = 0,
-      LOGIC_MODE_PERCENT,
-      LOGIC_MODE_OFF,
-      LOGIC_MODE_BOOST
+      MODE_BUDGET = 0,
+      MODE_PERCENT,
+      MODE_OFF,
+      MODE_BOOST
     };
-    typedef enum logic_mode_e logic_mode_t;
+    typedef enum mode_e mode_t;
 
     void Loop();
     void Reset();
@@ -79,7 +79,7 @@ class CPvBoiler
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
     void SetBudgetMargin(const uint16_t iMargin);
-    void SetLogicMode(const logic_mode_t logicMode);
+    void SetMode(const mode_t mode);
     void SetDimStyle(const dim_style_t dimStyle);
     void SetSsrPeriodCount(const uint8_t iPeriod);
     void SetPosErrorGain(const float fGain);
@@ -103,7 +103,7 @@ class CPvBoiler
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
     uint8_t GetDeadZone() const { return m_iDeadZone; };
     uint16_t GetBudgetMargin() const { return m_iBudgetMargin; };
-    logic_mode_t GetLogicMode() const { return m_logicMode; };
+    mode_t GetMode() const { return m_mode; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetPosErrorGain() const { return m_fPosErrorGain; };
@@ -171,7 +171,7 @@ class CPvBoiler
     float m_fPosStepClamp = POS_STEP_CLAMP_DEFAULT;
     float m_fNegStepClamp = NEG_STEP_CLAMP_DEFAULT;
 
-    logic_mode_t m_logicMode = LOGIC_MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
+    mode_t m_mode = MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 
     OneWire m_oneWire;
     DallasTemperature m_tempSensors;

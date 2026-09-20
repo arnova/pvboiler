@@ -90,23 +90,23 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_LOGIC_MODE "/set"))
+  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_MODE "/set"))
   {
     if (strcasecmp(strVal, "Budget") == 0)
     {
-      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_BUDGET);
+      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_BUDGET);
     }
     else if (strcasecmp(strVal, "Percentage") == 0)
     {
-      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_PERCENT);
+      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_PERCENT);
     }
     else if (strcasecmp(strVal, "Off") == 0)
     {
-      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_OFF);
+      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_OFF);
     }
     else if (strcasecmp(strVal, "Boost") == 0)
     {
-      g_app.GetPvBoiler().SetLogicMode(CPvBoiler::LOGIC_MODE_BOOST);
+      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_BOOST);
     }
     else
     {

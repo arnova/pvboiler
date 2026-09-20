@@ -90,7 +90,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_UPDATE_TIME_MAX                    254    // Seconds
 
 // Control topic items
-#define MQTT_SET_LOGIC_MODE                     "logic_mode"
+#define MQTT_SET_MODE                           "mode"
 #define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
 #define MQTT_SET_POWER_BUDGET                   "power_budget"
 

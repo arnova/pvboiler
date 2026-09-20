@@ -90,11 +90,11 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
     m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
 
-    switch(m_logicMode)
+    switch(m_mode)
     {
-      case LOGIC_MODE_BUDGET:
+      case MODE_BUDGET:
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Budget");
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Budget");
 
         snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
         m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
@@ -116,21 +116,21 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       }
       break;
 
-      case LOGIC_MODE_PERCENT:
+      case MODE_PERCENT:
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Percentage");
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Percentage");
       }
       break;
 
-      case LOGIC_MODE_OFF:
+      case MODE_OFF:
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Off");
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Off");
       }
       break;
 
-      case LOGIC_MODE_BOOST:
+      case MODE_BOOST:
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_LOGIC_MODE, "Boost");
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Boost");
       }
       break;
     }
@@ -247,7 +247,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
   static const char* strSelectValues[] = { "Percentage", "Budget", "Off", "Boost" };
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_LOGIC_MODE, strSelectValues, 4);
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strSelectValues, 4);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -326,7 +326,7 @@ void CPvBoiler::LoadSettings()
   m_iBudgetMargin = iVal16;
 
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_logicMode = (iVal8 == 0x01) ? CPvBoiler::LOGIC_MODE_PERCENT : CPvBoiler::LOGIC_MODE_BUDGET;
+  m_mode = (iVal8 == 0x01) ? CPvBoiler::MODE_PERCENT : CPvBoiler::MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
@@ -432,14 +432,14 @@ void CPvBoiler::SetBudgetMargin(const uint16_t iMargin)
 }
 
 
-void CPvBoiler::SetLogicMode(const CPvBoiler::logic_mode_t logicMode)
+void CPvBoiler::SetMode(const CPvBoiler::mode_t mode)
 {
-  if (logicMode != m_logicMode)
+  if (mode != m_mode)
   {
-    EEPROM.put(EEPROM_CTRL_MODE, (logicMode == CPvBoiler::LOGIC_MODE_PERCENT) ? 0x01 : 0x00);
+    EEPROM.put(EEPROM_CTRL_MODE, (mode == CPvBoiler::MODE_PERCENT) ? 0x01 : 0x00);
     EEPROM.commit();
 
-    m_logicMode = logicMode;
+    m_mode = mode;
 
     m_bPublishSettings = true;
   }
@@ -577,7 +577,7 @@ void CPvBoiler::FactoryReset()
   SetBoilerPowerRating(BOILER_POWER_RATING_DEFAULT);
   SetDeadZone(DEAD_ZONE_DEFAULT);
   SetBudgetMargin(BUDGET_MARGIN_DEFAULT);
-  SetLogicMode(LOGIC_MODE_BUDGET);
+  SetMode(MODE_BUDGET);
   SetDimStyle(DIM_STYLE_PHASE_ANGLE);
   SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
   SetPosErrorGain(POS_ERROR_GAIN_DEFAULT);
@@ -649,9 +649,9 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_logicMode == LOGIC_MODE_OFF || GetError())
+  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF || GetError())
   {
-    if (m_logicMode == LOGIC_MODE_OFF)
+    if (m_mode == MODE_OFF)
     {
       m_iNetworkWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
@@ -661,11 +661,11 @@ void CPvBoiler::Update()
       fNewPercentage -= m_fNegStepClamp; // Device off or watch-dog triggered: output to 0%
     }
   }
-  else if (m_logicMode == LOGIC_MODE_BOOST)
+  else if (m_mode == MODE_BOOST)
   {
     fNewPercentage = 100.0f; // Immediately 100% power
   }
-  else if (m_logicMode == LOGIC_MODE_PERCENT)
+  else if (m_mode == MODE_PERCENT)
   {
     fNewPercentage = m_iPowerPercentage;
   }
