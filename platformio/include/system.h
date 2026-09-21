@@ -129,12 +129,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define SOCKET_SERVER_PORT                      8000
 
 // Misc. (home assistant) settings
-#define HOST_NAME                              "pvboiler"
-#define DEVICE_NAME                            "PV-Boiler"
-#define MQTT_NAME                              DEVICE_NAME
-#define HA_DEVICE_NAME                         DEVICE_NAME
-#define HA_DEVICE_MODEL                        "PV-Boiler Controller"
-#define HA_MANUFACTURER                        "Arnova"
+#define DEFAULT_HOST_NAME                       "PvBoiler"
+#define DEVICE_NAME                             "PV-Boiler"
+#define DEVICE_MODEL                            "PV-Boiler Controller"
+#define MANUFACTURER                            "Arnova"
 
 /********************
  * GPIO pin numbers *

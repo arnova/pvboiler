@@ -31,6 +31,8 @@ class CNetwork
 
     void LoadSettings();
     void InitWifi(const bool bReconnect);
+
+    void SetHostName(const char* strHostName);
     void SetWifiSsid(const char* strSsid);
     void SetWifiPassword(const char* strPassword);
     void SetIpAddr(const uint8_t* ipAddress);
@@ -43,6 +45,7 @@ class CNetwork
 
     void MqttPublishValues();
 
+    const char* GetHostName() { return m_strHostName; };
     const char* GetWifiSsid() { return m_strWifiSsid; };
     const char* GetWifiPassword() { return m_strWifiPassword; };
     const uint8_t* GetIpAddr() { return m_ipAddr; };
@@ -64,6 +67,7 @@ class CNetwork
   private:
     static bool IsValidAlpha(const char* str);
 
+    char m_strHostName[HOST_NAME_MAX_SIZE + 1] = { 0 };
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
     char m_strWifiPassword[WIFI_PASSWORD_MAX_SIZE + 1] = { 0 };
     char m_strMqttUser[MQTT_USER_MAX_SIZE + 1] = { 0 };

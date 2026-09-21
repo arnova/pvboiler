@@ -203,7 +203,7 @@ void CApp::HandleDisplay()
   if (m_displayTimer > 5000)
   {
     m_displayTimer = 0;
-    char strValue[22]; // Maximum amount of characters on a single line with this font is 21
+    char strLine[22]; // Maximum amount of characters on a single line with this font is 21
 
     switch (m_displayCount)
     {
@@ -217,10 +217,10 @@ void CApp::HandleDisplay()
 
       case 1:
       {
-        m_display.WriteDisplayStr(m_network.GetWifiSsid(), 0, true);
+        m_display.WriteDisplayStr(m_network.GetHostName(), 0, true);
 
-        snprintf(strValue, sizeof(strValue), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-        m_display.WriteDisplayStr(strValue, 1, false);
+        snprintf(strLine, sizeof(strLine), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        m_display.WriteDisplayStr(strLine, 1, false);
 
         if (!m_network.IsConnected())
         {
@@ -232,7 +232,7 @@ void CApp::HandleDisplay()
         }
         else
         {
-          m_display.WriteDisplayStr("Connection OK", 2, false);
+          m_display.WriteDisplayStr(m_network.GetWifiSsid(), 2, false);
         }
       }
       break;
@@ -245,8 +245,8 @@ void CApp::HandleDisplay()
         }
         else
         {
-          snprintf(strValue, sizeof(strValue), "%uW", m_pvBoiler.GetCurrentPower());
-          m_display.WriteDisplayStr(strValue, 0, true);
+          snprintf(strLine, sizeof(strLine), "%uW", m_pvBoiler.GetCurrentPower());
+          m_display.WriteDisplayStr(strLine, 0, true);
         }
 
         const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
@@ -255,48 +255,48 @@ void CApp::HandleDisplay()
         {
           case CPvBoiler::MODE_BOOST:
           {
-            strcpy(strValue, "Boost - 100%");
+            strcpy(strLine, "Boost - 100%");
           }
           break;
 
           case CPvBoiler::MODE_BUDGET:
           {
-            snprintf(strValue, sizeof(strValue), "Budget - %u%%", iPercent);
+            snprintf(strLine, sizeof(strLine), "Budget - %u%%", iPercent);
           }
           break;
 
           case CPvBoiler::MODE_PERCENT:
           {
-            snprintf(strValue, sizeof(strValue), "%u%%", iPercent);
+            snprintf(strLine, sizeof(strLine), "%u%%", iPercent);
           }
           break;
 
           case CPvBoiler::MODE_OFF:
           {
-            strcpy(strValue, "Off - 0%");
+            strcpy(strLine, "Off - 0%");
           }
           break;
         }
 
-        m_display.WriteDisplayStr(strValue, 1, false);
+        m_display.WriteDisplayStr(strLine, 1, false);
 
         // Chars are not monospace so need to compensate for smaller spaces with the logic below
-        strcpy(strValue, "[");
+        strcpy(strLine, "[");
         for (uint8_t iCount = 0; iCount < 100;)
         {
           if (iCount < iPercent)
           {
-            strcat(strValue, "=");
+            strcat(strLine, "=");
             iCount += 10;
           }
           else
           {
-            strcat(strValue, " ");
+            strcat(strLine, " ");
             iCount += 5; // Spaces are smaller
           }
         }
-        strcat(strValue, "]");
-        m_display.WriteDisplayStr(strValue, 2, false);
+        strcat(strLine, "]");
+        m_display.WriteDisplayStr(strLine, 2, false);
       }
       break;
 
@@ -309,27 +309,27 @@ void CApp::HandleDisplay()
         }
         else
         {
-          snprintf(strValue, sizeof(strValue), "%.1fC", fTemperature);
-          m_display.WriteDisplayStr(strValue, 1, true);
+          snprintf(strLine, sizeof(strLine), "%.1fC", fTemperature);
+          m_display.WriteDisplayStr(strLine, 1, true);
         }
 
         // Chars are not monospace so need to compensate for smaller spaces with the logic below
-        strcpy(strValue, "[");
+        strcpy(strLine, "[");
         for (uint8_t iCount = 0; iCount < 100;)
         {
           if (iCount < fTemperature) // Range 0C - 100C
           {
-            strcat(strValue, "=");
+            strcat(strLine, "=");
             iCount += 10;
           }
           else
           {
-            strcat(strValue, " ");
+            strcat(strLine, " ");
             iCount += 5; // Spaces are smaller
           }
         }
-        strcat(strValue, "]");
-        m_display.WriteDisplayStr(strValue, 2, false);
+        strcat(strLine, "]");
+        m_display.WriteDisplayStr(strLine, 2, false);
       }
       break;
 

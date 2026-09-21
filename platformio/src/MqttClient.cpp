@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : July 30, 2026
+  Last modified    : September 22, 2026
 */
 
 #include <Arduino.h>
@@ -57,24 +57,24 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
   GetFriendlyName(strItem, strFriendlyItem, sizeof(strFriendlyItem));
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  snprintf(strBuf, sizeof(strBuf), "%s/%s", m_strHostName, strItem);
   root["state_topic"] = strBuf;
 
   root["name"] = strFriendlyItem;
 
-  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
-  snprintf(strBuf2, sizeof(strBuf2), MQTT_NAME "_%s", strItem);
+  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  snprintf(strBuf2, sizeof(strBuf2), "%s_%s", m_strHostName, strItem);
   root["unique_id"] = strBuf2;
   
   root["retain"] = true;
   root["qos"] = 1;
 
   JsonObject device = root["device"].to<JsonObject>();
-  device["name"] = HA_DEVICE_NAME;
-  device["model"] = HA_DEVICE_MODEL;
-  device["manufacturer"] = HA_MANUFACTURER;
-  device["identifiers"][0] = HA_DEVICE_NAME;
+  device["identifiers"][0] = m_strHostName;
+  device["name"] = m_strHostName;
+  device["model"] = DEVICE_MODEL;
+  device["manufacturer"] = MANUFACTURER;
   device["sw_version"] = MY_VERSION;
 }
 
@@ -90,7 +90,7 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
 #endif
 
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
-  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, MQTT_NAME, strItem);
+  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
   publish(strTopic, strMessage, true);
 }
 
@@ -102,8 +102,8 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
   PublishConfig(root, strItem, strTopicType);
 
   // Subscribe to /set messages
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
+  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
   subscribe(strBuf, 1);
 }
 
@@ -126,14 +126,14 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
 #endif
 
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
-  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, MQTT_NAME, strItem);
+  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
   publish(strTopic, "", true);
 
   if (bSetter)
   {
     // Unsubscribe setter
-    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
-    snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
+    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
+    snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
     unsubscribe(strBuf);
   }
 }
@@ -167,8 +167,8 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
+  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
   root["command_topic"] = strBuf;
 
   root["payload_on"] = "1";
@@ -185,8 +185,8 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* 
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
+  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
   root["command_topic"] = strBuf;
 
   root["min"] = fMin;
@@ -203,8 +203,8 @@ void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValue
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 6];
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "/%s/set", strItem);
+  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
+  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
   root["command_topic"] = strBuf;
 
   for (uint8_t it = 0; it < iCount; it++)
@@ -246,18 +246,20 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /
 
 bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetained /* = true */)
 {
-  char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + sizeof(MQTT_NAME) + 2];
-  snprintf(strTopic, sizeof(strTopic), MQTT_NAME "/%s", strItem);
+  char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  snprintf(strTopic, sizeof(strTopic), "%s/%s", m_strHostName, strItem);
   return publish(strTopic, strPayload, bRetained);
 }
 
 
-void CMqttClient::Init(const uint8_t* serverIp, const char* strUser, const char* strPassword)
+void CMqttClient::Init(const uint8_t* serverIp, const char* strHostName, const char* strUser, const char* strPassword)
 {
   memcpy(m_serverIp, serverIp, 4);
 
   setBufferSize(MQTT_MAX_MESSAGE_SIZE);
   setServer(m_serverIp, MQTT_PORT);
+
+  strcpy(m_strHostName, strHostName);
 
   if (strUser != NULL)
   {
@@ -273,7 +275,7 @@ void CMqttClient::Init(const uint8_t* serverIp, const char* strUser, const char*
 
 bool CMqttClient::ServerConnect()
 {
-  char strBuf[16]; // Enough for IPv4 address / hostname-xxxx
+  char strBuf[HOST_NAME_MAX_SIZE + 6]; // Enough for hostname-xxxx
 
 #ifdef MQTT_DEBUG
   CTerminal::print("Connecting to MQTT server: ");
@@ -284,7 +286,7 @@ bool CMqttClient::ServerConnect()
   CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
   // Create a random client ID
-  snprintf(strBuf, sizeof(strBuf), MQTT_NAME "-%lx", random(0xffff));
+  snprintf(strBuf, sizeof(strBuf), "%s-%lx", m_strHostName, random(0xffff));
 
   char* strUser = NULL;
   if (strlen(m_strUser) != 0)

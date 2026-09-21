@@ -41,7 +41,7 @@ void CNetwork::Init()
 
   if (IPAddress(m_mqttIpAddr) != IPAddress(0, 0, 0, 0))
   {
-    m_mqttClient.Init(m_mqttIpAddr, m_strMqttUser, m_strMqttPassword);
+    m_mqttClient.Init(m_mqttIpAddr, m_strHostName, m_strMqttUser, m_strMqttPassword);
   }
 }
 
@@ -62,7 +62,13 @@ bool CNetwork::IsValidAlpha(const char* str)
 
 void CNetwork::LoadSettings()
 {
-    // Obtain our IP
+  EEPROM.get(EEPROM_HOST_NAME, m_strHostName);
+  m_strHostName[HOST_NAME_MAX_SIZE] = '\0'; // Always null terminate
+  if (!IsValidAlpha(m_strHostName))
+  {
+    strcpy(m_strHostName, DEFAULT_HOST_NAME);
+  }
+
   EEPROM.get(EEPROM_IP_ADDR, m_ipAddr);
   if (IPAddress(m_ipAddr) == IPAddress(255, 255, 255, 255))
   {
@@ -153,7 +159,7 @@ void CNetwork::InitWifi(const bool bReconnect)
   }
 
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname(HOST_NAME);
+  WiFi.setHostname(m_strHostName);
   if (strlen(m_strWifiPassword) != 0)
   {
     WiFi.begin(m_strWifiSsid, m_strWifiPassword);
@@ -161,6 +167,19 @@ void CNetwork::InitWifi(const bool bReconnect)
   else
   {
     WiFi.begin(m_strWifiSsid);
+  }
+}
+
+
+void CNetwork::SetHostName(const char* strHostName)
+{
+  if (!STREQUALS(strHostName, m_strHostName))
+  {
+    memset(m_strHostName, 0x00, HOST_NAME_MAX_SIZE + 1);
+    strcpy(m_strHostName, strHostName);
+
+    EEPROM.put(EEPROM_HOST_NAME, m_strHostName);
+    EEPROM.commit();
   }
 }
 
@@ -223,7 +242,7 @@ void CNetwork::ReinitMqtt()
     m_mqttClient.disconnect();
   }
 
-  m_mqttClient.Init(m_mqttIpAddr, m_strMqttUser, m_strMqttPassword);
+  m_mqttClient.Init(m_mqttIpAddr, m_strHostName, m_strMqttUser, m_strMqttPassword);
 }
 
 
@@ -352,13 +371,13 @@ void CNetwork::Loop()
     if (!m_bWifiConnected)
     {
       // Initialize mDNS
-      if (!MDNS.begin(HOST_NAME))
+      if (!MDNS.begin(m_strHostName))
       {
         CTerminal::println("ERROR: Unable to start MDNS responder!");
       }
 
       // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
-      ArduinoOTA.setHostname(HOST_NAME);
+      ArduinoOTA.setHostname(m_strHostName);
 
       ArduinoOTA.onStart([]() {
         TERM_SERIAL.println("Start");

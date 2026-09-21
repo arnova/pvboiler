@@ -48,6 +48,11 @@ void IRAM_ATTR TriacTimerISR()
 
 void MqttCallback(char* topic, byte *payload, const unsigned int length)
 {
+  const size_t iLen = strlen(g_app.GetNetwork().GetHostName());
+  if (strncmp(topic, g_app.GetNetwork().GetHostName(), iLen) != 0 ||
+      strlen(topic) < iLen + 2)
+    return; // Hostname mismatch or length too small
+
 #ifdef MQTT_DEBUG
   CTerminal::println("-------new message from broker-----");
   CTerminal::print("topic: ");
@@ -68,7 +73,10 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   char strVal[32] = { 0 };
   memcpy(strVal, payload, (length < sizeof(strVal)) ? length : sizeof(strVal) - 1);
 
-  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_BUDGET "/set"))
+  // Get rid of host prefix
+  char* subTopic = topic + iLen;
+
+  if (STRIEQUALS(subTopic, "/" MQTT_SET_POWER_BUDGET "/set"))
   {
     if (bValidInt)
     {
@@ -79,7 +87,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+  else if (STRIEQUALS(subTopic, "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
@@ -90,7 +98,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  if (STRIEQUALS(topic, MQTT_NAME "/" MQTT_SET_MODE "/set"))
+  if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
   {
     if (strcasecmp(strVal, "Budget") == 0)
     {

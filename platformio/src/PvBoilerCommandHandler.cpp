@@ -21,6 +21,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"boost\", \"off\")\r\n"
+                                  "hostname [h]           : Set hostname to [n]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
                                   "ipaddr [ip]            : Set [ip] (\"dhcp\" for DHCP) for device IP address\r\n"
@@ -93,6 +94,29 @@ result_code_t CPvBoilerCommandHandler::CmdShowExpertHelp(const char *strArgs)
   CTerminal::println(FPSTR(EX_HELP_STR_P));
 
   return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetHostName(const char *strArgs)
+{
+  if (strArgs == NULL || !*strArgs)
+    return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
+
+  if (strlen(strArgs) > HOST_NAME_MAX_SIZE)
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MAX, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, HOST_NAME_MAX_SIZE);
+  }
+
+  if (strlen(strArgs) == 0)
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MIN, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, 1);
+  }
+
+  m_network.SetHostName(strArgs);
+
+  return pack_result_code(ERR_CODE_OK_AFTER_RESTART);
 }
 
 
@@ -242,7 +266,10 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTerminal::print("wifi_ssid=");
+  CTerminal::print("host_name=");
+  CTerminal::print(m_network.GetHostName());
+
+  CTerminal::print(" wifi_ssid=");
   CTerminal::print(m_network.GetWifiSsid());
 
   CTerminal::print(" wifi_pass=");
@@ -847,6 +874,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "scn") || STRIEQUALS(strCommand, "sclampn"))
   {
     result = CmdSetNegStepClamp(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "hostname") || STRIEQUALS(strCommand, "name"))
+  {
+    result = CmdSetHostName(strArgs);
   }
   else if (STRIEQUALS(strCommand, "ssid") || STRIEQUALS(strCommand, "wssid") || STRIEQUALS(strCommand, "wifissid"))
   {
