@@ -37,6 +37,7 @@ void CPvBoiler::Loop()
           m_bPublishBoilerTemperature = true;
           m_fBoilerTemperature = fTemperatureAveraged;
           m_iBoilerTemperatureRetryCount = 0;
+          m_legionella.UpdateTemperature(fTemperatureAveraged);
         }
       }
       else if (++m_iBoilerTemperatureRetryCount >= 255)
@@ -660,7 +661,11 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF || GetError())
+  if (m_legionella.MustDisinfect())
+  {
+    fNewPercentage = 100.0f;
+  }
+  else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF || GetError())
   {
     if (m_mode == MODE_OFF)
     {

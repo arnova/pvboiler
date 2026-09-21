@@ -11,6 +11,7 @@
 #include "Network.h"
 #include "PvBoilerCommandHandler.h"
 #include "RollingAverage.h"
+#include "Legionella.h"
 
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
@@ -181,5 +182,6 @@ class CPvBoiler
     bool m_bPublishBoilerTemperature = true;
     uint16_t m_iBoilerTemperatureRetryCount = 0;
     CRollingAverage m_boilerTemperatureAverage;
+    CLegionella m_legionella;
 };
 #endif // PVBOILER_H
