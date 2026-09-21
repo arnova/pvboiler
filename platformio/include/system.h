@@ -126,7 +126,12 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"
 #define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
 #define MQTT_UP_TIME                            "up_time"
+
 #define MQTT_BOILER_TEMPERATURE                 "boiler_temperature"
+#define MQTT_LEGIONELLA_MUST_DISINFECT          "legionella_must_disinfect"
+#define MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS   "legionella_disinfect_run_seconds"
+#define MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "legionella_hours_since_disinfection"
+#define MQTT_LEGIONELLA_DANGER_ZONE_HOURS       "legionella_danger_zone_hours"
 
 // Socket server settings
 #define SOCKET_SERVER_PORT                      8000
