@@ -9,6 +9,8 @@ CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE
   m_tempSensors.setResolution(9);
   m_tempSensors.setWaitForConversion(false); // Do not block but poll
   m_tempSensors.requestTemperatures(); // Request first temperature
+
+  m_boilerTemperatureAverage.SetAvgCount(100);
 }
 
 
@@ -26,15 +28,23 @@ void CPvBoiler::Loop()
     if (m_tempSensors.getDeviceCount() > 0)
     {
       const float fTemperature = m_tempSensors.getTempCByIndex(0); // first sensor on the bus
-      if (m_fBoilerTemperature != fTemperature)
+
+      if (fTemperature != DEVICE_DISCONNECTED_C && fTemperature != 85.0f)
       {
-        if ((fTemperature != DEVICE_DISCONNECTED_C && fTemperature != 85.0f) || 
-            ++m_iBoilerTemperatureRetryCount == 5)
+        const float fTemperatureAveraged = m_boilerTemperatureAverage.UpdateValue(fTemperature);
+        if (m_fBoilerTemperature != fTemperatureAveraged)
         {
           m_bPublishBoilerTemperature = true;
-          m_fBoilerTemperature = fTemperature;
+          m_fBoilerTemperature = fTemperatureAveraged;
           m_iBoilerTemperatureRetryCount = 0;
         }
+      }
+      else if (++m_iBoilerTemperatureRetryCount >= 255)
+      {
+        // Overwrite averaged value when out of retries:
+        m_bPublishBoilerTemperature = true;
+        m_fBoilerTemperature = fTemperature;
+        m_boilerTemperatureAverage.Reset();
       }
 
       m_tempSensors.requestTemperatures();
@@ -71,6 +81,7 @@ void CPvBoiler::Reset()
 
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
+  m_boilerTemperatureAverage.Reset();
 
   LoadSettings();
 }

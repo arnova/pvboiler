@@ -10,6 +10,7 @@
 #include "Uptime.h"
 #include "Network.h"
 #include "PvBoilerCommandHandler.h"
+#include "RollingAverage.h"
 
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
@@ -179,5 +180,6 @@ class CPvBoiler
     float m_fBoilerTemperature = -1.0f;
     bool m_bPublishBoilerTemperature = true;
     uint16_t m_iBoilerTemperatureRetryCount = 0;
+    CRollingAverage m_boilerTemperatureAverage;
 };
 #endif // PVBOILER_H
