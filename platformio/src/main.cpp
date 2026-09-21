@@ -1,6 +1,6 @@
 /*
   ESP PV-Boiler - ESP Controlled PV Boiler
-  Last update: July 27, 2026
+  Last update: September 21, 2026
   (C) Copyright 2026 by Arno van Amersfoort
   Web                   : https://github.com/arnova/pvboiler
   Email                 : a r n o DOT v a n DOT a m e r s f o o r t AT g m a i l DOT c o m
@@ -121,7 +121,7 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
 
 void setup()
 {
-  EEPROM.begin(256); // Reserve room for eeprom settings
+  EEPROM.begin(512); // Reserve room for eeprom settings
 
   randomSeed(micros());
 
