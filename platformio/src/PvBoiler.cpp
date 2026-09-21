@@ -24,6 +24,7 @@ void CPvBoiler::Loop()
   {
     CheckNetworkWatchDog();
     Update();
+    m_legionella.Loop();
 
     if (m_tempSensors.getDeviceCount() > 0)
     {
@@ -37,6 +38,7 @@ void CPvBoiler::Loop()
           m_bPublishBoilerTemperature = true;
           m_fBoilerTemperature = fTemperatureAveraged;
           m_iBoilerTemperatureRetryCount = 0;
+          m_legionella.UpdateTemperature(fTemperatureAveraged);
         }
       }
       else if (++m_iBoilerTemperatureRetryCount >= 255)
@@ -219,6 +221,28 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursPassedSinceLastDisinfect());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetDisinfectRunTimeSeconds());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
+
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursInDangerZone());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursPassedSinceLastDisinfect());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetDisinfectRunTimeSeconds());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
+
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursInDangerZone());
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+
     m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
 
     // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
@@ -289,6 +313,10 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_FREQUENCY, "Hz", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_MUST_DISINFECT, true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, "h", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, "h", "", "", true);
 
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
@@ -663,7 +691,11 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF)
+  if (m_legionella.MustDisinfect())
+  {
+    fNewPercentage = 100.0f;
+  }
+  else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF)
   {
     if (m_mode == MODE_OFF)
     {
