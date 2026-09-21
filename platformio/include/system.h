@@ -155,6 +155,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define RESERVED_SIZE           100
 #define WIFI_SSID_MAX_SIZE      32
 #define WIFI_PASSWORD_MAX_SIZE  64
+#define HOST_NAME_MAX_SIZE      32
 #define MQTT_USER_MAX_SIZE      32
 #define MQTT_PASSWORD_MAX_SIZE  64
 #define HOST_NAME_MAX_SIZE      32
