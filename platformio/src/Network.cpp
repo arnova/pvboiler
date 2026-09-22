@@ -11,10 +11,8 @@
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 #else
 #include <WiFi.h>
-#include <ESPmDNS.h>
 #endif
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
@@ -131,8 +129,6 @@ void CNetwork::InitWifi(const bool bReconnect)
     }
 
     m_socketServer.stop();
-
-    MDNS.end(); // Need to deinit MDNS (and init again below else it may stop working)
 
     WiFi.disconnect();
   }
@@ -370,13 +366,7 @@ void CNetwork::Loop()
   {
     if (!m_bWifiConnected)
     {
-      // Initialize mDNS
-      if (!MDNS.begin(m_strHostName))
-      {
-        CTerminal::println("ERROR: Unable to start MDNS responder!");
-      }
-
-      // Need to explicitly set hostname as ArduinoOTA will override our mdns-name set above
+      // Need to explicitly set hostname as ArduinoOTA also handles mdns
       ArduinoOTA.setHostname(m_strHostName);
 
       ArduinoOTA.onStart([]() {
@@ -420,11 +410,9 @@ void CNetwork::Loop()
 #endif
     }
 
-    // Handle OTA-updates
+    // Handle OTA (& mdns) updates
     ArduinoOTA.handle();
-#ifdef ESP8266
-    MDNS.update();
-#endif
+
     m_wifiTimeoutTimer = 0;
   }
   else
