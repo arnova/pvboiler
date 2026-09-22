@@ -42,7 +42,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define POS_STEP_CLAMP_MIN                      0.01f   // %
 #define POS_STEP_CLAMP_MAX                      100.0f  // %
 
-#define NEG_STEP_CLAMP_DEFAULT                  3.0f    // %
+#define NEG_STEP_CLAMP_DEFAULT                  12.0f   // %
 #define NEG_STEP_CLAMP_MIN                      0.01f   // %
 #define NEG_STEP_CLAMP_MAX                      100.0f  // %
 
