@@ -7,6 +7,7 @@
 #include "PvBoiler.h"
 #include "Ssd1306.h"
 #include "Terminal.h"
+#include "TrackedValue.h"
 
 class CApp
 {
@@ -32,6 +33,8 @@ class CApp
     CPvBoiler& GetPvBoiler() { return m_pvBoiler; };
 
   private:
+    void IRAM_ATTR ScheduleTriac(const uint32_t iNow);
+
 #ifdef ESP32
     hw_timer_t *m_hTriacTimer = nullptr;
 #endif
@@ -46,10 +49,12 @@ class CApp
     elapsedMillis m_ledTimer = 0;
     elapsedMillis m_displayTimer = 0;
 
-    volatile uint32_t m_iLastZeroCrossTime = 0;
+    CTrackedValue m_period;
+    CTrackedValue m_zeroCrossWindow;
+
+    volatile uint32_t m_iLastPeriodStartTime = 0;
     volatile uint32_t m_iLastEventTime = 0;
-    volatile uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
-    volatile uint16_t m_iPeriodTime = 65535;
+
     volatile bool m_bTriacOn = false;
     volatile bool m_bGateBlanking = false;
     volatile uint8_t m_iSSRPeriodCounter = 0;

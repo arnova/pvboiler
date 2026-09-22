@@ -113,12 +113,15 @@ class CPvBoiler
     float GetNegStepClamp() const { return m_fNegStepClamp; };
     uint16_t GetNetPeriod() const { return m_iPeriodTime; };
     uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
-    bool GetError() const { return m_lastErrorTimer > ERROR_TIME_MAX; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
+
+    void SetPowerGood(const bool bPowerGood) { m_bPowerGood = bPowerGood; m_bPowerGoodFlag &= bPowerGood; };
+    bool GetPowerGood() const { return m_bPowerGood; };
+    bool GetPowerGoodFlag() { const bool bPowerGoodFlag = m_bPowerGoodFlag; m_bPowerGoodFlag = m_bPowerGood; return bPowerGoodFlag; };
 
   private:
     void Update();
@@ -128,7 +131,6 @@ class CPvBoiler
 
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
-    elapsedMillis m_lastErrorTimer = 0;
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
@@ -162,8 +164,10 @@ class CPvBoiler
 
     float m_fTriacAngleFactor = 0.0f;
     uint16_t m_iTriacPhaseAngle = 0; // us
-    uint16_t m_iPeriodTime = 65535; // us
-    uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT; // us
+    uint16_t m_iPeriodTime = NET_PERIOD_INVALID; // us
+    uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_INVALID; // us
+    bool m_bPowerGood = true;
+    bool m_bPowerGoodFlag = true;
 
     // (Proportional) error gains
     float m_fPosErrorGain = POS_ERROR_GAIN_DEFAULT;

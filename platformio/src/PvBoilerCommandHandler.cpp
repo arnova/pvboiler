@@ -443,19 +443,42 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   CTerminal::print("net_period=");
-  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetNetPeriod()) / 500.0f);
-  CTerminal::print(strBuf);
+  const uint16_t iPeriod = m_pvBoiler.GetNetPeriod();
+  if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
+  {
+    CTerminal::print("?ms");
+  }
+  else
+  {
+    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iPeriod) / 500.0f);
+    CTerminal::print(strBuf);
+  }
 
   CTerminal::print(" net_freq=");
-  snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(m_pvBoiler.GetNetPeriod()));
-  CTerminal::print(strBuf);
+  if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
+  {
+    CTerminal::print("?Hz");
+  }
+  else
+  {
+    snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(iPeriod));
+    CTerminal::print(strBuf);
+  }
 
   CTerminal::print(" zero_cross_window=");
-  snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetZeroCrossWindow()) / 1000.0f);
-  CTerminal::print(strBuf);
+  const uint16_t iWindow = m_pvBoiler.GetZeroCrossWindow();
+  if (iWindow == 0 || iWindow == ZERO_CROSS_WINDOW_INVALID)
+  {
+    CTerminal::print("?ms");
+  }
+  else
+  {
+    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iWindow) / 1000.0f);
+    CTerminal::print(strBuf);
+  }
 
   CTerminal::print(" error=");
-  CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
+  CTerminal::print(m_pvBoiler.GetPowerGoodFlag() ? "0" : "1");
 
   CTerminal::println("");
 

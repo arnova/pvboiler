@@ -72,12 +72,14 @@ void CPvBoiler::Reset()
   m_bPublishOutputPercentage = true;
 
   m_bPublishSettings = true;
-  m_lastErrorTimer = 0;
+
+  m_bPowerGood = true;
+  m_bPowerGoodFlag = true;
 
   m_fTriacAngleFactor = 0.0f;
   m_iTriacPhaseAngle = 0;
-  m_iPeriodTime = 65535;
-  m_iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
+  m_iPeriodTime = NET_PERIOD_INVALID;
+  m_iZeroCrossWindow = ZERO_CROSS_WINDOW_INVALID;
 
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
@@ -217,16 +219,16 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetError() ? "1" : "0");
+    m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetPowerGoodFlag() ? "0" : "1");
 
     // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
+    snprintf(strBuf, sizeof(strBuf), "%u", (m_iPeriodTime == NET_PERIOD_INVALID) ? 0 : m_iPeriodTime * 2);
     m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
 
     snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
     m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
+    snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
     m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
 
     // Publish uptime
@@ -608,12 +610,17 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   m_iPeriodTime = iPeriodTime;
   m_iZeroCrossWindow = iZeroCrossWindow;
 
+  if (iPeriodTime > NET_PERIOD_MAX_US || iZeroCrossWindow > ZERO_CROSS_WINDOW_MAX_US)
+  {
+    return 0; // Unable to calculate value
+  }
+
   uint32_t iDelay = 0;
   if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
   {
     m_fTriacAngleFactor = 0.0f;
-    m_iTriacPhaseAngle = ZERO_CROSS_EDGE_MIN_US;
-    iDelay = ZERO_CROSS_EDGE_MIN_US;
+    m_iTriacPhaseAngle = TRIAC_PHASE_ANGLE_MARGIN_US;
+    iDelay = TRIAC_PHASE_ANGLE_MARGIN_US;
   }
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
@@ -621,33 +628,24 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
     m_fTriacAngleFactor = triac_percentage_factor[static_cast<uint8_t>(m_fCurrentPercentage)];
 
     // Make sure we trigger not too close to zero cross
-    m_iTriacPhaseAngle = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(ZERO_CROSS_EDGE_MIN_US));
+    m_iTriacPhaseAngle = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(TRIAC_PHASE_ANGLE_MARGIN_US));
 
-    // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring
-    if (m_iTriacPhaseAngle + ZERO_CROSS_EDGE_MIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
+    // NOTE: Only turn on triac when NOT near 0% to prevent excessive EMI due to misfiring (eg. caused by WiFi latency)
+    if (m_iTriacPhaseAngle + TRIAC_PHASE_ANGLE_MARGIN_US + GATE_PULSE_WIDTH <= iPeriodTime)
     {
       iDelay = m_iTriacPhaseAngle;
+    }
+
+    // With zero delay return zero so we know we should do "nothing"
+    if (iDelay == 0)
+    {
+      return 0;
     }
   }
   else // DIM_STYLE_NONE
   {
     m_fTriacAngleFactor = 0.0f;
     m_iTriacPhaseAngle = 0;
-  }
-
-  // Update error state. Note that invalid iZeroCrossWindow-value can never happen (handled in ISR)
-  if (iPeriodTime < NET_PERIOD_MIN_US || iPeriodTime > NET_PERIOD_MAX_US)
-  {
-    return 0; // Flag error
-  }
-  else
-  {
-    m_lastErrorTimer = 0; // Reset error timer
-  }
-
-  // With zero delay return zero so we know we should do "nothing"
-  if (iDelay == 0)
-  {
     return 0;
   }
 
@@ -660,7 +658,7 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF || GetError())
+  if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF)
   {
     if (m_mode == MODE_OFF)
     {

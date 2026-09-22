@@ -46,18 +46,21 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define NEG_STEP_CLAMP_MIN                      0.01f   // %
 #define NEG_STEP_CLAMP_MAX                      100.0f  // %
 
-// Initial value for phase correction time
-#define ZERO_CROSS_WINDOW_DEFAULT               1100  // uS
+// Zero crossing window related values
+#define ZERO_CROSS_WINDOW_MIN_US                800   // us
+#define ZERO_CROSS_WINDOW_MAX_US                1300  // us
+#define ZERO_CROSS_WINDOW_INVALID               65535 // us
 
-// Minimum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MIN_US                  500   // us
-
-// Maximum time for positive/negative zero crossing
-#define ZERO_CROSS_EDGE_MAX_US                  2000  // us
-
-// Net period time limits (for (rectified) 48-62 Hz)
+// Net period time related values (for (rectified) 49-62 Hz half-period)
 #define NET_PERIOD_MIN_US                       8000  // us
-#define NET_PERIOD_MAX_US                       10500 // us
+#define NET_PERIOD_MAX_US                       11000 // us
+#define NET_PERIOD_INVALID                      65535 // us
+
+// Maximum amount of net period & zero cross window measurement outliers
+#define MAX_CONSECUTIVE_OUTLIERS                8
+
+// Triac phase margin we keep to prevent misfires
+#define TRIAC_PHASE_ANGLE_MARGIN_US             500   // us
 
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50    // uS
@@ -202,7 +205,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 
 #define CONTROL_LOOP_TIME_MS  1000  // ms
 
-// Maximum time elapsed before we flag an actual error
-#define ERROR_TIME_MAX        1000  // ms
+// Maximum time elapsed before we flag an actual power error
+#define POWER_GOOD_TIME_MAX   1000  // ms
 
 #endif // SYSTEM_H
