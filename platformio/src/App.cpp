@@ -2,9 +2,11 @@
 #include "util.h"
 #include "App.h"
 
-CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network), m_terminal(m_network)
+CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network), m_terminal(m_network),
+               m_period(NET_PERIOD_MIN_US, NET_PERIOD_MAX_US, MAX_CONSECUTIVE_OUTLIERS),
+               m_zeroCrossWindow(ZERO_CROSS_WINDOW_MIN_US, ZERO_CROSS_WINDOW_MAX_US, MAX_CONSECUTIVE_OUTLIERS)
 {
-  m_iLastZeroCrossTime = m_iLastEventTime = micros();
+  m_iLastPeriodStartTime = m_iLastEventTime = micros();
 }
 
 
@@ -24,88 +26,116 @@ void CApp::Init()
 void IRAM_ATTR CApp::ZeroCrossHandler()
 {
   const uint32_t iNow = micros();
-
-  /*
-   * Ignore pulse when it's less than ZERO_CROSS_EDGE_MIN_US, when it's more and less then ZERO_CROSS_EDGE_MAX_US
-   * consider it the zero cross (short) pulse, of it's more consider it the (long) remainder of the period
-   */
   const uint32_t iPulseWidth = iNow - m_iLastEventTime;
-  if (iPulseWidth < ZERO_CROSS_EDGE_MIN_US || m_bGateBlanking)
+
+  if (iPulseWidth < ZERO_CROSS_WINDOW_MIN_US || m_bGateBlanking)
   {
     return; // Filter noise
   }
 
-  // Update last even time
   m_iLastEventTime = iNow;
 
-  // Pulse is longer than ~65 ms?
-  if (iPulseWidth > 65535)
+  // Short pulse: zero cross window measurement
+  if (iPulseWidth <= ZERO_CROSS_WINDOW_MAX_US)
   {
-    m_iPeriodTime = 65535; // Cap to max uint16 value
+    const CTrackedValue::result_t result = m_zeroCrossWindow.Update(iPulseWidth);
+    if (result == CTrackedValue::RESULT_OUTLIER || result == CTrackedValue::RESULT_RESET)
+    {
+      m_iLastEventTime = iNow - iPulseWidth; // Ignore this edge completely (restore previous event time)
+    }
+
     return;
   }
 
-  if (iPulseWidth >= ZERO_CROSS_EDGE_MAX_US) // Long pulse?
+  // Long pulse: period measurement
+  const uint32_t iNewPeriodTime = iNow - m_iLastPeriodStartTime;
+
+  if (iNewPeriodTime < NET_PERIOD_MIN_US)
   {
-    m_iPeriodTime = iNow - m_iLastZeroCrossTime;
+    // Implausibly short period, e.g. the end edge of a zero-cross pulse that was
+    // serviced late (WiFi latency) and therefore looks like a long pulse.
+    // Ignore this edge completely: keep the period baseline intact.
+    m_iLastEventTime = iNow - iPulseWidth; // Restore previous event time
+    return;
+  }
 
-    m_iLastZeroCrossTime = iNow;
+  if (iNewPeriodTime >= NET_PERIOD_INVALID)
+  {
+    // Gap: far too long to be a real period (dropout, missed pulses, boot)
+    m_period.Reset(iNewPeriodTime);
+    m_iLastPeriodStartTime = iNow;
+    return;
+  }
 
-    if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR)
+  switch (m_period.Update(iNewPeriodTime))
+  {
+    case CTrackedValue::RESULT_ACCEPTED:
     {
-      if (m_iCurrentPercentage == 0)
-      {
-        digitalWrite(TRIAC_OUTPUT, LOW); // Always off
-      }
-      else
-      {
-        m_iSSRPeriodCounter++;
-        if ((m_iSSRPeriodCounter * 100) / m_iSSRPeriodCount <= m_iCurrentPercentage)
-        {
-          m_bTriacOn = true;
-#ifdef ESP8266
-          timer1_write(m_iTriacDelayUs * ESP8266_TICKS_PER_US);
-#else
-          timerWrite(m_hTriacTimer, 0);
-          timerAlarmWrite(m_hTriacTimer, m_iTriacDelayUs, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
-          timerAlarmEnable(m_hTriacTimer);
-#endif
-        }
-        else
-        {
-          digitalWrite(TRIAC_OUTPUT, LOW); // Off
-        }
-
-        if (m_iSSRPeriodCounter >= m_iSSRPeriodCount)
-        {
-          m_iSSRPeriodCounter = 0;
-        }
-      }
+      m_iLastPeriodStartTime = iNow;
     }
-    else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
+    break;
+
+    case CTrackedValue::RESULT_OUTLIER:
     {
-      digitalWrite(TRIAC_OUTPUT, LOW); // Off
+      // Flywheel: advance by the number of whole periods passed (handles missed edges)
+      const uint32_t iPeriod = m_period.Get();
+      m_iLastPeriodStartTime += ((iNow - m_iLastPeriodStartTime + iPeriod / 2) / iPeriod) * iPeriod;
+    }
+    break;
 
-      // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
-      if (m_iTriacDelayUs != 0)
-      {
-        m_bTriacOn = true;
+    default: // No valid average: resync and do not fire triac
+    {
+      m_iLastPeriodStartTime = iNow;
+    }
+    return;
+  }
 
-#ifdef ESP8266
-        timer1_write(m_iTriacDelayUs * ESP8266_TICKS_PER_US);
-#else
-        timerWrite(m_hTriacTimer, 0);
-        timerAlarmWrite(m_hTriacTimer, m_iTriacDelayUs, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
-        timerAlarmEnable(m_hTriacTimer);
-#endif
-      }
+  digitalWrite(TRIAC_OUTPUT, LOW); // Off
+
+  if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
+  {
+    // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
+    if (m_iTriacDelayUs != 0)
+    {
+      ScheduleTriac(iNow);
     }
   }
-  else // Short pulse
+  else if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR && m_iCurrentPercentage != 0)
   {
-    // NOTE: The time between rising edge and falling edge is used
-    m_iZeroCrossWindow = iPulseWidth;
+    m_iSSRPeriodCounter++;
+    if ((m_iSSRPeriodCounter * 100) / m_iSSRPeriodCount <= m_iCurrentPercentage)
+    {
+      ScheduleTriac(iNow);
+    }
+
+    if (m_iSSRPeriodCounter >= m_iSSRPeriodCount)
+    {
+      m_iSSRPeriodCounter = 0;
+    }
   }
+}
+
+
+void IRAM_ATTR CApp::ScheduleTriac(const uint32_t iNow)
+{
+  const int32_t iRemainingDelay = static_cast<int32_t>(m_iLastPeriodStartTime + m_iTriacDelayUs - iNow);
+
+  if (iRemainingDelay <= 0)
+  {
+    // Conservative: skip firing this half-cycle rather than
+    // firing at an unintended (near-zero) delay
+    m_bTriacOn = false;
+    return;
+  }
+
+  m_bTriacOn = true;
+#ifdef ESP8266
+  timer1_write(iRemainingDelay * ESP8266_TICKS_PER_US);
+#else
+  timerWrite(m_hTriacTimer, 0);
+  timerAlarmWrite(m_hTriacTimer, iRemainingDelay, false); // one-shot, tick = 1µs
+  timerAlarmEnable(m_hTriacTimer);
+#endif
 }
 
 
@@ -121,7 +151,7 @@ void IRAM_ATTR CApp::TriacGateHandler()
     timer1_write(GATE_PULSE_WIDTH * ESP8266_TICKS_PER_US);
 #else // ESP32
     timerWrite(m_hTriacTimer, 0);
-    timerAlarmWrite(m_hTriacTimer, GATE_PULSE_WIDTH, false); // one-shot, GATE_PULSE_WIDTH in µs since tick = 1µs
+    timerAlarmWrite(m_hTriacTimer, GATE_PULSE_WIDTH, false);
     timerAlarmEnable(m_hTriacTimer);
 #endif
   }
@@ -239,7 +269,7 @@ void CApp::HandleDisplay()
 
       case 2:
       {
-        if (m_pvBoiler.GetError())
+        if (!m_pvBoiler.GetPowerGood())
         {
           m_display.WriteDisplayStr("Power error", 0, true);
         }
@@ -353,21 +383,15 @@ void CApp::UpdateValues()
 {
   noInterrupts(); // Enter critical section
 
-  const uint32_t iTimeSinceLastZeroCross = micros() - m_iLastZeroCrossTime;
-
-  // Get current phase correction & zero cross time value from ISR
-  uint16_t iZeroCrossWindow = m_iZeroCrossWindow;
-  uint16_t iPeriodTime = m_iPeriodTime;
+  // Get current period & zero cross window from ISR
+  const bool bPeriodValid = m_period.IsValid();
+  const uint32_t iPeriodTime = m_period.Get();
+  const bool bZeroCrossWindowValid = m_zeroCrossWindow.IsValid();
+  const uint32_t iZeroCrossWindow = m_zeroCrossWindow.Get();
 
   interrupts(); // Leave critical section
 
-  // Check for timeout: No zero cross within 1 second?
-  if (iTimeSinceLastZeroCross > 1000 * 1000)
-  {
-    // Zero cross ISR timeout: reset values to default
-    iZeroCrossWindow = ZERO_CROSS_WINDOW_DEFAULT;
-    iPeriodTime = 65535;
-  }
+  m_pvBoiler.SetPowerGood(bPeriodValid && bZeroCrossWindowValid);
 
   // Get updated values for ISR
   const uint8_t iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();
@@ -383,7 +407,7 @@ void CApp::UpdateValues()
   m_dimStyle = dimStyle;
 
   // Only update value when no errors (else fallback to previous value)
-  if (!m_pvBoiler.GetError())
+  if (m_pvBoiler.GetPowerGood())
   {
     m_iTriacDelayUs = iTriacDelayUs;
   }
