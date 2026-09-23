@@ -57,16 +57,22 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
   GetFriendlyName(strItem, strFriendlyItem, sizeof(strFriendlyItem));
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
-  snprintf(strBuf, sizeof(strBuf), "%s/%s", m_strHostName, strItem);
-  root["state_topic"] = strBuf;
-
   root["name"] = strFriendlyItem;
 
-  char strBuf2[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
-  snprintf(strBuf2, sizeof(strBuf2), "%s_%s", m_strHostName, strItem);
-  root["unique_id"] = strBuf2;
-  
+  char strStateTopic[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  snprintf(strStateTopic, sizeof(strStateTopic), "%s/%s", m_strHostName, strItem);
+  root["state_topic"] = strStateTopic;
+
+  char strUniqueId[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  snprintf(strUniqueId, sizeof(strUniqueId), "%s_%s", m_strHostName, strItem);
+  root["unique_id"] = strUniqueId;
+
+  char strAvail[HOST_NAME_MAX_SIZE + 8];
+  snprintf(strAvail, sizeof(strAvail), "%s/status", m_strHostName);
+  root["availability_topic"] = strAvail;
+  root["payload_available"] = "online";
+  root["payload_not_available"] = "offline";
+
   root["retain"] = true;
   root["qos"] = 1;
 
@@ -275,18 +281,18 @@ void CMqttClient::Init(const uint8_t* serverIp, const char* strHostName, const c
 
 bool CMqttClient::ServerConnect()
 {
-  char strBuf[HOST_NAME_MAX_SIZE + 6]; // Enough for hostname-xxxx
-
 #ifdef MQTT_DEBUG
   CTerminal::print("Connecting to MQTT server: ");
 
+  char strBuf[16]; // Enough for an IPv4 address + null char
   snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_serverIp[0], m_serverIp[1], m_serverIp[2], m_serverIp[3]);
   CTerminal::print(strBuf);
 
   CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
   // Create a random client ID
-  snprintf(strBuf, sizeof(strBuf), "%s-%lx", m_strHostName, random(0xffff));
+  char strclientId[HOST_NAME_MAX_SIZE + 6]; // Enough for hostname-xxxx
+  snprintf(strclientId, sizeof(strclientId), "%s-%lx", m_strHostName, random(0xffff));
 
   char* strUser = NULL;
   if (strlen(m_strUser) != 0)
@@ -300,9 +306,11 @@ bool CMqttClient::ServerConnect()
     strPassword = m_strPassword;
   }
 
+  char strWillTopic[HOST_NAME_MAX_SIZE + 8];
+  snprintf(strWillTopic, sizeof(strWillTopic), "%s/status", m_strHostName);
+
   // Attempt to connect
-//  if (connect(strBuf, NULL, NULL, "test", 0, false, "not connected", false))
-  if (!connect(strBuf, strUser, strPassword))
+  if (!connect(strclientId, strUser, strPassword, strWillTopic, 1, true, "offline"))
   {
 #ifdef MQTT_DEBUG
     CTerminal::print("ERROR, rc=");
@@ -310,6 +318,8 @@ bool CMqttClient::ServerConnect()
 #endif
     return false;
   }
+
+  publish(strWillTopic, "online", true);
 
 #ifdef MQTT_DEBUG
   CTerminal::println("OK");
