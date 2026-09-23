@@ -32,10 +32,11 @@ CNetwork::CNetwork()
 
 void CNetwork::Init()
 {
-  m_mqttClient.setClient(m_wifiClient);
   LoadSettings();
 
   InitWifi(false);
+
+  m_mqttClient.setClient(m_wifiClient);
 
   if (IPAddress(m_mqttIpAddr) != IPAddress(0, 0, 0, 0))
   {
