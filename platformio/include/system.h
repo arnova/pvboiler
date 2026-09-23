@@ -63,7 +63,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define GATE_PULSE_WIDTH                        50    // uS
 
 // Network watchdog timer settings
-#define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        900   // Seconds = 15 minutes
+#define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        60    // Seconds = 1 minute
 #define NETWORK_WATCHDOG_TIMEOUT_MAX            65000
 
 #define NETWORK_WATCHDOG_RECOVERY_DEFAULT       60    // Seconds = 1 minute
