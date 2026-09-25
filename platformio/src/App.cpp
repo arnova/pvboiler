@@ -13,7 +13,7 @@ void CApp::Init()
   m_display.Init();
   m_display.WriteDisplayStr(DEVICE_NAME);
   m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
-  m_display.WriteDisplayStr("C) Arnova", 2, false);
+  m_display.WriteDisplayStr("(C) Arnova", 2, false);
 
   m_network.Init();
 
