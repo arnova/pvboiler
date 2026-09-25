@@ -376,11 +376,6 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
-  CTerminal::print(" error=");
-  CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
-
-  CTerminal::println("");
-
   CTerminal::print("wifi_conn=");
   CTerminal::print(m_network.IsConnected() ? "1" : "0");
 
@@ -459,10 +454,13 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetZeroCrossWindow()) / 1000.0f);
   CTerminal::print(strBuf);
 
+  CTerminal::print(" error=");
+  CTerminal::print(m_pvBoiler.GetError() ? "1" : "0");
+
+  CTerminal::println("");
+
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    CTerminal::println("");
-
     CTerminal::print("phase_angle=");
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
     CTerminal::print(strBuf);
@@ -470,9 +468,10 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(" angle_factor=");
     snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
     CTerminal::print(strBuf);
+
+    CTerminal::println("");
   }
 
-  CTerminal::println("");
   CTerminal::println("");
 
   return pack_result_code(ERR_CODE_OK);
