@@ -297,7 +297,7 @@ void CPvBoiler::MqttPublishConfig()
   
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "measurement", true);
   }
   else
   {
