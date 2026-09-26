@@ -625,7 +625,12 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     // Update triac angle factor
-    m_fTriacAngleFactor = triac_percentage_factor[static_cast<uint8_t>(m_fCurrentPercentage)];
+    const float fTriacAngleFactor = triac_percentage_factor[static_cast<uint8_t>(m_fCurrentPercentage)];
+    if (fTriacAngleFactor != m_fTriacAngleFactor)
+    {
+      m_fTriacAngleFactor = fTriacAngleFactor;
+      m_bPublishOutputPercentage = true; // Make sure (MQTT) published factor matches current percentage
+    }
 
     // Make sure we trigger not too close to zero cross
     m_iTriacPhaseAngle = max(static_cast<uint32_t>(m_fTriacAngleFactor * iPeriodTime), static_cast<uint32_t>(TRIAC_PHASE_ANGLE_MARGIN_US));
