@@ -40,7 +40,7 @@ private:
 
   volatile bool m_bValid = false;
   volatile uint32_t m_iValue = 0;
-  volatile uint8_t m_iOutlierCount = 0;
+  uint8_t m_iOutlierCount = 0; // ISR only
 
   volatile uint32_t m_iLastBadValue = 0;
   volatile uint32_t m_iLowest = UINT32_MAX;

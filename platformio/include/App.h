@@ -52,12 +52,12 @@ class CApp
     CTrackedValue m_period;
     CTrackedValue m_zeroCrossWindow;
 
-    volatile uint32_t m_iLastPeriodStartTime = 0;
-    volatile uint32_t m_iLastEventTime = 0;
+    uint32_t m_iLastPeriodStartTime = 0; // ISR only
+    uint32_t m_iLastEventTime = 0; // ISR only
 
     volatile bool m_bTriacOn = false;
     volatile bool m_bGateBlanking = false;
-    volatile uint8_t m_iSSRPeriodCounter = 0;
+    uint8_t m_iSSRPeriodCounter = 0; // ISR only
     volatile uint16_t m_iTriacDelayUs = 0;
     volatile uint8_t m_iSSRPeriodCount = 0;
     volatile uint8_t m_iCurrentPercentage = 0;
