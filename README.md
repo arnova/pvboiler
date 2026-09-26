@@ -23,6 +23,10 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
 
+## Known issues
+
+- During development it turned out that due to the ESP8266's single-core architecture WiFi interferes with accurate interrupt handling causing problems with zero-cross detection and triac gate firing. Although mitigations are in place, it's recommended to use a dual-core board with an ESP32-S3, ESP32-WROOM or ESP32-Wrover.
+
 ## Hardware Assembly Hints
 
 1. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own device
