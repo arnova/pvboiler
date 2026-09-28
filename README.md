@@ -12,14 +12,14 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Phase angle control (default) or SSR dim style
 - Configuration via USB serial connection or network terminal connection (port 8000)
 - OTA updates (e.g. via PlatformIO)
-- Output control using automatic power budget mode, or manually by setting output power percentage. The "logic-mode" can be dynamically changed using MQTT
-- Boost mode to temporarely set output power to 100%. Can be used for external (eg. using Home Assistant) legionella prevention control
+- Operating modes:  automatic power budget mode (using eg. P1/HA information), (manual) power percentage mode, boost mode (100% power) and off mode. The mode can be dynamically changed using MQTT
+- Support for an optional one-wire DS18B20 temperature sensor (probe) for sensing the boiler's internal temperature
 - Support for an optional OLED 128×64 screen to display output power/percentage and connection status
 - The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while (when eg. network fails), the output will automatically decrease to 0% instead of being stuck on the last value. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.
 
 ## Planned features & improvements
 
-- Automatic legionella prevention using an external one wire temperature sensor
+- Automatic legionella prevention using an external one wire temperature sensor. Currently boost mode can be used for external (eg. using Home Assistant) legionella prevention control until implemented in firmware
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
 
@@ -32,9 +32,10 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 1. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own device
 2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0C/W when using a ~2500W boiler
 3. Around some power traces the mask has been intentionally left out. You should solder these traces with extra solder to reduce the power losses due to trace resistance
-4. It is recommended to use 1.5mm2 wires for internal wiring
-5. The electronics are designed for ~230VAC grids for other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
-6. Note that only truely "dumb" hot water boilers are supported. Boilers featuring any kind of (digital) electronics (except for an analog thermostat) can not be used directly
+4. It is recommended to use 1.5mm2 flexible wires for internal wiring
+5. When using a one-wire DS18B20 temperature sensor (probe) there are a few things you must adhere to make it work properly. Its supply should be connected to the board's +5V (not +3.3V), the cable's ground shield should be connected to the (digital) low-voltage ground (NOT the system ground) of the board. Most (sealed) temperature probes use a metal probe housing which is connected to the cable shield, since this may short to the mains ground and introduce (switching) noise into the system, it should be isolated. The easiest way to accomplish this is using some shrink-tube
+6. The electronics are designed for ~230VAC grids for other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
+7. Note that only truely "dumb" hot water boilers are supported. Boilers featuring any kind of (digital) electronics (except for an analog thermostat) can not be used directly. For such boilers the wiring to heating element(s) must be directly connected to the controller (triac).
 
 ## First Time Use
 
