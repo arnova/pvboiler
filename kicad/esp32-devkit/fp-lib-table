@@ -1,0 +1,6 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "pvboiler") (type "KiCad") (uri "D:/MEGA/Temp/pvboiler/kicad/pvboiler.pretty") (options "") (descr ""))
+	(lib (name "kicad") (type "KiCad") (uri "D:/MEGA/Temp/pvboiler/kicad.pretty") (options "") (descr ""))
+	(lib (name "footprints") (type "KiCad") (uri "${KIPRJMOD}/footprints.pretty") (options "") (descr ""))
+)
