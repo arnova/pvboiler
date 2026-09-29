@@ -203,12 +203,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, strBuf);
 
       snprintf(strBuf, sizeof(strBuf), "%u", GetTriacPhaseAngle());
-      m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE, strBuf);
+      m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_PHASE_ANGLE, strBuf);
 
       if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
       {
         snprintf(strBuf, sizeof(strBuf), "%.4f", GetTriacAngleFactor());
-        m_network.GetMqttClient().PublishMessage(MQTT_PHASE_ANGLE_FACTOR, strBuf);
+        m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_ANGLE_FACTOR, strBuf);
       }
     }
 
@@ -280,8 +280,8 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "ms", "duration", "measurement", true);  
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE, "us", "", "", true);
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "ms", "duration", "measurement", true);  
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
 
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "us", "", "", true);
@@ -299,11 +299,11 @@ void CPvBoiler::MqttPublishConfig()
   
   if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
   {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR, "", "", "measurement", true);
+    m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
   }
   else
   {
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_PHASE_ANGLE_FACTOR);
+    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR);
   }
 
   // Publish our f/w version

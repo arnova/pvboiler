@@ -484,11 +484,11 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    CTerminal::print("phase_angle=");
+    CTerminal::print("triac_phase_angle=");
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
     CTerminal::print(strBuf);
 
-    CTerminal::print(" angle_factor=");
+    CTerminal::print(" triac_angle_factor=");
     snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
     CTerminal::print(strBuf);
 
