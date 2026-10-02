@@ -4,15 +4,16 @@
 >
 > This project is provided "as-is" and is to be used entirely at your own risk! The hardware is connected to the mains and involves voltages that may be lethal. Only build, install and service it if you are qualified to work on mains equipment, and always disconnect it from the mains before opening the enclosure.
 >
-> - The ESP/low-voltage side of the controller is galvanically isolated from the mains. The triac, the mains filter and the snubber are **not**: treat everything on the power side as live.
-> - Mount the controller in a closed plastic enclosure, earth the heatsink properly, and protect the circuit with a correctly rated fuse or circuit breaker and an RCD (residual-current device), as required by your local regulations.
-> - The boiler's own thermostat and thermal cutoff must remain in the heating circuit. This controller is not a substitute for over-temperature protection.
+> - The ESP/low-voltage side of the controller is galvanically isolated from the mains. Nevertheless, treat everything as live and dangerous!
+> - Mount the controller in a closed plastic enclosure and earth the heatsink properly to the mains ground.
+> - Only connect the controller to a correctly fused circuit.
+> - The boiler's own thermostat and thermal cutoff must remain in the heating circuit. This controller is not a substitute for over-temperature protection!
 
 This project is a complete hardware, firmware & software solution to turn your "dumb" electronic domestic hot water boiler into a smart **PV-Boiler**. It aims to optimize the amount of surplus solar electricity that can be stored in a boiler as hot water using as little grid power as possible.
 
 Most other solutions use SSR modules for power control. This design uses a (BTA25/BTA40) **triac** for power control to enable **phase-angle control**, which allows for more accurate power control than with a normal SSR.
 
-The hardware was designed using **KiCAD**, and the software uses **MQTT** for communication, targeted to be used with **Home Assistant**. The hardware and firmware were developed for a NodeMCU v2 (Amica) ESP8266 module, but should in principle work with any ESP8266 or ESP32 board. Obviously, ESP boards with alternative form factors and/or pinouts cannot be directly fitted on the PCB but should be connected using wires, and you may need to modify platformio.ini for your specific ESP board.
+The hardware was designed using **KiCAD**, and the software uses **MQTT** for communication, targeted to be used with **Home Assistant**. The hardware and firmware were developed for a NodeMCU v2 (Amica) ESP8266 module, but should in principle work with any ESP8266 or ESP32 board. Obviously, ESP boards with alternative form factors and/or pinouts cannot be directly fitted on the PCB but should be connected using wires, and you may need to modify platformio.ini and the GPIO definitions in include/system.h for your specific ESP board.
 
 ## Features
 
@@ -30,19 +31,20 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Automatic legionella prevention using an external one-wire temperature sensor. Currently boost mode can be used for external (e.g. using Home Assistant) legionella prevention control until implemented in firmware
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
+- New PCB design to fit a (dual-core) ESP32-DevKit module
 
 ## Known issues
 
-- During development it turned out that due to the ESP8266's single-core architecture WiFi interferes with accurate interrupt timing, causing problems with zero-cross detection and triac gate firing. Mitigations are in place but they can't completely fix the issue. Therefore for new designs it's recommended to use a dual-core board with an ESP32-S3, ESP32-WROOM or ESP32-Wrover. Note that single-core ESP32 variants (e.g. ESP32-C3, ESP32-S2) share the ESP8266's limitation.
+- During development it turned out that due to the ESP8266's single-core architecture WiFi interferes with accurate interrupt timing, causing problems with zero-cross detection and triac gate firing. Mitigations are in place but they can't completely fix the issue. Therefore for new designs it's recommended to use an ESP board with a dual-core ESP32-S3, ESP32-WROOM or ESP32-Wrover. Note that single-core ESP32 variants (e.g. ESP32-C3, ESP32-S2) share the ESP8266's limitation.
 
 ## Electromagnetic compatibility
 
-Phase-angle control inherently generates harmonics and electromagnetic interference, because the triac switches the load on part-way through each mains half-cycle. The design includes an RC snubber across the triac and a mains filter to limit this. Depending on your country and installation, regulations on conducted emissions and flicker (e.g. the EN 61000-3 series in the EU) may still apply to the complete installation, so check them before putting the device into permanent use.
+Phase-angle control inherently generates harmonics and electromagnetic interference, because the triac switches the load on part-way through each mains half-cycle. The design includes an RC snubber across the triac and a 2-stage mains filter to limit this. Although such mains filters are expensive, do not omit them: consider the filter mandatory. Depending on your country and installation, regulations on conducted emissions and flicker (e.g. the EN 61000-3 series in the EU) may still apply to the complete installation, so check them before putting the device into permanent use.
 
 ## Hardware Assembly Hints
 
 1. In the pictures-folder of this project you can find photos of my assembled enclosure which can be used as a guideline to build your own device
-2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0 °C/W when using a ~2500 W boiler. Don't forget to connect the heatsink to the mains ground for safety! This is only safe with BTA-type triacs, which have an electrically insulated tab. The non-insulated BTB types would make the heatsink live
+2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0 °C/W when using a ~2500 W boiler. Don't forget to connect the heatsink to the mains ground for safety! You should also use triacs with an electrically insulated tab, like the BTA-type triacs in the design
 3. Around some power traces the mask has been intentionally left out. You should solder these traces with extra solder to reduce the power losses due to trace resistance
 4. It is recommended to use 1.5 mm² flexible wires for internal wiring
 5. When using a one-wire DS18B20 temperature sensor (probe) there are a few things you must adhere to make it work properly. Its supply should be connected to the board's +5V (not +3.3V), and the cable's ground shield should be connected to the (digital) low-voltage ground (NOT the mains ground) of the board. Most (sealed) temperature probes use a metal probe housing which is connected to the cable shield. Since this may short to the mains ground and introduce (switching) noise into the system, it should be isolated. The easiest way to accomplish this is using some shrink-tube
@@ -57,12 +59,14 @@ For boilers with (digital) electronics the controller cannot be connected to the
 2. Of the 2 wires of the (internal) heating element(s), identify the one that is connected to the (safety) thermostat. This wire, and therefore the thermostat, must remain untouched.
 3. Cut the other wire (the one NOT connected to the thermostat) in two. Connect only the end that goes to the heating element to the controller's TRIAC-L terminal.
 4. Power the controller in one of these ways:
-   - **Recommended: from the cut wire.** Connect the other cut end (the one coming from the boiler) to the controller's MAINS-L terminal, and connect the controller's MAINS-N terminal to the boiler's N (the connection the thermostat-side element wire returns to). The controller then only needs this one additional N connection. Because the controller takes its L from the same wire that used to feed the element, the L/N polarity pitfall of the separate feed option is avoided, which makes this option much more fool-proof. This requires that the end is permanently live, i.e. not switched by the boiler's electronics.
+   - **Recommended: from the cut wire.** Connect the other cut end (the one coming from the boiler) to the controller's MAINS-L terminal, and connect the controller's MAINS-N terminal to the boiler's N (the connection the thermostat-side element wire returns to). The controller then only needs this one additional N connection. Because the controller takes its L from the same wire that used to feed the element, the L/N polarity pitfall of the separate feed option is avoided, which makes this option much more fool-proof. The cut end goes directly to the boiler's L input and is therefore permanently live; verify this with a multimeter before connecting.
    - **Separate feed.** Connect the controller's MAINS-L and MAINS-N terminals to the boiler's mains L and N, and properly insulate the unused cut end. Make sure the boiler's mains L/N connections are such that the controller's MAINS-L is the same "L" that used to feed the cut wire. Otherwise you create a short between the mains N and L.
+
+![Wiring diagram for the recommended power option](pictures/wiring_boiler_with_electronics.svg)
 
 Things to be aware of:
 
-- The separate feed option is only suitable for a fixed (hard-wired) installation with verified polarity. Do **not** use it with a reversible plug (e.g. Schuko) where L and N are undefined. Always verify L and N with a meter.
+- The separate feed option is only suitable for a fixed (hard-wired) installation with verified polarity. Do **not** use it with a reversible plug (e.g. Schuko) where L and N are undefined. Always verify L and N with a multimeter.
 - The boiler's own electronics may react unexpectedly to the modification (e.g. by reporting a fault when the element is not powered). This is boiler-dependent.
 - Modifying a boiler's internal wiring may void its warranty and, depending on your country, may need to be performed by a qualified electrician.
 
