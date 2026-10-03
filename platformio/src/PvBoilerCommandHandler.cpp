@@ -477,7 +477,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(strBuf);
   }
 
-  CTerminal::print(" error=");
+  CTerminal::print(" mains_error=");
   CTerminal::print(m_pvBoiler.GetPowerGoodFlag() ? "0" : "1");
 
   CTerminal::println("");
