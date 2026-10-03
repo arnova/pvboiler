@@ -66,9 +66,9 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdSetMode(const char *strArgs);
     result_code_t CmdSetDimStyle(const char *strArgs);
     result_code_t CmdSetSsrPeriodCount(const char *strArgs);
-    result_code_t CmdSetPosErrorGain(const char *strArgs);
-    result_code_t CmdSetNegErrorGain(const char *strArgs);
-    result_code_t CmdSetPosStepClamp(const char *strArgs);
-    result_code_t CmdSetNegStepClamp(const char *strArgs);
+    result_code_t CmdSetErrorGainPos(const char *strArgs);
+    result_code_t CmdSetErrorGainNeg(const char *strArgs);
+    result_code_t CmdSetStepClampPos(const char *strArgs);
+    result_code_t CmdSetStepClampNeg(const char *strArgs);
 };
 #endif // PVBOILER_COMMAND_HANDLER_H

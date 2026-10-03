@@ -326,20 +326,20 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("pos_error_gain=");
-  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetPosErrorGain());
+  CTerminal::print("error_gain_pos=");
+  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainPos());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" neg_error_gain=");
-  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetNegErrorGain());
+  CTerminal::print(" error_gain_neg=");
+  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainNeg());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" pos_step_clamp=");
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetPosStepClamp());
+  CTerminal::print(" step_clamp_pos=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampPos());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" neg_step_clamp=");
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetNegStepClamp());
+  CTerminal::print(" step_clamp_neg=");
+  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampNeg());
   CTerminal::print(strBuf);
 
   CTerminal::print(" dead_zone=");
@@ -442,8 +442,8 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("net_period=");
-  const uint16_t iPeriod = m_pvBoiler.GetNetPeriod();
+  CTerminal::print("mains_period=");
+  const uint16_t iPeriod = m_pvBoiler.GetMainsPeriod();
   if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
   {
     CTerminal::print("?ms");
@@ -454,7 +454,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(strBuf);
   }
 
-  CTerminal::print(" net_freq=");
+  CTerminal::print(" mains_freq=");
   if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
   {
     CTerminal::print("?Hz");
@@ -465,8 +465,8 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print(strBuf);
   }
 
-  CTerminal::print(" zero_cross_window=");
-  const uint16_t iWindow = m_pvBoiler.GetZeroCrossWindow();
+  CTerminal::print(" mains_zero_cross_window=");
+  const uint16_t iWindow = m_pvBoiler.GetMainsZeroCrossWindow();
   if (iWindow == 0 || iWindow == ZERO_CROSS_WINDOW_INVALID)
   {
     CTerminal::print("?ms");
@@ -683,69 +683,69 @@ result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
 
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetPosErrorGain(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetErrorGainPos(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, POS_ERROR_GAIN_MIN, POS_ERROR_GAIN_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetPosErrorGain(fGain);
+  m_pvBoiler.SetErrorGainPos(fGain);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetNegErrorGain(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetErrorGainNeg(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, POS_ERROR_GAIN_MIN, POS_ERROR_GAIN_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetNegErrorGain(fGain);
+  m_pvBoiler.SetErrorGainNeg(fGain);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetPosStepClamp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetStepClampPos(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, POS_STEP_CLAMP_MIN, POS_STEP_CLAMP_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetPosStepClamp(fClamp);
+  m_pvBoiler.SetStepClampPos(fClamp);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetNegStepClamp(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetStepClampNeg(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, POS_STEP_CLAMP_MIN, POS_STEP_CLAMP_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetNegStepClamp(fClamp);
+  m_pvBoiler.SetStepClampNeg(fClamp);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -883,19 +883,19 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   }
   else if (STRIEQUALS(strCommand, "egp") || STRIEQUALS(strCommand, "egainp"))
   {
-    result = CmdSetPosErrorGain(strArgs);
+    result = CmdSetErrorGainPos(strArgs);
   }
   else if (STRIEQUALS(strCommand, "egn") || STRIEQUALS(strCommand, "egainn"))
   {
-    result = CmdSetNegErrorGain(strArgs);
+    result = CmdSetErrorGainNeg(strArgs);
   }
   else if (STRIEQUALS(strCommand, "scp") || STRIEQUALS(strCommand, "sclampp"))
   {
-    result = CmdSetPosStepClamp(strArgs);
+    result = CmdSetStepClampPos(strArgs);
   }
   else if (STRIEQUALS(strCommand, "scn") || STRIEQUALS(strCommand, "sclampn"))
   {
-    result = CmdSetNegStepClamp(strArgs);
+    result = CmdSetStepClampNeg(strArgs);
   }
   else if (STRIEQUALS(strCommand, "hostname") || STRIEQUALS(strCommand, "name"))
   {

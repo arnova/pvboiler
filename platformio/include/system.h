@@ -29,22 +29,22 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define SSR_PERIOD_COUNT_MAX                    254
 
 // Positive error gain
-#define POS_ERROR_GAIN_DEFAULT                  0.05f
-#define POS_ERROR_GAIN_MIN                      0.0001f
-#define POS_ERROR_GAIN_MAX                      100.0f
+#define ERROR_GAIN_POS_DEFAULT                  0.05f
+#define ERROR_GAIN_POS_MIN                      0.0001f
+#define ERROR_GAIN_POS_MAX                      100.0f
 
 // Negative error gain
-#define NEG_ERROR_GAIN_DEFAULT                  0.2f
-#define NEG_ERROR_GAIN_MIN                      0.0001f
-#define NEG_ERROR_GAIN_MAX                      100.0f
+#define ERROR_GAIN_NEG_DEFAULT                  0.2f
+#define ERROR_GAIN_NEG_MIN                      0.0001f
+#define ERROR_GAIN_NEG_MAX                      100.0f
 
-#define POS_STEP_CLAMP_DEFAULT                  3.0f    // %
-#define POS_STEP_CLAMP_MIN                      0.01f   // %
-#define POS_STEP_CLAMP_MAX                      100.0f  // %
+#define STEP_POS_CLAMP_DEFAULT                  3.0f    // %
+#define STEP_CLAMP_POS_MIN                      0.01f   // %
+#define STEP_CLAMP_POS_MAX                      100.0f  // %
 
-#define NEG_STEP_CLAMP_DEFAULT                  12.0f   // %
-#define NEG_STEP_CLAMP_MIN                      0.01f   // %
-#define NEG_STEP_CLAMP_MAX                      100.0f  // %
+#define STEP_NEG_CLAMP_DEFAULT                  12.0f   // %
+#define STEP_CLAMP_NEG_MIN                      0.01f   // %
+#define STEP_CLAMP_NEG_MAX                      100.0f  // %
 
 // Zero crossing window related values
 #define ZERO_CROSS_WINDOW_MIN_US                700   // us
@@ -107,10 +107,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_BUDGET_MARGIN                      "budget_margin"
 #define MQTT_DIM_STYLE                          "dim_style"
 #define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
-#define MQTT_POS_ERROR_GAIN                     "positive_error_gain"
-#define MQTT_NEG_ERROR_GAIN                     "negative_error_gain"
-#define MQTT_POS_STEP_CLAMP                     "positive_step_clamp"
-#define MQTT_NEG_STEP_CLAMP                     "negative_step_clamp"
+#define MQTT_ERROR_GAIN_POS                     "error_gain_positive"
+#define MQTT_ERROR_GAIN_NEG                     "error_gain_negative"
+#define MQTT_STEP_CLAMP_POS                     "clamp_positive_step"
+#define MQTT_STEP_CLAMP_NEG                     "clamp_negative_step"
 
 // Diagnostic topic items
 #define MQTT_WIFI_SSID                          "wifi_ssid"
@@ -118,10 +118,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_IP_NETMASK                         "ip_netmask"
 #define MQTT_TRIAC_ANGLE_FACTOR                 "triac_angle_factor"
 #define MQTT_TRIAC_PHASE_ANGLE                  "triac_phase_angle"
-#define MQTT_NET_PERIOD                         "net_period"
-#define MQTT_NET_FREQUENCY                      "net_frequency"
-#define MQTT_ZERO_CROSS_WINDOW                  "zero_cross_window"
-#define MQTT_POWER_ERROR                        "power_error"
+#define MQTT_MAINS_PERIOD                       "mains_period"
+#define MQTT_MAINS_FREQUENCY                    "mains_frequency"
+#define MQTT_MAINS_ZERO_CROSS_WINDOW            "mains_zero_cross_window"
+#define MQTT_MAINS_ERROR                        "mains_error"
 #define MQTT_UPDATE_INTERVAL                    "update_interval"
 #define MQTT_NET_WD_TIMEOUT                     "network_watchdog_timeout"
 #define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
@@ -191,11 +191,11 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_NET_WD_TIMEOUT EEPROM_SSR_PERIOD + SSR_PERIOD_SIZE                 // 348
 #define EEPROM_NET_WD_RECOVER EEPROM_NET_WD_TIMEOUT + NET_WD_TIMEOUT_SIZE         // 350
 #define EEPROM_MQTT_INTERVAL  EEPROM_NET_WD_RECOVER + NET_WD_RECOVER_SIZE         // 352
-#define EEPROM_POS_ERROR_GAIN EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // 353
-#define EEPROM_NEG_ERROR_GAIN EEPROM_POS_ERROR_GAIN + ERROR_GAIN_SIZE             // 357
-#define EEPROM_POS_STEP_CLAMP EEPROM_NEG_ERROR_GAIN + ERROR_GAIN_SIZE             // 361
-#define EEPROM_NEG_STEP_CLAMP EEPROM_POS_STEP_CLAMP + STEP_CLAMP_SIZE             // 365
-#define EEPROM_DEAD_ZONE      EEPROM_NEG_STEP_CLAMP + STEP_CLAMP_SIZE             // 369
+#define EEPROM_ERROR_GAIN_POS EEPROM_MQTT_INTERVAL + MQTT_INTERVAL_SIZE           // 353
+#define EEPROM_ERROR_GAIN_NEG EEPROM_ERROR_GAIN_POS + ERROR_GAIN_SIZE             // 357
+#define EEPROM_STEP_CLAMP_POS EEPROM_ERROR_GAIN_NEG + ERROR_GAIN_SIZE             // 361
+#define EEPROM_STEP_CLAMP_NEG EEPROM_STEP_CLAMP_POS + STEP_CLAMP_SIZE             // 365
+#define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP_NEG + STEP_CLAMP_SIZE             // 369
 #define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // 370
                                                                                   // end 372
 

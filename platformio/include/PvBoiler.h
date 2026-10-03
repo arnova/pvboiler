@@ -83,10 +83,10 @@ class CPvBoiler
     void SetMode(const mode_t mode);
     void SetDimStyle(const dim_style_t dimStyle);
     void SetSsrPeriodCount(const uint8_t iPeriod);
-    void SetPosErrorGain(const float fGain);
-    void SetNegErrorGain(const float fGain);
-    void SetPosStepClamp(const float fClamp);
-    void SetNegStepClamp(const float fClamp);
+    void SetErrorGainPos(const float fGain);
+    void SetErrorGainNeg(const float fGain);
+    void SetStepClampPos(const float fClamp);
+    void SetStepClampNeg(const float fClamp);
     void SetMqttUpdateInterval(const uint8_t iInterval);
     void SetNetWatchDogTimeout(const uint16_t iTimeout);
     void SetNetWatchDogRecovery(const uint16_t iTimeout);
@@ -107,12 +107,12 @@ class CPvBoiler
     mode_t GetMode() const { return m_mode; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
-    float GetPosErrorGain() const { return m_fPosErrorGain; };
-    float GetNegErrorGain() const { return m_fNegErrorGain; };
-    float GetPosStepClamp() const { return m_fPosStepClamp; };
-    float GetNegStepClamp() const { return m_fNegStepClamp; };
-    uint16_t GetNetPeriod() const { return m_iPeriodTime; };
-    uint16_t GetZeroCrossWindow() const { return m_iZeroCrossWindow; };
+    float GetErrorGainPos() const { return m_fErrorGainPos; };
+    float GetErrorGainNeg() const { return m_fErrorGainNeg; };
+    float GetStepClampPos() const { return m_fStepClampPos; };
+    float GetStepClampNeg() const { return m_fStepClampNeg; };
+    uint16_t GetMainsPeriod() const { return m_iPeriodTime; };
+    uint16_t GetMainsZeroCrossWindow() const { return m_iZeroCrossWindow; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
@@ -170,11 +170,11 @@ class CPvBoiler
     bool m_bPowerGoodFlag = true;
 
     // (Proportional) error gains
-    float m_fPosErrorGain = POS_ERROR_GAIN_DEFAULT;
-    float m_fNegErrorGain = NEG_ERROR_GAIN_DEFAULT;
+    float m_fErrorGainPos = ERROR_GAIN_POS_DEFAULT;
+    float m_fErrorGainNeg = ERROR_GAIN_NEG_DEFAULT;
 
-    float m_fPosStepClamp = POS_STEP_CLAMP_DEFAULT;
-    float m_fNegStepClamp = NEG_STEP_CLAMP_DEFAULT;
+    float m_fStepClampPos = STEP_POS_CLAMP_DEFAULT;
+    float m_fStepClampNeg = STEP_NEG_CLAMP_DEFAULT;
 
     mode_t m_mode = MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 

@@ -115,17 +115,17 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
         snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
         m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fPosErrorGain);
-        m_network.GetMqttClient().PublishMessage(MQTT_POS_ERROR_GAIN, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainPos);
+        m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_POS, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fNegErrorGain);
-        m_network.GetMqttClient().PublishMessage(MQTT_NEG_ERROR_GAIN, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainNeg);
+        m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_NEG, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fPosStepClamp);
-        m_network.GetMqttClient().PublishMessage(MQTT_POS_STEP_CLAMP, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampPos);
+        m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_POS, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fNegStepClamp);
-        m_network.GetMqttClient().PublishMessage(MQTT_NEG_STEP_CLAMP, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampNeg);
+        m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_NEG, strBuf);
       }
       break;
 
@@ -219,17 +219,17 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    m_network.GetMqttClient().PublishMessage(MQTT_POWER_ERROR, GetPowerGoodFlag() ? "0" : "1");
+    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
 
     // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
     snprintf(strBuf, sizeof(strBuf), "%u", (m_iPeriodTime == NET_PERIOD_INVALID) ? 0 : m_iPeriodTime * 2);
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_PERIOD, strBuf);
+    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
 
     snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_FREQUENCY, strBuf);
+    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
 
     snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
-    m_network.GetMqttClient().PublishMessage(MQTT_ZERO_CROSS_WINDOW, strBuf);
+    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
 
     // Publish uptime
     const CUptime::uptime_t upTime = GetUpTime();
@@ -244,15 +244,15 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 void CPvBoiler::MqttPublishConfig()
 {
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_POWER_ERROR, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1, -100000, 100000);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1, 0, 100, false);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_ERROR_GAIN, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_ERROR_GAIN, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_POS_STEP_CLAMP, "%", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NEG_STEP_CLAMP, "%", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP_POS, "%", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP_NEG, "%", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
@@ -283,15 +283,15 @@ void CPvBoiler::MqttPublishConfig()
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "ms", "duration", "measurement", true);  
   m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
 
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "ms", "duration", "measurement", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_PERIOD, "us", "", "", true);
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_PERIOD, "ms", "duration", "measurement", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_PERIOD, "us", "", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_FREQUENCY, "Hz", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_FREQUENCY, "Hz", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
 
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_ZERO_CROSS_WINDOW, "us", "", "", true);
+//  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
@@ -351,33 +351,33 @@ void CPvBoiler::LoadSettings()
   }
   m_iSsrPeriodCount = iVal8;
 
-  EEPROM.get(EEPROM_POS_ERROR_GAIN, fVal);
-  if (fVal < POS_ERROR_GAIN_MIN || fVal > POS_ERROR_GAIN_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_ERROR_GAIN_POS, fVal);
+  if (fVal < ERROR_GAIN_POS_MIN || fVal > ERROR_GAIN_POS_MAX || isnan(fVal))
   {
-    fVal = POS_ERROR_GAIN_DEFAULT;
+    fVal = ERROR_GAIN_POS_DEFAULT;
   }
-  m_fPosErrorGain = fVal;
+  m_fErrorGainPos = fVal;
 
-  EEPROM.get(EEPROM_NEG_ERROR_GAIN, fVal);
-  if (fVal < NEG_ERROR_GAIN_MIN || fVal > NEG_ERROR_GAIN_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_ERROR_GAIN_NEG, fVal);
+  if (fVal < ERROR_GAIN_NEG_MIN || fVal > ERROR_GAIN_NEG_MAX || isnan(fVal))
   {
-    fVal = NEG_ERROR_GAIN_DEFAULT;
+    fVal = ERROR_GAIN_NEG_DEFAULT;
   }
-  m_fNegErrorGain = fVal;
+  m_fErrorGainNeg = fVal;
 
-  EEPROM.get(EEPROM_POS_STEP_CLAMP, fVal);
-  if (fVal < POS_STEP_CLAMP_MIN || fVal > POS_STEP_CLAMP_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_STEP_CLAMP_POS, fVal);
+  if (fVal < STEP_CLAMP_POS_MIN || fVal > STEP_CLAMP_POS_MAX || isnan(fVal))
   {
-    fVal = POS_STEP_CLAMP_DEFAULT;
+    fVal = STEP_POS_CLAMP_DEFAULT;
   }
-  m_fPosStepClamp = fVal;
+  m_fStepClampPos = fVal;
 
-  EEPROM.get(EEPROM_NEG_STEP_CLAMP, fVal);
-  if (fVal < NEG_STEP_CLAMP_MIN || fVal > NEG_STEP_CLAMP_MAX || isnan(fVal))
+  EEPROM.get(EEPROM_STEP_CLAMP_NEG, fVal);
+  if (fVal < STEP_CLAMP_NEG_MIN || fVal > STEP_CLAMP_NEG_MAX || isnan(fVal))
   {
-    fVal = NEG_STEP_CLAMP_DEFAULT;
+    fVal = STEP_NEG_CLAMP_DEFAULT;
   }
-  m_fNegStepClamp = fVal;
+  m_fStepClampNeg = fVal;
 
   EEPROM.get(EEPROM_NET_WD_TIMEOUT, iVal16);
   if (iVal16 > NETWORK_WATCHDOG_TIMEOUT_MAX)
@@ -487,56 +487,56 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 }
 
 
-void CPvBoiler::SetPosErrorGain(const float fGain)
+void CPvBoiler::SetErrorGainPos(const float fGain)
 {
-  if (fGain != m_fPosErrorGain)
+  if (fGain != m_fErrorGainPos)
   {
-    EEPROM.put(EEPROM_POS_ERROR_GAIN, fGain);
+    EEPROM.put(EEPROM_ERROR_GAIN_POS, fGain);
     EEPROM.commit();
 
-    m_fPosErrorGain = fGain;
+    m_fErrorGainPos = fGain;
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetNegErrorGain(const float fGain)
+void CPvBoiler::SetErrorGainNeg(const float fGain)
 {
-  if (fGain != m_fNegErrorGain)
+  if (fGain != m_fErrorGainNeg)
   {
-    EEPROM.put(EEPROM_NEG_ERROR_GAIN, fGain);
+    EEPROM.put(EEPROM_ERROR_GAIN_NEG, fGain);
     EEPROM.commit();
 
-    m_fNegErrorGain = fGain;
+    m_fErrorGainNeg = fGain;
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetPosStepClamp(const float fClamp)
+void CPvBoiler::SetStepClampPos(const float fClamp)
 {
-  if (fClamp != m_fPosStepClamp)
+  if (fClamp != m_fStepClampPos)
   {
-    EEPROM.put(EEPROM_POS_STEP_CLAMP, fClamp);
+    EEPROM.put(EEPROM_STEP_CLAMP_POS, fClamp);
     EEPROM.commit();
 
-    m_fPosStepClamp = fClamp;
+    m_fStepClampPos = fClamp;
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetNegStepClamp(const float fClamp)
+void CPvBoiler::SetStepClampNeg(const float fClamp)
 {
-  if (fClamp != m_fNegStepClamp)
+  if (fClamp != m_fStepClampNeg)
   {
-    EEPROM.put(EEPROM_NEG_STEP_CLAMP, fClamp);
+    EEPROM.put(EEPROM_STEP_CLAMP_NEG, fClamp);
     EEPROM.commit();
 
-    m_fNegStepClamp = fClamp;
+    m_fStepClampNeg = fClamp;
 
     m_bPublishSettings = true;
   }
@@ -593,10 +593,10 @@ void CPvBoiler::FactoryReset()
   SetMode(MODE_BUDGET);
   SetDimStyle(DIM_STYLE_PHASE_ANGLE);
   SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
-  SetPosErrorGain(POS_ERROR_GAIN_DEFAULT);
-  SetNegErrorGain(NEG_ERROR_GAIN_DEFAULT);
-  SetPosStepClamp(POS_STEP_CLAMP_DEFAULT);
-  SetNegStepClamp(NEG_STEP_CLAMP_DEFAULT);
+  SetErrorGainPos(ERROR_GAIN_POS_DEFAULT);
+  SetErrorGainNeg(ERROR_GAIN_NEG_DEFAULT);
+  SetStepClampPos(STEP_POS_CLAMP_DEFAULT);
+  SetStepClampNeg(STEP_NEG_CLAMP_DEFAULT);
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
 
@@ -672,7 +672,7 @@ void CPvBoiler::Update()
 
     if (m_fCurrentPercentage > 0)
     {
-      fNewPercentage -= m_fNegStepClamp; // Device off or watch-dog triggered: output to 0%
+      fNewPercentage -= m_fStepClampNeg; // Device off or watch-dog triggered: output to 0%
     }
   }
   else if (m_mode == MODE_BOOST)
@@ -687,16 +687,16 @@ void CPvBoiler::Update()
   {
     // Calculate error step (percentage)
     float fErrorStep = (100.0f * (m_iPowerBudget - m_iBudgetMargin)) / m_iBoilerPowerRating;
-    fErrorStep *= (fErrorStep > 0.0f) ? m_fPosErrorGain : m_fNegErrorGain;
+    fErrorStep *= (fErrorStep > 0.0f) ? m_fErrorGainPos : m_fErrorGainNeg;
 
     // Clamp error (step) value
-    if (fErrorStep > m_fPosStepClamp)
+    if (fErrorStep > m_fStepClampPos)
     {
-      fErrorStep = m_fPosStepClamp;
+      fErrorStep = m_fStepClampPos;
     }
-    else if (fErrorStep < -m_fNegStepClamp)
+    else if (fErrorStep < -m_fStepClampNeg)
     {
-      fErrorStep = -m_fNegStepClamp;
+      fErrorStep = -m_fStepClampNeg;
     }
 
     // Only change value when outside deadzone
