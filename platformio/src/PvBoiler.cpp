@@ -91,6 +91,38 @@ void CPvBoiler::Reset()
 }
 
 
+void CPvBoiler::SetLegionellaHoursSinceDisinfection(const uint32_t iVal)
+{
+  // May be set from both the mqtt broker (retained message) or
+  // from ourselves when the value changes in the CLegionella-class
+  // We know that when value differs it was not set by ourselves and
+  // it's the retained message from the broker
+  if (iVal != m_iLegionellaHoursSinceDisinfectionLast)
+  {
+    // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
+    m_legionella.SetHoursPassedSinceLastDisinfect(iVal + 1);
+  }
+
+  m_bPublishLegionellaHoursSinceDisinfection = true;
+}
+
+
+void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
+{
+  // May be set from both the mqtt broker (retained message) or
+  // from ourselves when the value changes in the CLegionella-class
+  // We know that when value differs it was not set by ourselves and
+  // it's the retained message from the broker
+  if (iVal != m_iLegionellaDangerZoneHoursLast)
+  {
+    // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
+    m_legionella.SetHoursInDangerZone(iVal + 1);
+  }
+
+  m_bPublishLegionellaDangerZoneHours = true;
+}
+
+
 bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 {
   if (!m_network.IsMqttConnected())
@@ -221,27 +253,48 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursPassedSinceLastDisinfect());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
-
     snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetDisinfectRunTimeSeconds());
     m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
 
     m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursInDangerZone());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+    // Publish new setter value only when changed
+    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
+    if (m_iLegionellaHoursSinceDisinfectionLast != iLegionellaHoursSinceDisinfection)
+    {
+      // Update last value else we'll loop on setting it over and over again via broker
+      m_iLegionellaHoursSinceDisinfectionLast = iLegionellaHoursSinceDisinfection;
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursPassedSinceLastDisinfect());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaHoursSinceDisinfection);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set", strBuf);
+    }
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetDisinfectRunTimeSeconds());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
+    // Publish state?
+    if (m_bPublishLegionellaHoursSinceDisinfection || bForce)
+    {
+      m_bPublishLegionellaHoursSinceDisinfection = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaHoursSinceDisinfection);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
+    }
 
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
+    // Publish new setter value only when changed
+    const uint32_t iLegionellaDangerZoneHours = m_legionella.GetHoursInDangerZone();
+    if (m_iLegionellaDangerZoneHoursLast != iLegionellaDangerZoneHours)
+    {
+      // Update last value else we'll loop on setting it over and over again via broker
+      m_iLegionellaDangerZoneHoursLast = iLegionellaDangerZoneHours;
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetHoursInDangerZone());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaDangerZoneHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set", strBuf);
+    }
+
+    // Publish state?
+    if (m_bPublishLegionellaDangerZoneHours || bForce)
+    {
+      m_bPublishLegionellaDangerZoneHours = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaDangerZoneHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+    }
 
     m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
 
@@ -306,8 +359,9 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_MUST_DISINFECT, true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, "h", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, "h", "", "", true);
+
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, 1.0f, 0.0f, 10000000.0f);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);

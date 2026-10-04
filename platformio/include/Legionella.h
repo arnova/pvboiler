@@ -33,14 +33,15 @@ class CLegionella
 
     void Reset() { m_iSecondsPassedSinceLastDisinfect = 0; m_iDisinfectRuntimeSeconds = 0; m_iSecondsInDangerZone = 0; m_bMustDisinfect = false; };
     void Loop();
+
+    const uint32_t GetHoursPassedSinceLastDisinfect() const { return m_iSecondsPassedSinceLastDisinfect / 3600; };
+    const uint32_t GetDisinfectRunTimeSeconds() const { return m_iDisinfectRuntimeSeconds; };
+    const uint32_t GetHoursInDangerZone() const { return m_iSecondsInDangerZone / 3600; };
+    bool MustDisinfect() const { return m_bMustDisinfect; };
+
     void UpdateTemperature(const float fTemperature) { m_fTemperature = fTemperature; };
-
-    void SetSecondsPassedSinceLastDisinfect(const uint32_t iTime) { m_iSecondsPassedSinceLastDisinfect = iTime; }; // FIXME: m_iSecondsInDangerZone?
-
-    const uint32_t GetHoursPassedSinceLastDisinfect() { return m_iSecondsPassedSinceLastDisinfect / 3600; };
-    const uint32_t GetDisinfectRunTimeSeconds() { return m_iDisinfectRuntimeSeconds; };
-    const uint32_t GetHoursInDangerZone() { return m_iSecondsInDangerZone / 3600; };
-    bool MustDisinfect() { return m_bMustDisinfect; };
+    void SetHoursPassedSinceLastDisinfect(const uint32_t iHours) { m_iSecondsPassedSinceLastDisinfect = iHours * 3600; };
+    void SetHoursInDangerZone(const uint32_t iHours) { m_iSecondsInDangerZone = iHours * 3600; };
 
   private:
     uint32_t m_iSecondsPassedSinceLastDisinfect; // s
