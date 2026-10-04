@@ -98,7 +98,29 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
+  else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set"))
+  {
+    if (bValidInt && iVal >=0)
+    {
+      g_app.GetPvBoiler().SetLegionellaHoursSinceDisinfection(iVal);
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
+  else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set"))
+  {
+    if (bValidInt && iVal >=0)
+    {
+      g_app.GetPvBoiler().SetLegionellaDangerZoneHours(iVal);
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
+  else if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
   {
     if (strcasecmp(strVal, "Budget") == 0)
     {

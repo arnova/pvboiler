@@ -77,6 +77,8 @@ class CPvBoiler
 
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
+    void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
+    void SetLegionellaDangerZoneHours(const uint32_t iVal);
 
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
@@ -186,6 +188,13 @@ class CPvBoiler
     bool m_bPublishBoilerTemperature = true;
     uint16_t m_iBoilerTemperatureRetryCount = 0;
     CRollingAverage m_boilerTemperatureAverage;
+
     CLegionella m_legionella;
+
+    uint32_t m_iLegionellaHoursSinceDisinfectionLast = 0;
+    bool m_bPublishLegionellaHoursSinceDisinfection = true;
+
+    uint32_t m_iLegionellaDangerZoneHoursLast = 0;
+    bool m_bPublishLegionellaDangerZoneHours = true;
 };
 #endif // PVBOILER_H
