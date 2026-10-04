@@ -368,14 +368,14 @@ void CPvBoiler::LoadSettings()
   EEPROM.get(EEPROM_STEP_CLAMP_POS, fVal);
   if (fVal < STEP_CLAMP_POS_MIN || fVal > STEP_CLAMP_POS_MAX || isnan(fVal))
   {
-    fVal = STEP_POS_CLAMP_DEFAULT;
+    fVal = STEP_CLAMP_POS_DEFAULT;
   }
   m_fStepClampPos = fVal;
 
   EEPROM.get(EEPROM_STEP_CLAMP_NEG, fVal);
   if (fVal < STEP_CLAMP_NEG_MIN || fVal > STEP_CLAMP_NEG_MAX || isnan(fVal))
   {
-    fVal = STEP_NEG_CLAMP_DEFAULT;
+    fVal = STEP_CLAMP_NEG_DEFAULT;
   }
   m_fStepClampNeg = fVal;
 
@@ -595,8 +595,8 @@ void CPvBoiler::FactoryReset()
   SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
   SetErrorGainPos(ERROR_GAIN_POS_DEFAULT);
   SetErrorGainNeg(ERROR_GAIN_NEG_DEFAULT);
-  SetStepClampPos(STEP_POS_CLAMP_DEFAULT);
-  SetStepClampNeg(STEP_NEG_CLAMP_DEFAULT);
+  SetStepClampPos(STEP_CLAMP_POS_DEFAULT);
+  SetStepClampNeg(STEP_CLAMP_NEG_DEFAULT);
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
 

@@ -38,11 +38,11 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define ERROR_GAIN_NEG_MIN                      0.0001f
 #define ERROR_GAIN_NEG_MAX                      100.0f
 
-#define STEP_POS_CLAMP_DEFAULT                  3.0f    // %
+#define STEP_CLAMP_POS_DEFAULT                  3.0f    // %
 #define STEP_CLAMP_POS_MIN                      0.01f   // %
 #define STEP_CLAMP_POS_MAX                      100.0f  // %
 
-#define STEP_NEG_CLAMP_DEFAULT                  12.0f   // %
+#define STEP_CLAMP_NEG_DEFAULT                  12.0f   // %
 #define STEP_CLAMP_NEG_MIN                      0.01f   // %
 #define STEP_CLAMP_NEG_MAX                      100.0f  // %
 
@@ -109,8 +109,8 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_SSR_PERIOD_COUNT                   "ssr_period_count"
 #define MQTT_ERROR_GAIN_POS                     "error_gain_positive"
 #define MQTT_ERROR_GAIN_NEG                     "error_gain_negative"
-#define MQTT_STEP_CLAMP_POS                     "clamp_positive_step"
-#define MQTT_STEP_CLAMP_NEG                     "clamp_negative_step"
+#define MQTT_STEP_CLAMP_POS                     "step_clamp_positive"
+#define MQTT_STEP_CLAMP_NEG                     "step_clamp_negative"
 
 // Diagnostic topic items
 #define MQTT_WIFI_SSID                          "wifi_ssid"

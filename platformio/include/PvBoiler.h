@@ -173,8 +173,8 @@ class CPvBoiler
     float m_fErrorGainPos = ERROR_GAIN_POS_DEFAULT;
     float m_fErrorGainNeg = ERROR_GAIN_NEG_DEFAULT;
 
-    float m_fStepClampPos = STEP_POS_CLAMP_DEFAULT;
-    float m_fStepClampNeg = STEP_NEG_CLAMP_DEFAULT;
+    float m_fStepClampPos = STEP_CLAMP_POS_DEFAULT;
+    float m_fStepClampNeg = STEP_CLAMP_NEG_DEFAULT;
 
     mode_t m_mode = MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
 
