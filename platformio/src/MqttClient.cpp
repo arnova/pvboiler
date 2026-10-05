@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : September 22, 2026
+  Last modified    : October 5, 2026
 */
 
 #include <Arduino.h>
@@ -187,7 +187,7 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
 }
 
 
-void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1 */, const float fMin /* = 0 */, const float fMax /* = 100 */, const bool bBox /* = true */)
+void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1.0f */, const float fMin /* = 0.0f */, const float fMax /* = 100.0f */, const char* strUnit /* = "" */, const char* strDeviceClass /* = "" */, const bool bBox /* = true */)
 {
   JsonDocument root;
 

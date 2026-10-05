@@ -246,8 +246,8 @@ void CPvBoiler::MqttPublishConfig()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1, -100000, 100000);
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1, 0, 100, false);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
