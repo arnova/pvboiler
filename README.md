@@ -74,9 +74,9 @@ Only do this when you have sufficient confidence you understand what you are doi
 
 ## First Time Use
 
-1. Flash the ESP firmware using e.g. PlatformIO (future firmware updates can be done over-the-air (OTA)). The initial flash needs to be performed using the USB serial connection, with the `usb` environment of `platformio.ini`: `pio run -e usb -t upload`. You may also need to customize `platform` and `board` in the shared `[env]` section of `platformio.ini` for your specific ESP board.
-2. After the initial flash, future firmware updates can be done over-the-air (OTA) with the `ota` environment: `pio run -e ota -t upload`. Note that you *may* need to substitute the controller's IP address for `pvboiler.local` in `upload_port` of the `ota` environment in case mDNS is not available in your network (or it's failing somehow).
-3. Connect to the microcontroller's terminal interface, either via the USB connection or a socket connection to the device's IP at port 8000, using a terminal program (e.g. PuTTY). The network terminal is plain-text and gives access to the stored WiFi and MQTT credentials, so only use it on a network you trust.
+1. Flash the ESP firmware using PlatformIO. The initial flash needs to be performed using the USB serial connection, with one of the `usb-xxxxx` (`usb-esp8266` or `usb-esp32`) PlatformIO-environments: `pio run -e usb-xxxxx -t upload`. You may need to customize `platform` and `board` in your `platformio.ini` for your specific ESP board first.
+2. After the initial flash, future firmware updates can be done over-the-air (OTA) with one of the `ota-xxxxx` (`ota-esp8266` or `ota-esp32`) PlatformIO-environments: `pio run -e ota-xxxxx -t upload`. Note that you *may* need to substitute the controller's IP address for `pvboiler.local` in `upload_port` of the relevant `ota-xxxxx` environment in case mDNS is not available in your network (or it's failing somehow).
+3. Connect to the microcontroller's terminal interface, either via the USB connection or a socket connection to the device's IP at port 8000, using a terminal program (e.g. PuTTY). The network terminal is plain-text and also gives access to the stored WiFi and MQTT credentials, so only use it on a network you trust.
 4. In the command terminal, `help` (+ `Enter`) will show all available commands with their descriptions. Initially, these operations must be performed:
    - Reset all settings to default with the `factoryreset`-command.
    - Set your WiFi network SSID with the `ssid`-command, providing the name of your network as an argument.
