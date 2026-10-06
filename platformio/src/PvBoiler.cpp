@@ -265,46 +265,26 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE, "", "", "", true);
-
-  if (m_dimStyle == DIM_STYLE_SSR)
-  {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT, "", "", "", true);
-  }
-  else
-  {
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_SSR_PERIOD_COUNT);
-  }
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT, "", "", "", true);
 
   // Diagnostic
   m_network.GetMqttClient().PublishSensorConfig(MQTT_WIFI_SSID, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
 //  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "ms", "duration", "measurement", true);  
   m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
 
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_PERIOD, "ms", "duration", "measurement", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_PERIOD, "us", "", "", true);
-
   m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_FREQUENCY, "Hz", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
-
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "ms", "duration", "measurement", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
-  
-  if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
-  {
-    m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
-  }
-  else
-  {
-    m_network.GetMqttClient().UnpublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR);
-  }
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_UP_TIME, "", "", "", true);
 
   // Publish our f/w version
   m_network.GetMqttClient().PublishMessage(MQTT_FW_VERSION, MY_VERSION, true);
