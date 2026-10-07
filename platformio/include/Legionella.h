@@ -44,9 +44,9 @@ class CLegionella
     void SetHoursInDangerZone(const uint32_t iHours) { m_iSecondsInDangerZone = iHours * 3600; };
 
   private:
-    uint32_t m_iSecondsPassedSinceLastDisinfect; // s
-    uint32_t m_iDisinfectRuntimeSeconds; // s
-    uint32_t m_iSecondsInDangerZone; // s
+    uint32_t m_iSecondsPassedSinceLastDisinfect = 0; // s
+    uint32_t m_iDisinfectRuntimeSeconds = 0; // s
+    uint32_t m_iSecondsInDangerZone = 0; // s
 
     float m_fTemperature = -1.0f;
     bool m_bMustDisinfect = false;

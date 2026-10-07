@@ -85,7 +85,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // MQTT settings
 #define MQTT_PORT                               1883
 #define MQTT_MAX_MESSAGE_SIZE                   1024
-#define MQTT_MAX_TOPIC_ITEM_SIZE                32
+#define MQTT_MAX_TOPIC_ITEM_SIZE                64
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
 
 #define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
