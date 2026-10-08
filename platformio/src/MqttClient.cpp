@@ -290,9 +290,9 @@ bool CMqttClient::ServerConnect()
 
   CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif
-  // Create a random client ID
-  char strclientId[HOST_NAME_MAX_SIZE + 6]; // Enough for hostname-xxxx
-  snprintf(strclientId, sizeof(strclientId), "%s-%lx", m_strHostName, random(0xffff));
+  // Use a fixed client ID so the broker takes over (and ends) a stale session from before a reboot,
+  // instead of firing its "offline" will later on and overriding our "online" status
+  const char* strclientId = m_strHostName;
 
   char* strUser = NULL;
   if (strlen(m_strUser) != 0)
@@ -326,4 +326,18 @@ bool CMqttClient::ServerConnect()
 #endif
 
   return true;
+}
+
+
+void CMqttClient::ServerDisconnect()
+{
+  if (connected())
+  {
+    // Clean disconnect: will isn't sent by the broker, so explicitly report offline
+    char strWillTopic[HOST_NAME_MAX_SIZE + 8];
+    snprintf(strWillTopic, sizeof(strWillTopic), "%s/status", m_strHostName);
+    publish(strWillTopic, "offline", true);
+
+    disconnect();
+  }
 }
