@@ -841,6 +841,9 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   }
   else if (STRIEQUALS(strCommand, "reboot"))
   {
+    if (strArgs == NULL || !*strArgs)
+      m_network.GetMqttClient().ServerDisconnect();
+
     result = CmdReboot(strArgs);
   }
   else if (STRIEQUALS(strCommand, "reset"))

@@ -28,6 +28,7 @@ class CMqttClient : public PubSubClient
 
     void Init(const uint8_t* serverIp, const char* strHostName, const char* strUser, const char* strPassword);
     bool ServerConnect();
+    void ServerDisconnect();
 
   private:
     void ConstructConfigMessage(JsonDocument& root, const char* strItem);
