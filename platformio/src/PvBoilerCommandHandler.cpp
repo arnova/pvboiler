@@ -436,8 +436,22 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" boiler_t=");
+  CTerminal::println("");
+
+  CTerminal::print("boiler_t=");
   snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" danger_zone=");
+  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDangerZoneHours());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" disinfect_passed=");
+  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaHoursSinceDisinfection());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" disinfect_runtime=");
+  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetLegionellaDisinfectRunTimeSeconds());
   CTerminal::print(strBuf);
 
   CTerminal::println("");

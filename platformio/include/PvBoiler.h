@@ -121,6 +121,9 @@ class CPvBoiler
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
+    uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
+    uint32_t GetLegionellaDangerZoneHours() const { return m_iLegionellaDangerZoneHours; };
+    uint32_t GetLegionellaDisinfectRunTimeSeconds() const { return m_iDisinfectRunTimeSeconds; };
 
     void SetPowerGood(const bool bPowerGood) { m_bPowerGood = bPowerGood; m_bPowerGoodFlag &= bPowerGood; };
     bool GetPowerGood() const { return m_bPowerGood; };
@@ -191,10 +194,12 @@ class CPvBoiler
 
     CLegionella m_legionella;
 
-    uint32_t m_iLegionellaHoursSinceDisinfectionLast = 0;
+    uint32_t m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
     bool m_bPublishLegionellaHoursSinceDisinfection = true;
 
-    uint32_t m_iLegionellaDangerZoneHoursLast = 0;
+    uint32_t m_iLegionellaDangerZoneHours = UINT32_MAX;
     bool m_bPublishLegionellaDangerZoneHours = true;
+
+    uint32_t m_iDisinfectRunTimeSeconds = 0;
 };
 #endif // PVBOILER_H

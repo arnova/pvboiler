@@ -97,7 +97,7 @@ void CPvBoiler::SetLegionellaHoursSinceDisinfection(const uint32_t iVal)
   // from ourselves when the value changes in the CLegionella-class
   // We know that when value differs it was not set by ourselves and
   // it's the retained message from the broker
-  if (iVal != m_iLegionellaHoursSinceDisinfectionLast)
+  if (iVal != m_iLegionellaHoursSinceDisinfection)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
     m_legionella.SetHoursPassedSinceLastDisinfect(iVal + 1);
@@ -113,7 +113,7 @@ void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
   // from ourselves when the value changes in the CLegionella-class
   // We know that when value differs it was not set by ourselves and
   // it's the retained message from the broker
-  if (iVal != m_iLegionellaDangerZoneHoursLast)
+  if (iVal != m_iLegionellaDangerZoneHours)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
     m_legionella.SetHoursInDangerZone(iVal + 1);
@@ -253,17 +253,21 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_legionella.GetDisinfectRunTimeSeconds());
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
-
     m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
 
-    // Publish new setter value only when changed
-    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
-    if (m_iLegionellaHoursSinceDisinfectionLast != iLegionellaHoursSinceDisinfection)
+    const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
+    if (m_iDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
     {
-      // Update last value else we'll loop on setting it over and over again via broker
-      m_iLegionellaHoursSinceDisinfectionLast = iLegionellaHoursSinceDisinfection;
+      m_iDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
+      snprintf(strBuf, sizeof(strBuf), "%u", iDisinfectRunTimeSeconds);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
+    }
+
+    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
+    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
+    if (m_iLegionellaHoursSinceDisinfection != iLegionellaHoursSinceDisinfection)
+    {
+      m_iLegionellaHoursSinceDisinfection = iLegionellaHoursSinceDisinfection;
 
       snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaHoursSinceDisinfection);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set", strBuf);
@@ -277,12 +281,11 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
     }
 
-    // Publish new setter value only when changed
+    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
     const uint32_t iLegionellaDangerZoneHours = m_legionella.GetHoursInDangerZone();
-    if (m_iLegionellaDangerZoneHoursLast != iLegionellaDangerZoneHours)
+    if (m_iLegionellaDangerZoneHours != iLegionellaDangerZoneHours)
     {
-      // Update last value else we'll loop on setting it over and over again via broker
-      m_iLegionellaDangerZoneHoursLast = iLegionellaDangerZoneHours;
+      m_iLegionellaDangerZoneHours = iLegionellaDangerZoneHours;
 
       snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaDangerZoneHours);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set", strBuf);
