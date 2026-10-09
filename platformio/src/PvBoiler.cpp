@@ -277,17 +277,10 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       break;
     }
 
-    if (m_dimStyle == DIM_STYLE_SSR)
-    {
-      m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "SSR");
+    m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_SSR) ? "SSR" : "Phase-angle");
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iSsrPeriodCount);
-      m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, strBuf);
-    }
-    else
-    {
-      m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, "Phase-angle");
-    }
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iSsrPeriodCount);
+    m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, strBuf);
 
     snprintf(strBuf, sizeof(strBuf), "%u", m_iMqttUpdateInterval);
     m_network.GetMqttClient().PublishMessage(MQTT_UPDATE_INTERVAL, strBuf);
