@@ -73,7 +73,6 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   root["payload_available"] = "online";
   root["payload_not_available"] = "offline";
 
-  root["retain"] = true;
   root["qos"] = 1;
 
   JsonObject device = root["device"].to<JsonObject>();
@@ -101,9 +100,12 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
 }
 
 
-void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
+void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bRetain /* = true */)
 {
   ConstructConfigMessage(root, strItem);
+
+  // Whether HA publishes commands (/set) retained
+  root["retain"] = bRetain;
 
   PublishConfig(root, strItem, strTopicType);
 
@@ -169,7 +171,7 @@ void CMqttClient::UnpublishBinarySensorConfig(const char* strItem)
 }
 
 
-void CMqttClient::PublishSwitchConfig(const char* strItem)
+void CMqttClient::PublishSwitchConfig(const char* strItem, const bool bRetain /* = true */)
 {
   JsonDocument root;
 
@@ -183,11 +185,11 @@ void CMqttClient::PublishSwitchConfig(const char* strItem)
   root["state_off"] = "0";
 //  root["value_template"] = "{{ value_json.state }}"; // Not used
 
-  PublishSetterConfig(root, strItem, "switch");
+  PublishSetterConfig(root, strItem, "switch", bRetain);
 }
 
 
-void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1.0f */, const float fMin /* = 0.0f */, const float fMax /* = 100.0f */, const char* strUnit /* = "" */, const char* strDeviceClass /* = "" */, const bool bBox /* = true */)
+void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1.0f */, const float fMin /* = 0.0f */, const float fMax /* = 100.0f */, const char* strUnit /* = "" */, const char* strDeviceClass /* = "" */, const bool bBox /* = true */, const bool bRetain /* = true */)
 {
   JsonDocument root;
 
@@ -207,11 +209,11 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* 
 
   root["mode"] = bBox ? "box" : "slider";
 
-  PublishSetterConfig(root, strItem, "number");
+  PublishSetterConfig(root, strItem, "number", bRetain);
 }
 
 
-void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount)
+void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount, const bool bRetain /* = true */)
 {
   JsonDocument root;
 
@@ -224,7 +226,7 @@ void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValue
     root["options"][it] = strValues[it];
   }
 
-  PublishSetterConfig(root, strItem, "select");
+  PublishSetterConfig(root, strItem, "select", bRetain);
 }
 
 
@@ -256,11 +258,11 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /
 }
 
 
-bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetained /* = true */)
+bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetain /* = false */)
 {
   char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
   snprintf(strTopic, sizeof(strTopic), "%s/%s", m_strHostName, strItem);
-  return publish(strTopic, strPayload, bRetained);
+  return publish(strTopic, strPayload, bRetain);
 }
 
 
