@@ -27,8 +27,6 @@ void CPvBoiler::Loop()
   {
     CheckNetworkWatchDog();
 
-    m_legionella.Loop();
-
     if (m_tempSensors.getDeviceCount() > 0)
     {
       const float fTemperature = m_tempSensors.getTempCByIndex(0); // first sensor on the bus
@@ -64,8 +62,18 @@ void CPvBoiler::Loop()
         }
       }
 
+      m_legionella.Loop();
+
       // Request new value from temperature probe
       m_tempSensors.requestTemperatures();
+    }
+    else
+    {
+      if (m_fBoilerTemperature != 1.0f)
+      {
+        m_bPublishBoilerTemperature = true;
+        m_fBoilerTemperature = -1.0f;
+      }
     }
 
     MqttPublishValues();
