@@ -20,7 +20,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
-                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"boost\", \"off\")\r\n"
+                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"off\", \"on\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
@@ -411,6 +411,12 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     }
     break;
 
+    case CPvBoiler::MODE_ON:
+    {
+      CTerminal::print("on");
+    }
+    break;
+
     case CPvBoiler::MODE_OFF:
     {
       CTerminal::print("off");
@@ -665,7 +671,9 @@ result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
     m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET);
   else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_OFF);
-  else if (STRIEQUALS(strArgs, "boost") || STRIEQUALS(strArgs, "1"))
+  else if (STRIEQUALS(strArgs, "on") || STRIEQUALS(strArgs, "1"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_ON);
+  else if (STRIEQUALS(strArgs, "boost"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_BOOST);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
