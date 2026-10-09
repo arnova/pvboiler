@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : October 5, 2026
+  Last modified    : October 9, 2026
 */
 
 #include <Arduino.h>
@@ -198,6 +198,12 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* 
   root["min"] = fMin;
   root["max"] = fMax;
   root["step"] = fStep;
+
+  if (strlen(strUnit) != 0)
+    root["unit_of_measurement"] = strUnit;
+
+  if (strlen(strDeviceClass) != 0)
+    root["device_class"] = strDeviceClass;
 
   root["mode"] = bBox ? "box" : "slider";
 

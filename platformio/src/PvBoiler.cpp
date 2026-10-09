@@ -499,8 +499,8 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f);
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, 1.0f, 0.0f, 10000000.0f);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f, "h");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, 1.0f, 0.0f, 10000000.0f, "h");
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
