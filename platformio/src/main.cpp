@@ -98,6 +98,17 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
+  else if (STRIEQUALS(subTopic, "/" MQTT_SET_TEMPERATURE_OVERRIDE "/set"))
+  {
+    if (bValidInt && iVal >= TEMPERATURE_OVERRIDE_MIN && iVal <= TEMPERATURE_OVERRIDE_MAX)
+    {
+      g_app.GetPvBoiler().SetTemperatureOverride(iVal);
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
   else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set"))
   {
     if (bValidInt && iVal >=0)

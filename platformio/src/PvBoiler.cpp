@@ -3,6 +3,9 @@
 
 #include <EEPROM.h>
 
+// Make sure the thermostat never drops to/below the disinfect temperature during disinfection (this would reset the disinfect run time)
+static_assert(TEMPERATURE_DISINFECT_SETPOINT - TEMPERATURE_OVERRIDE_HYSTERESIS > DISINFECT_TEMPERATURE, "TEMPERATURE_DISINFECT_SETPOINT too low");
+
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
   m_tempSensors.begin();
@@ -103,8 +106,16 @@ void CPvBoiler::Reset()
   m_boilerTemperatureAverage.Reset();
   m_bBoilerOverHeated = false;
 
+  m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
+  m_bPublishTemperatureOverride = true;
+  m_bThermostatAllowsHeating = true;
+
   m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
+  m_bPublishLegionellaHoursSinceDisinfection = true;
+
   m_iLegionellaDangerZoneHours = UINT32_MAX;
+  m_bPublishLegionellaDangerZoneHours = true;
+
   m_iLegionellaDisinfectRunTimeSeconds = 0;
   m_bLegionellaMustDisinfect = false;
 
@@ -246,6 +257,14 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
     }
 
+    if (m_bPublishTemperatureOverride || bForce)
+    {
+      m_bPublishTemperatureOverride = false;
+
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iTemperatureOverride);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_TEMPERATURE_OVERRIDE, strBuf);
+    }
+
     if (m_bPublishOutputPercentage || bForce)
     {
       m_bPublishOutputPercentage = false;
@@ -357,6 +376,7 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power");
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_TEMPERATURE_OVERRIDE, 1.0f, TEMPERATURE_OVERRIDE_MIN, TEMPERATURE_OVERRIDE_MAX, "°C", "temperature", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
@@ -815,6 +835,41 @@ void CPvBoiler::Update()
     fNewPercentage = 100.0f;
   }
   else if (fNewPercentage < 0.0f)
+  {
+    fNewPercentage = 0.0f;
+  }
+
+  // Software thermostat. When set to TEMPERATURE_OVERRIDE_MAX or when no temperature sensor
+  // is installed it's disabled and the hardware thermostat takes over
+  if (m_tempSensors.getDeviceCount() > 0 &&
+      m_iTemperatureOverride >= TEMPERATURE_OVERRIDE_MIN && m_iTemperatureOverride < TEMPERATURE_OVERRIDE_MAX)
+  {
+    // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
+    uint8_t iSetpoint = m_iTemperatureOverride;
+    if (m_bLegionellaMustDisinfect && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
+    {
+      iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
+    }
+
+    if (m_fBoilerTemperature <= 0.0f)
+    {
+      m_bThermostatAllowsHeating = false; // Sensor installed but no valid reading: fail safe
+    }
+    else if (m_fBoilerTemperature >= iSetpoint)
+    {
+      m_bThermostatAllowsHeating = false;
+    }
+    else if (m_fBoilerTemperature <= iSetpoint - TEMPERATURE_OVERRIDE_HYSTERESIS)
+    {
+      m_bThermostatAllowsHeating = true;
+    }
+  }
+  else
+  {
+    m_bThermostatAllowsHeating = true;
+  }
+
+  if (!m_bThermostatAllowsHeating)
   {
     fNewPercentage = 0.0f;
   }
