@@ -180,9 +180,11 @@ void CPvBoiler::SetLegionellaHoursSinceDisinfection(const uint32_t iVal)
 {
   // May be set from both the mqtt broker (retained message) or
   // from ourselves when the value changes in the CLegionella-class
-  // We know that when value differs it was not set by ourselves and
-  // it's the retained message from the broker
-  if (iVal != m_iLegionellaHoursSinceDisinfection)
+  // We know that when value differs from what we last published it was not set by ourselves
+  // and it's the retained message from the broker (or set by the user).
+  // NOTE: Do not compare with the current value as our own echo may arrive after it changed
+  // (eg. directly after (re)connect), which would reset the restored value
+  if (iVal != m_iLegionellaHoursSinceDisinfectionSetter)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
     m_legionella.SetHoursPassedSinceLastDisinfect(iVal + 1);
@@ -196,9 +198,11 @@ void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
 {
   // May be set from both the mqtt broker (retained message) or
   // from ourselves when the value changes in the CLegionella-class
-  // We know that when value differs it was not set by ourselves and
-  // it's the retained message from the broker
-  if (iVal != m_iLegionellaDangerZoneHours)
+  // We know that when value differs from what we last published it was not set by ourselves
+  // and it's the retained message from the broker (or set by the user).
+  // NOTE: Do not compare with the current value as our own echo may arrive after it changed
+  // (eg. directly after (re)connect), which would reset the restored value
+  if (iVal != m_iLegionellaDangerZoneHoursSetter)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
     m_legionella.SetHoursInDangerZone(iVal + 1);
@@ -377,10 +381,15 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
     }
 
+    // Hold off publishing setters directly after subscribing so the (retained) broker values are
+    // received first. Else we'd overwrite them with our own (reset) values
+    const bool bSetterHoldOff = (m_mqttSetterHoldOffTimer < MQTT_SETTER_HOLD_OFF_TIME_MS);
+
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaHoursSinceDisinfectionSetter)
+    if (m_bPublishLegionellaHoursSinceDisinfectionSetter && !bSetterHoldOff)
     {
       m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
+      m_iLegionellaHoursSinceDisinfectionSetter = m_iLegionellaHoursSinceDisinfection;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set", strBuf);
     }
@@ -394,9 +403,10 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     }
 
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaDangerZoneHoursSetter)
+    if (m_bPublishLegionellaDangerZoneHoursSetter && !bSetterHoldOff)
     {
       m_bPublishLegionellaDangerZoneHoursSetter = false;
+      m_iLegionellaDangerZoneHoursSetter = m_iLegionellaDangerZoneHours;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set", strBuf);
     }
@@ -443,6 +453,9 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
 
 void CPvBoiler::MqttPublishConfig()
 {
+  // (Re)subscribing makes the broker resend retained setter values: hold off publishing our own
+  m_mqttSetterHoldOffTimer = 0;
+
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
