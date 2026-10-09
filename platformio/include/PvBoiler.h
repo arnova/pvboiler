@@ -77,6 +77,8 @@ class CPvBoiler
 
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
+    void SetTemperatureOverride(const uint8_t iTemperature) { m_iTemperatureOverride = iTemperature; m_bPublishTemperatureOverride = true; };
+
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
 
@@ -120,8 +122,11 @@ class CPvBoiler
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
     CUptime::uptime_t GetUpTime() const { return m_upTime.GetBreakdown(); };
+
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
+    uint8_t GetTemperatureOverride() const { return m_iTemperatureOverride; };
+
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
     uint32_t GetLegionellaDangerZoneHours() const { return m_iLegionellaDangerZoneHours; };
     uint32_t GetLegionellaDisinfectRunTimeSeconds() const { return m_iLegionellaDisinfectRunTimeSeconds; };
@@ -194,6 +199,10 @@ class CPvBoiler
     uint16_t m_iBoilerTemperatureRetryCount = 0;
     CRollingAverage m_boilerTemperatureAverage;
     bool m_bBoilerOverHeated = false;
+
+    uint8_t m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
+    bool m_bPublishTemperatureOverride = true;
+    bool m_bThermostatAllowsHeating = true;
 
     CLegionella m_legionella;
 

@@ -66,8 +66,12 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define GATE_PULSE_WIDTH                        50    // uS
 
 // Temperature related
-#define TEMPERATURE_OVERHEATING_MAX             90.0f
 #define TEMPERATURE_MAX_RETRIES                 255
+#define TEMPERATURE_OVERHEATING_MAX             90.0f
+#define TEMPERATURE_OVERRIDE_MIN                55
+#define TEMPERATURE_OVERRIDE_MAX                95
+#define TEMPERATURE_OVERRIDE_HYSTERESIS         2     // C
+#define TEMPERATURE_DISINFECT_SETPOINT          65    // C. Minimum override setpoint during legionella disinfection
 
 // Network watchdog timer settings
 #define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        60    // Seconds = 1 minute
@@ -100,6 +104,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_SET_MODE                           "mode"
 #define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
 #define MQTT_SET_POWER_BUDGET                   "power_budget"
+#define MQTT_SET_TEMPERATURE_OVERRIDE           "temperature_override"
 
 // Status topic items
 #define MQTT_FW_VERSION                         "firmware_version"
