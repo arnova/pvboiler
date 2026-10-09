@@ -255,6 +255,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       }
       break;
 
+      case MODE_ON:
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "On");
+      }
+      break;
+
       case MODE_BOOST:
       {
         m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Boost");
@@ -442,8 +448,8 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  static const char* strSelectValues[] = { "Percentage", "Budget", "Off", "Boost" };
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strSelectValues, 4);
+  static const char* strSelectValues[] = { "Percentage", "Budget", "Off", "On", "Boost" };
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strSelectValues, 5);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -884,7 +890,7 @@ void CPvBoiler::Update()
       fNewPercentage -= m_fStepClampNeg; // Device off or watch-dog triggered: output to 0%
     }
   }
-  else if (m_mode == MODE_BOOST)
+  else if (m_mode == MODE_BOOST || m_mode == MODE_ON)
   {
     fNewPercentage = 100.0f; // Immediately 100% power
   }
@@ -927,7 +933,7 @@ void CPvBoiler::Update()
 
   // Software thermostat. When set to TEMPERATURE_OVERRIDE_MAX or when no temperature sensor
   // is installed it's disabled and the hardware thermostat takes over
-  if (m_tempSensors.getDeviceCount() > 0 &&
+  if (m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST &&
       m_iTemperatureOverride >= TEMPERATURE_OVERRIDE_MIN && m_iTemperatureOverride < TEMPERATURE_OVERRIDE_MAX)
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held

@@ -61,6 +61,7 @@ class CPvBoiler
       MODE_BUDGET = 0,
       MODE_PERCENT,
       MODE_OFF,
+      MODE_ON,
       MODE_BOOST
     };
     typedef enum mode_e mode_t;

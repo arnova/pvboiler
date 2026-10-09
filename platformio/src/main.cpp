@@ -145,6 +145,10 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_OFF);
     }
+    else if (strcasecmp(strVal, "On") == 0)
+    {
+      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_ON);
+    }
     else if (strcasecmp(strVal, "Boost") == 0)
     {
       g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_BOOST);

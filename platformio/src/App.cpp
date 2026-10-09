@@ -301,6 +301,12 @@ void CApp::HandleDisplay()
           }
           break;
 
+          case CPvBoiler::MODE_ON:
+          {
+            snprintf(strLine, sizeof(strLine), "On - %u%%", iPercent);
+          }
+          break;
+
           case CPvBoiler::MODE_OFF:
           {
             strcpy(strLine, "Off - 0%");
