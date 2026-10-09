@@ -127,6 +127,7 @@ class CPvBoiler
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetTemperatureOverride() const { return m_iTemperatureOverride; };
+    bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
     uint32_t GetLegionellaDangerZoneHours() const { return m_iLegionellaDangerZoneHours; };
@@ -208,6 +209,7 @@ class CPvBoiler
     uint8_t m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
     bool m_bPublishTemperatureOverride = true;
     bool m_bThermostatAllowsHeating = true;
+    bool m_bPublishThermostatAllowsHeating = true;
 
     CLegionella m_legionella;
 

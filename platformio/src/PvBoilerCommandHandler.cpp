@@ -459,7 +459,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(" over_heated=");
   CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
 
-  CTerminal::print(" thermostat=");
+  CTerminal::print(" thermostat_set=");
   if (m_pvBoiler.GetTemperatureOverride() < TEMPERATURE_OVERRIDE_MAX)
   {
     snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetTemperatureOverride());
@@ -469,6 +469,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   {
     CTerminal::print("off");
   }
+
+  CTerminal::print(" thermostat_heating=");
+  CTerminal::print(m_pvBoiler.GetThermostatAllowsHeating() ? "1" : "0");
 
   CTerminal::print(" must_disinfect=");
   CTerminal::print(m_pvBoiler.GetLegionellaMustDisinfect() ? "1" : "0");

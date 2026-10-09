@@ -157,6 +157,7 @@ void CPvBoiler::Reset()
 
   m_bPublishTemperatureOverride = true; // Value itself is (re)loaded by LoadSettings()
   m_bThermostatAllowsHeating = true;
+  m_bPublishThermostatAllowsHeating = true;
 
   m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
   m_bPublishLegionellaHoursSinceDisinfection = true;
@@ -361,6 +362,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
     }
 
+    if (m_bPublishThermostatAllowsHeating || bForce)
+    {
+      m_bPublishThermostatAllowsHeating = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
+    }
+
     if (m_bPublishLegionellaMustDisinfect || bForce)
     {
       m_bPublishLegionellaMustDisinfect = false;
@@ -488,6 +495,7 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_HEATING, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_MUST_DISINFECT, true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
 
@@ -977,6 +985,8 @@ void CPvBoiler::Update()
     fNewPercentage = 0.0f;
   }
 
+  const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
+
   // Software thermostat. When set to TEMPERATURE_OVERRIDE_MAX or when no temperature sensor
   // is installed it's disabled and the hardware thermostat takes over
   if (m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST &&
@@ -1005,6 +1015,11 @@ void CPvBoiler::Update()
   else
   {
     m_bThermostatAllowsHeating = true;
+  }
+
+  if (m_bThermostatAllowsHeating != bThermostatAllowedHeating)
+  {
+    m_bPublishThermostatAllowsHeating = true;
   }
 
   if (!m_bThermostatAllowsHeating)

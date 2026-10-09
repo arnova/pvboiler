@@ -138,6 +138,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 
 #define MQTT_BOILER_TEMPERATURE                 "boiler_temperature"
 #define MQTT_BOILER_OVERHEATED                  "boiler_overheated"
+#define MQTT_THERMOSTAT_HEATING                 "thermostat_heating"
 #define MQTT_LEGIONELLA_MUST_DISINFECT          "legionella_must_disinfect"
 #define MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS   "legionella_disinfect_run_seconds"
 #define MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "legionella_hours_since_disinfection"
