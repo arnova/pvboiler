@@ -145,6 +145,7 @@ class CPvBoiler
 
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
+    elapsedMillis m_mqttSetterHoldOffTimer = 0;
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
@@ -213,10 +214,12 @@ class CPvBoiler
     uint32_t m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
     bool m_bPublishLegionellaHoursSinceDisinfection = true;
     bool m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
+    uint32_t m_iLegionellaHoursSinceDisinfectionSetter = UINT32_MAX; // Last value we published to the setter topic
 
     uint32_t m_iLegionellaDangerZoneHours = UINT32_MAX;
     bool m_bPublishLegionellaDangerZoneHours = true;
     bool m_bPublishLegionellaDangerZoneHoursSetter = false;
+    uint32_t m_iLegionellaDangerZoneHoursSetter = UINT32_MAX; // Last value we published to the setter topic
 
     uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
     bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;

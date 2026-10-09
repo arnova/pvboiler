@@ -222,6 +222,9 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 
 #define CONTROL_LOOP_TIME_MS  1000  // ms
 
+// Time to wait after MQTT (re)subscribing before publishing setter values (allow retained values to arrive first)
+#define MQTT_SETTER_HOLD_OFF_TIME_MS  5000  // ms
+
 // Maximum time elapsed before we flag an actual power error
 #define POWER_GOOD_TIME_MAX   1000  // ms
 
