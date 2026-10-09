@@ -445,8 +445,15 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   CTerminal::print("boiler_t=");
-  snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
-  CTerminal::print(strBuf);
+  if (m_pvBoiler.GetBoilerTemperature() > 0.0f)
+  {
+    snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
+    CTerminal::print(strBuf);
+  }
+  else
+  {
+    CTerminal::print("n/a");
+  }
 
   CTerminal::print(" over_heated=");
   CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
