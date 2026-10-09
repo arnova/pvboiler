@@ -31,9 +31,10 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 
 ## Planned features & improvements
 
+- New PCB design to fit a (dual-core) ESP32-DevKit module
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
-- New PCB design to fit a (dual-core) ESP32-DevKit module
+- Support for CT current clamp
 
 ## Known issues
 
