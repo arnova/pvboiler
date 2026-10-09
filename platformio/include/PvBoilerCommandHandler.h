@@ -59,6 +59,7 @@ class CPvBoilerCommandHandler : public CCommandHandler
 
     result_code_t CmdSetPowerBudget(const char *strArgs);
     result_code_t CmdSetPowerPercentage(const char *strArgs);
+    result_code_t CmdSetTemperatureOverride(const char *strArgs);
 
     result_code_t CmdSetBoilerPowerRating(const char *strArgs);
     result_code_t CmdSetDeadZone(const char *strArgs);

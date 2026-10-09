@@ -19,6 +19,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "uptime                 : Show device uptime\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
+                                  "override [t]           : Set temperature override (thermostat) to [t] Celsius (55-95, 95=disabled)\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"off\", \"on\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
@@ -616,6 +617,23 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdSetTemperatureOverride(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iTemperature;
+  result = get_int32_from_string(strArgs, &iTemperature, TEMPERATURE_OVERRIDE_MIN, TEMPERATURE_OVERRIDE_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetTemperatureOverride(iTemperature);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
@@ -905,6 +923,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "percent"))
   {
     result = CmdSetPowerPercentage(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "override"))
+  {
+    result = CmdSetTemperatureOverride(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {
