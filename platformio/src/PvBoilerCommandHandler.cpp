@@ -19,7 +19,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "uptime                 : Show device uptime\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
-                                  "override [t]           : Set temperature override (thermostat) to [t] Celsius (55-95, 95=disabled)\r\n"
+                                  "thermostat [t]         : Set thermostat (temperature override) to [t] Celsius (55-95, 95=disabled)\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"off\", \"on\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
@@ -459,7 +459,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(" over_heated=");
   CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
 
-  CTerminal::print(" override=");
+  CTerminal::print(" thermostat=");
   if (m_pvBoiler.GetTemperatureOverride() < TEMPERATURE_OVERRIDE_MAX)
   {
     snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetTemperatureOverride());
@@ -924,7 +924,7 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetPowerPercentage(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "override"))
+  else if (STRIEQUALS(strCommand, "thermostat"))
   {
     result = CmdSetTemperatureOverride(strArgs);
   }
