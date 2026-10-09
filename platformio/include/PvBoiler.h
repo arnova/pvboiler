@@ -132,7 +132,7 @@ class CPvBoiler
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
     uint32_t GetLegionellaDangerZoneHours() const { return m_iLegionellaDangerZoneHours; };
     uint32_t GetLegionellaDisinfectRunTimeSeconds() const { return m_iLegionellaDisinfectRunTimeSeconds; };
-    bool GetLegionellaMustDisinfect() const { return m_bLegionellaMustDisinfect; };
+    bool GetLegionellaDisinfectionRequired() const { return m_bLegionellaDisinfectionRequired; };
 
     void SetPowerGood(const bool bPowerGood);
     bool GetPowerGood() const { return m_bPowerGood; };
@@ -226,7 +226,7 @@ class CPvBoiler
     uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
     bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;
 
-    bool m_bLegionellaMustDisinfect = false;
-    bool m_bPublishLegionellaMustDisinfect = true;
+    bool m_bLegionellaDisinfectionRequired = false;
+    bool m_bPublishLegionellaDisinfectionRequired = true;
 };
 #endif // PVBOILER_H

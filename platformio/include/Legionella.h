@@ -31,13 +31,13 @@ class CLegionella
     CLegionella() {}; // Empty ctor
     ~CLegionella() {}; // Empty dtor
 
-    void Reset() { m_iSecondsPassedSinceLastDisinfect = 0; m_iDisinfectRuntimeSeconds = 0; m_iSecondsInDangerZone = 0; m_bMustDisinfect = false; };
+    void Reset() { m_iSecondsPassedSinceLastDisinfect = 0; m_iDisinfectRuntimeSeconds = 0; m_iSecondsInDangerZone = 0; m_bDisinfectionRequired = false; };
     void Loop();
 
     const uint32_t GetHoursPassedSinceLastDisinfect() const { return m_iSecondsPassedSinceLastDisinfect / 3600; };
     const uint32_t GetDisinfectRunTimeSeconds() const { return m_iDisinfectRuntimeSeconds; };
     const uint32_t GetHoursInDangerZone() const { return m_iSecondsInDangerZone / 3600; };
-    bool MustDisinfect() const { return m_bMustDisinfect; };
+    bool DisinfectionRequired() const { return m_bDisinfectionRequired; };
 
     void UpdateTemperature(const float fTemperature) { m_fTemperature = fTemperature; };
     void SetHoursPassedSinceLastDisinfect(const uint32_t iHours) { m_iSecondsPassedSinceLastDisinfect = iHours * 3600; };
@@ -49,6 +49,6 @@ class CLegionella
     uint32_t m_iSecondsInDangerZone = 0; // s
 
     float m_fTemperature = -1.0f;
-    bool m_bMustDisinfect = false;
+    bool m_bDisinfectionRequired = false;
 };
 #endif // LEGIONELLA_H

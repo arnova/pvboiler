@@ -78,11 +78,11 @@ void CPvBoiler::Loop()
     }
 
     // Update legionella values
-    const bool bLegionellaMustDisinfect = m_legionella.MustDisinfect();
-    if (m_bLegionellaMustDisinfect != bLegionellaMustDisinfect)
+    const bool bLegionellaDisinfectionRequired = m_legionella.DisinfectionRequired();
+    if (m_bLegionellaDisinfectionRequired != bLegionellaDisinfectionRequired)
     {
-      m_bLegionellaMustDisinfect = bLegionellaMustDisinfect;
-      m_bPublishLegionellaMustDisinfect = true;
+      m_bLegionellaDisinfectionRequired = bLegionellaDisinfectionRequired;
+      m_bPublishLegionellaDisinfectionRequired = true;
     }
 
     const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
@@ -170,8 +170,8 @@ void CPvBoiler::Reset()
   m_iLegionellaDisinfectRunTimeSeconds = 0;
   m_bPublishLegionellaDisinfectRunTimeSeconds = true;
 
-  m_bLegionellaMustDisinfect = false;
-  m_bPublishLegionellaMustDisinfect = true;
+  m_bLegionellaDisinfectionRequired = false;
+  m_bPublishLegionellaDisinfectionRequired = true;
 
   LoadSettings();
 }
@@ -365,13 +365,13 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     if (m_bPublishThermostatAllowsHeating || bForce)
     {
       m_bPublishThermostatAllowsHeating = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
+      m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
     }
 
-    if (m_bPublishLegionellaMustDisinfect || bForce)
+    if (m_bPublishLegionellaDisinfectionRequired || bForce)
     {
-      m_bPublishLegionellaMustDisinfect = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_bLegionellaMustDisinfect ? "1" : "0");
+      m_bPublishLegionellaDisinfectionRequired = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_REQUIRED, m_bLegionellaDisinfectionRequired ? "1" : "0");
     }
 
     if (m_bPublishLegionellaDisinfectRunTimeSeconds || bForce)
@@ -495,8 +495,8 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_HEATING, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_MUST_DISINFECT, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_ALLOWS_HEATING, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
 
   m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f);
@@ -928,7 +928,7 @@ void CPvBoiler::Update()
   {
     fNewPercentage = 0.0f;
   }
-  else if (m_bLegionellaMustDisinfect)
+  else if (m_bLegionellaDisinfectionRequired)
   {
     fNewPercentage = 100.0f;
   }
@@ -994,7 +994,7 @@ void CPvBoiler::Update()
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
     uint8_t iSetpoint = m_iTemperatureOverride;
-    if (m_bLegionellaMustDisinfect && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
+    if (m_bLegionellaDisinfectionRequired && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
     {
       iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
     }

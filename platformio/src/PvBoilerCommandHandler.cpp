@@ -470,11 +470,11 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     CTerminal::print("off");
   }
 
-  CTerminal::print(" thermostat_heating=");
+  CTerminal::print(" thermostat_allows_heating=");
   CTerminal::print(m_pvBoiler.GetThermostatAllowsHeating() ? "1" : "0");
 
-  CTerminal::print(" must_disinfect=");
-  CTerminal::print(m_pvBoiler.GetLegionellaMustDisinfect() ? "1" : "0");
+  CTerminal::print(" disinfection_required=");
+  CTerminal::print(m_pvBoiler.GetLegionellaDisinfectionRequired() ? "1" : "0");
 
   CTerminal::print(" danger_zone=");
   snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDangerZoneHours());

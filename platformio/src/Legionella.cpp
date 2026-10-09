@@ -8,7 +8,7 @@ void CLegionella::Loop()
   {
     if (++m_iDisinfectRuntimeSeconds >= DISINFECT_RUN_TIME_MINUTES * 60)
     {
-      m_bMustDisinfect = false;
+      m_bDisinfectionRequired = false;
       m_iSecondsInDangerZone = 0;
       m_iSecondsPassedSinceLastDisinfect = 0;
     }
@@ -23,7 +23,7 @@ void CLegionella::Loop()
 
     if (++m_iSecondsInDangerZone >= DANGER_ZONE_DWELL_LIMIT_DAYS * 3600 * 24)
     {
-      m_bMustDisinfect = true;
+      m_bDisinfectionRequired = true;
     }
   }
 
