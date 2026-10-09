@@ -19,7 +19,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "uptime                 : Show device uptime\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
-                                  "thermostat [t]         : Set thermostat (temperature override) to [t] Celsius (55-95, 95=disabled)\r\n"
+                                  "thermostat [t]         : Set thermostat setpoint to [t] Celsius (55-95, 95=disabled)\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"off\", \"on\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
@@ -460,9 +460,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
 
   CTerminal::print(" thermostat_set=");
-  if (m_pvBoiler.GetTemperatureOverride() < TEMPERATURE_OVERRIDE_MAX)
+  if (m_pvBoiler.GetThermostatSetpoint() < THERMOSTAT_SETPOINT_MAX)
   {
-    snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetTemperatureOverride());
+    snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetThermostatSetpoint());
     CTerminal::print(strBuf);
   }
   else
@@ -620,18 +620,18 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetTemperatureOverride(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetThermostatSetpoint(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, TEMPERATURE_OVERRIDE_MIN, TEMPERATURE_OVERRIDE_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iTemperature, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetTemperatureOverride(iTemperature);
+  m_pvBoiler.SetThermostatSetpoint(iTemperature);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -929,7 +929,7 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   }
   else if (STRIEQUALS(strCommand, "thermostat"))
   {
-    result = CmdSetTemperatureOverride(strArgs);
+    result = CmdSetThermostatSetpoint(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {
