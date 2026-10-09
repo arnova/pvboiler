@@ -633,8 +633,11 @@ void CPvBoiler::SetMode(const CPvBoiler::mode_t mode)
 {
   if (mode != m_mode)
   {
-    EEPROM.put(EEPROM_CTRL_MODE, (mode == CPvBoiler::MODE_PERCENT) ? 0x01 : 0x00);
-    EEPROM.commit();
+    if (mode != CPvBoiler::MODE_BOOST)
+    {
+      EEPROM.put(EEPROM_CTRL_MODE, mode);
+      EEPROM.commit();
+    }
 
     m_mode = mode;
 
