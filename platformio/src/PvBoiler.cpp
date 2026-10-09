@@ -4,7 +4,7 @@
 #include <EEPROM.h>
 
 // Make sure the thermostat never drops to/below the disinfect temperature during disinfection (this would reset the disinfect run time)
-static_assert(TEMPERATURE_DISINFECT_SETPOINT - TEMPERATURE_OVERRIDE_HYSTERESIS > DISINFECT_TEMPERATURE, "TEMPERATURE_DISINFECT_SETPOINT too low");
+static_assert(TEMPERATURE_DISINFECT_SETPOINT - THERMOSTAT_SETPOINT_HYSTERESIS > DISINFECT_TEMPERATURE, "TEMPERATURE_DISINFECT_SETPOINT too low");
 
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
@@ -155,7 +155,7 @@ void CPvBoiler::Reset()
   m_bBoilerOverHeated = false;
   m_bPublishBoilerOverHeated = true;
 
-  m_bPublishTemperatureOverride = true; // Value itself is (re)loaded by LoadSettings()
+  m_bPublishThermostatSetpoint = true; // Value itself is (re)loaded by LoadSettings()
   m_bThermostatAllowsHeating = true;
   m_bPublishThermostatAllowsHeating = true;
 
@@ -314,12 +314,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
     }
 
-    if (m_bPublishTemperatureOverride || bForce)
+    if (m_bPublishThermostatSetpoint || bForce)
     {
-      m_bPublishTemperatureOverride = false;
+      m_bPublishThermostatSetpoint = false;
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iTemperatureOverride);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_TEMPERATURE_OVERRIDE, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iThermostatSetpoint);
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_SETPOINT, strBuf);
     }
 
     if (m_bPublishOutputPercentage || bForce)
@@ -461,7 +461,7 @@ void CPvBoiler::MqttPublishConfig()
 
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power");
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_TEMPERATURE_OVERRIDE, 1.0f, TEMPERATURE_OVERRIDE_MIN, TEMPERATURE_OVERRIDE_MAX, "°C", "temperature", true);
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
@@ -601,29 +601,29 @@ void CPvBoiler::LoadSettings()
     m_iMqttUpdateInterval = MQTT_UPDATE_TIME_DEFAULT;
   }
 
-  EEPROM.get(EEPROM_TEMP_OVERRIDE, iVal8);
-  if (iVal8 < TEMPERATURE_OVERRIDE_MIN || iVal8 > TEMPERATURE_OVERRIDE_MAX)
+  EEPROM.get(EEPROM_THERMOSTAT_SP, iVal8);
+  if (iVal8 < THERMOSTAT_SETPOINT_MIN || iVal8 > THERMOSTAT_SETPOINT_MAX)
   {
-    iVal8 = TEMPERATURE_OVERRIDE_MAX; // Default: disabled
+    iVal8 = THERMOSTAT_SETPOINT_MAX; // Default: disabled
   }
-  m_iTemperatureOverride = iVal8;
-  m_bPublishTemperatureOverride = true;
+  m_iThermostatSetpoint = iVal8;
+  m_bPublishThermostatSetpoint = true;
 
   m_bPublishSettings = true;
 }
 
 
-void CPvBoiler::SetTemperatureOverride(const uint8_t iTemperature)
+void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iTemperatureOverride)
+  if (iTemperature != m_iThermostatSetpoint)
   {
-    EEPROM.put(EEPROM_TEMP_OVERRIDE, iTemperature);
+    EEPROM.put(EEPROM_THERMOSTAT_SP, iTemperature);
     EEPROM.commit();
 
-    m_iTemperatureOverride = iTemperature;
+    m_iThermostatSetpoint = iTemperature;
   }
 
-  m_bPublishTemperatureOverride = true;
+  m_bPublishThermostatSetpoint = true;
 }
 
 
@@ -827,7 +827,7 @@ void CPvBoiler::FactoryReset()
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
-  SetTemperatureOverride(TEMPERATURE_OVERRIDE_MAX);
+  SetThermostatSetpoint(THERMOSTAT_SETPOINT_MAX);
 
   // Reset controller
   Reset();
@@ -987,13 +987,13 @@ void CPvBoiler::Update()
 
   const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
 
-  // Software thermostat. When set to TEMPERATURE_OVERRIDE_MAX or when no temperature sensor
+  // Software thermostat. When set to THERMOSTAT_SETPOINT_MAX or when no temperature sensor
   // is installed it's disabled and the hardware thermostat takes over
   if (m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST &&
-      m_iTemperatureOverride >= TEMPERATURE_OVERRIDE_MIN && m_iTemperatureOverride < TEMPERATURE_OVERRIDE_MAX)
+      m_iThermostatSetpoint >= THERMOSTAT_SETPOINT_MIN && m_iThermostatSetpoint < THERMOSTAT_SETPOINT_MAX)
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
-    uint8_t iSetpoint = m_iTemperatureOverride;
+    uint8_t iSetpoint = m_iThermostatSetpoint;
     if (m_bLegionellaDisinfectionRequired && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
     {
       iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
@@ -1007,7 +1007,7 @@ void CPvBoiler::Update()
     {
       m_bThermostatAllowsHeating = false;
     }
-    else if (m_fBoilerTemperature <= iSetpoint - TEMPERATURE_OVERRIDE_HYSTERESIS)
+    else if (m_fBoilerTemperature <= iSetpoint - THERMOSTAT_SETPOINT_HYSTERESIS)
     {
       m_bThermostatAllowsHeating = true;
     }
