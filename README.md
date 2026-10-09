@@ -23,12 +23,14 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - OTA updates (e.g. via PlatformIO)
 - Operating modes: automatic power budget mode (using e.g. P1/HA information), (manual) power percentage mode, boost mode (100% power) and off mode. The mode can be dynamically changed using MQTT
 - Support for an optional one-wire DS18B20 temperature sensor (probe) for sensing the boiler's internal temperature
+- Automatic legionella prevention (using the external temperature sensor)
+- Boiler overheating-protection (using the external temperature sensor) in case the boiler hardware thermostat somehow fails
+- Temperature (thermostat) override function to allow setting a lower set-point from software than the one set on the boiler
 - Support for an optional OLED 128×64 screen to display output power/percentage and connection status
 - The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while (e.g. when the network fails), the output will automatically decrease to 0% instead of being stuck on the last value. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.
 
 ## Planned features & improvements
 
-- Automatic legionella prevention using an external one-wire temperature sensor. Currently boost mode can be used for external (e.g. using Home Assistant) legionella prevention control until implemented in firmware
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
 - New PCB design to fit a (dual-core) ESP32-DevKit module
