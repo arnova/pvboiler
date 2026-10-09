@@ -132,9 +132,9 @@ class CPvBoiler
     uint32_t GetLegionellaDisinfectRunTimeSeconds() const { return m_iLegionellaDisinfectRunTimeSeconds; };
     bool GetLegionellaMustDisinfect() const { return m_bLegionellaMustDisinfect; };
 
-    void SetPowerGood(const bool bPowerGood) { m_bPowerGood = bPowerGood; m_bPowerGoodFlag &= bPowerGood; };
+    void SetPowerGood(const bool bPowerGood);
     bool GetPowerGood() const { return m_bPowerGood; };
-    bool GetPowerGoodFlag() { const bool bPowerGoodFlag = m_bPowerGoodFlag; m_bPowerGoodFlag = m_bPowerGood; return bPowerGoodFlag; };
+    bool GetPowerGoodFlag();
 
   private:
     void Update();
@@ -179,8 +179,10 @@ class CPvBoiler
     uint16_t m_iTriacPhaseAngle = 0; // us
     uint16_t m_iPeriodTime = NET_PERIOD_INVALID; // us
     uint16_t m_iZeroCrossWindow = ZERO_CROSS_WINDOW_INVALID; // us
+    bool m_bPublishMainsValues = true;
     bool m_bPowerGood = true;
     bool m_bPowerGoodFlag = true;
+    bool m_bPublishPowerGoodFlag = true;
 
     // (Proportional) error gains
     float m_fErrorGainPos = ERROR_GAIN_POS_DEFAULT;
@@ -199,6 +201,7 @@ class CPvBoiler
     uint16_t m_iBoilerTemperatureRetryCount = 0;
     CRollingAverage m_boilerTemperatureAverage;
     bool m_bBoilerOverHeated = false;
+    bool m_bPublishBoilerOverHeated = true;
 
     uint8_t m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
     bool m_bPublishTemperatureOverride = true;
@@ -208,12 +211,16 @@ class CPvBoiler
 
     uint32_t m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
     bool m_bPublishLegionellaHoursSinceDisinfection = true;
+    bool m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
 
     uint32_t m_iLegionellaDangerZoneHours = UINT32_MAX;
     bool m_bPublishLegionellaDangerZoneHours = true;
+    bool m_bPublishLegionellaDangerZoneHoursSetter = false;
 
     uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
+    bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;
 
     bool m_bLegionellaMustDisinfect = false;
+    bool m_bPublishLegionellaMustDisinfect = true;
 };
 #endif // PVBOILER_H

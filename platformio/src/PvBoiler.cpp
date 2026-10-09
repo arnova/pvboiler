@@ -56,9 +56,10 @@ void CPvBoiler::Loop()
         m_legionella.UpdateTemperature(m_fBoilerTemperature);
 
         // Over temperature protection
-        if (m_fBoilerTemperature >= TEMPERATURE_OVERHEATING_MAX)
+        if (m_fBoilerTemperature >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
         {
           m_bBoilerOverHeated = true;
+          m_bPublishBoilerOverHeated = true;
         }
       }
 
@@ -69,11 +70,42 @@ void CPvBoiler::Loop()
     }
     else
     {
-      if (m_fBoilerTemperature != 1.0f)
+      if (m_fBoilerTemperature != -1.0f)
       {
         m_bPublishBoilerTemperature = true;
         m_fBoilerTemperature = -1.0f;
       }
+    }
+
+    // Update legionella values
+    const bool bLegionellaMustDisinfect = m_legionella.MustDisinfect();
+    if (m_bLegionellaMustDisinfect != bLegionellaMustDisinfect)
+    {
+      m_bLegionellaMustDisinfect = bLegionellaMustDisinfect;
+      m_bPublishLegionellaMustDisinfect = true;
+    }
+
+    const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
+    if (m_iLegionellaDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
+    {
+      m_iLegionellaDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
+      m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+    }
+
+    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
+    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
+    if (m_iLegionellaHoursSinceDisinfection != iLegionellaHoursSinceDisinfection)
+    {
+      m_iLegionellaHoursSinceDisinfection = iLegionellaHoursSinceDisinfection;
+      m_bPublishLegionellaHoursSinceDisinfectionSetter = true;
+    }
+
+    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
+    const uint32_t iLegionellaDangerZoneHours = m_legionella.GetHoursInDangerZone();
+    if (m_iLegionellaDangerZoneHours != iLegionellaDangerZoneHours)
+    {
+      m_iLegionellaDangerZoneHours = iLegionellaDangerZoneHours;
+      m_bPublishLegionellaDangerZoneHoursSetter = true;
     }
 
     MqttPublishValues();
@@ -103,16 +135,19 @@ void CPvBoiler::Reset()
 
   m_bPowerGood = true;
   m_bPowerGoodFlag = true;
+  m_bPublishPowerGoodFlag = true;
 
   m_fTriacAngleFactor = 0.0f;
   m_iTriacPhaseAngle = 0;
   m_iPeriodTime = NET_PERIOD_INVALID;
   m_iZeroCrossWindow = ZERO_CROSS_WINDOW_INVALID;
+  m_bPublishMainsValues = true;
 
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
   m_boilerTemperatureAverage.Reset();
   m_bBoilerOverHeated = false;
+  m_bPublishBoilerOverHeated = true;
 
   m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
   m_bPublishTemperatureOverride = true;
@@ -120,12 +155,17 @@ void CPvBoiler::Reset()
 
   m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
   m_bPublishLegionellaHoursSinceDisinfection = true;
+  m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
 
   m_iLegionellaDangerZoneHours = UINT32_MAX;
   m_bPublishLegionellaDangerZoneHours = true;
+  m_bPublishLegionellaDangerZoneHoursSetter = false;
 
   m_iLegionellaDisinfectRunTimeSeconds = 0;
+  m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+
   m_bLegionellaMustDisinfect = false;
+  m_bPublishLegionellaMustDisinfect = true;
 
   LoadSettings();
 }
@@ -300,31 +340,30 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    // FIXME: This one is always updated
-    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
-
-    const bool bLegionellaMustDisinfect = m_legionella.MustDisinfect();
-    if (m_bLegionellaMustDisinfect != bLegionellaMustDisinfect)
+    if (m_bPublishBoilerOverHeated || bForce)
     {
-      m_bLegionellaMustDisinfect = bLegionellaMustDisinfect;
+      m_bPublishBoilerOverHeated = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
+    }
+
+    if (m_bPublishLegionellaMustDisinfect || bForce)
+    {
+      m_bPublishLegionellaMustDisinfect = false;
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_bLegionellaMustDisinfect ? "1" : "0");
     }
 
-    const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
-    if (m_iLegionellaDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
+    if (m_bPublishLegionellaDisinfectRunTimeSeconds || bForce)
     {
-      m_iLegionellaDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
-      snprintf(strBuf, sizeof(strBuf), "%u", iDisinfectRunTimeSeconds);
+      m_bPublishLegionellaDisinfectRunTimeSeconds = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectRunTimeSeconds);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
     }
 
-    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
-    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
-    if (m_iLegionellaHoursSinceDisinfection != iLegionellaHoursSinceDisinfection)
+    // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
+    if (m_bPublishLegionellaHoursSinceDisinfectionSetter)
     {
-      m_iLegionellaHoursSinceDisinfection = iLegionellaHoursSinceDisinfection;
-
-      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaHoursSinceDisinfection);
+      m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set", strBuf);
     }
 
@@ -332,17 +371,15 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     if (m_bPublishLegionellaHoursSinceDisinfection || bForce)
     {
       m_bPublishLegionellaHoursSinceDisinfection = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaHoursSinceDisinfection);
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
     }
 
-    // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
-    const uint32_t iLegionellaDangerZoneHours = m_legionella.GetHoursInDangerZone();
-    if (m_iLegionellaDangerZoneHours != iLegionellaDangerZoneHours)
+    // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
+    if (m_bPublishLegionellaDangerZoneHoursSetter)
     {
-      m_iLegionellaDangerZoneHours = iLegionellaDangerZoneHours;
-
-      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaDangerZoneHours);
+      m_bPublishLegionellaDangerZoneHoursSetter = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set", strBuf);
     }
 
@@ -350,24 +387,33 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     if (m_bPublishLegionellaDangerZoneHours || bForce)
     {
       m_bPublishLegionellaDangerZoneHours = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", iLegionellaDangerZoneHours);
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
     }
 
-    // FIXME: These are always updated:
-    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
+    if (m_bPublishPowerGoodFlag || bForce)
+    {
+      // Note: Clear before GetPowerGoodFlag() since it may set it again when the flag is restored
+      m_bPublishPowerGoodFlag = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
+    }
 
-    // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
-    snprintf(strBuf, sizeof(strBuf), "%u", (m_iPeriodTime == NET_PERIOD_INVALID) ? 0 : m_iPeriodTime * 2);
-    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
+    if (m_bPublishMainsValues || bForce)
+    {
+      m_bPublishMainsValues = false;
 
-    snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
-    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
+      // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
+      snprintf(strBuf, sizeof(strBuf), "%u", (m_iPeriodTime == NET_PERIOD_INVALID) ? 0 : m_iPeriodTime * 2);
+      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
 
-    snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
-    m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
+      snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
+      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
 
-    // Publish uptime
+      snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
+      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
+    }
+
+    // Publish uptime. Note: Always published since it changes every interval
     const CUptime::uptime_t upTime = GetUpTime();
     snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
     m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
@@ -728,10 +774,42 @@ void CPvBoiler::FactoryReset()
 }
 
 
+void CPvBoiler::SetPowerGood(const bool bPowerGood)
+{
+  m_bPowerGood = bPowerGood;
+
+  // Latch power failure until reported
+  if (!bPowerGood && m_bPowerGoodFlag)
+  {
+    m_bPowerGoodFlag = false;
+    m_bPublishPowerGoodFlag = true;
+  }
+}
+
+
+bool CPvBoiler::GetPowerGoodFlag()
+{
+  const bool bPowerGoodFlag = m_bPowerGoodFlag;
+
+  // Reading the flag restores it to the current state
+  if (m_bPowerGoodFlag != m_bPowerGood)
+  {
+    m_bPowerGoodFlag = m_bPowerGood;
+    m_bPublishPowerGoodFlag = true;
+  }
+
+  return bPowerGoodFlag;
+}
+
+
 uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow)
 {
-  m_iPeriodTime = iPeriodTime;
-  m_iZeroCrossWindow = iZeroCrossWindow;
+  if (m_iPeriodTime != iPeriodTime || m_iZeroCrossWindow != iZeroCrossWindow)
+  {
+    m_iPeriodTime = iPeriodTime;
+    m_iZeroCrossWindow = iZeroCrossWindow;
+    m_bPublishMainsValues = true;
+  }
 
   if (iPeriodTime > NET_PERIOD_MAX_US || iZeroCrossWindow > ZERO_CROSS_WINDOW_MAX_US)
   {
