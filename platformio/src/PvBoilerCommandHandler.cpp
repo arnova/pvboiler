@@ -442,6 +442,12 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
   CTerminal::print(strBuf);
 
+  CTerminal::print(" over_heated=");
+  CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "0" : "1");
+
+  CTerminal::print(" must_disinfect=");
+  CTerminal::print(m_pvBoiler.GetLegionellaMustDisinfect() ? "0" : "1");
+
   CTerminal::print(" danger_zone=");
   snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDangerZoneHours());
   CTerminal::print(strBuf);

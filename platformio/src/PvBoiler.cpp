@@ -23,13 +23,15 @@ void CPvBoiler::Loop()
   if (m_loopTimer > CONTROL_LOOP_TIME_MS)
   {
     CheckNetworkWatchDog();
-    Update();
+
     m_legionella.Loop();
 
     if (m_tempSensors.getDeviceCount() > 0)
     {
       const float fTemperature = m_tempSensors.getTempCByIndex(0); // first sensor on the bus
 
+      // Note: 85.0 is the startup value so we can't see the difference between restarts and an actual value of 85.0c
+      // therefore in case of 85.0 we need TEMPERATURE_MAX_RETRIES before the value is actually used
       if (fTemperature != DEVICE_DISCONNECTED_C && fTemperature != 85.0f)
       {
         const float fTemperatureAveraged = m_boilerTemperatureAverage.UpdateValue(fTemperature);
@@ -38,10 +40,9 @@ void CPvBoiler::Loop()
           m_bPublishBoilerTemperature = true;
           m_fBoilerTemperature = fTemperatureAveraged;
           m_iBoilerTemperatureRetryCount = 0;
-          m_legionella.UpdateTemperature(fTemperatureAveraged);
         }
       }
-      else if (++m_iBoilerTemperatureRetryCount >= 255)
+      else if (++m_iBoilerTemperatureRetryCount >= TEMPERATURE_MAX_RETRIES)
       {
         // Overwrite averaged value when out of retries:
         m_bPublishBoilerTemperature = true;
@@ -49,10 +50,24 @@ void CPvBoiler::Loop()
         m_boilerTemperatureAverage.Reset();
       }
 
+      if (m_fBoilerTemperature > 0.0f)
+      {
+        m_legionella.UpdateTemperature(m_fBoilerTemperature);
+
+        // Over temperature protection
+        if (m_fBoilerTemperature >= TEMPERATURE_OVERHEATING_MAX)
+        {
+          m_bBoilerOverHeated = true;
+        }
+      }
+
+      // Request new value from temperature probe
       m_tempSensors.requestTemperatures();
     }
 
     MqttPublishValues();
+
+    Update();
 
     m_loopTimer = 0;
   }
@@ -86,6 +101,12 @@ void CPvBoiler::Reset()
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
   m_boilerTemperatureAverage.Reset();
+  m_bBoilerOverHeated = false;
+
+  m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
+  m_iLegionellaDangerZoneHours = UINT32_MAX;
+  m_iLegionellaDisinfectRunTimeSeconds = 0;
+  m_bLegionellaMustDisinfect = false;
 
   LoadSettings();
 }
@@ -205,7 +226,6 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
   }
 
   // Publish these MQTT values (if any) when timer expires (and connected)
-  // FIXME: These are always updated
   if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000)
   {
     m_mqttPublishTimer = 0;
@@ -253,12 +273,20 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
     }
 
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_legionella.MustDisinfect() ? "1" : "0");
+    // FIXME: This one is always updated
+    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
+
+    const bool bLegionellaMustDisinfect = m_legionella.MustDisinfect();
+    if (m_bLegionellaMustDisinfect != bLegionellaMustDisinfect)
+    {
+      m_bLegionellaMustDisinfect = bLegionellaMustDisinfect;
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_MUST_DISINFECT, m_bLegionellaMustDisinfect ? "1" : "0");
+    }
 
     const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
-    if (m_iDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
+    if (m_iLegionellaDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
     {
-      m_iDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
+      m_iLegionellaDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
       snprintf(strBuf, sizeof(strBuf), "%u", iDisinfectRunTimeSeconds);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
     }
@@ -299,6 +327,7 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
     }
 
+    // FIXME: These are always updated:
     m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
 
     // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
@@ -360,6 +389,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "C", "", "", true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_MUST_DISINFECT, true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
 
@@ -728,7 +758,11 @@ void CPvBoiler::Update()
 {
   float fNewPercentage = m_fCurrentPercentage;
 
-  if (m_legionella.MustDisinfect())
+  if (m_bBoilerOverHeated)
+  {
+    fNewPercentage = 0.0f;
+  }
+  else if (m_bLegionellaMustDisinfect)
   {
     fNewPercentage = 100.0f;
   }

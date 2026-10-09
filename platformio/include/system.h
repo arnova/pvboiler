@@ -65,6 +65,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50    // uS
 
+// Temperature related
+#define TEMPERATURE_OVERHEATING_MAX             90.0f
+#define TEMPERATURE_MAX_RETRIES                 255
+
 // Network watchdog timer settings
 #define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        60    // Seconds = 1 minute
 #define NETWORK_WATCHDOG_TIMEOUT_MAX            65000
@@ -128,6 +132,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_UP_TIME                            "up_time"
 
 #define MQTT_BOILER_TEMPERATURE                 "boiler_temperature"
+#define MQTT_BOILER_OVERHEATED                  "boiler_overheated"
 #define MQTT_LEGIONELLA_MUST_DISINFECT          "legionella_must_disinfect"
 #define MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS   "legionella_disinfect_run_seconds"
 #define MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "legionella_hours_since_disinfection"
