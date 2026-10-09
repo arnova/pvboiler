@@ -35,33 +35,33 @@ void CPvBoiler::Loop()
       // therefore in case of 85.0 we need TEMPERATURE_MAX_RETRIES before the value is actually used
       if (fTemperature != DEVICE_DISCONNECTED_C && fTemperature != 85.0f)
       {
+        m_iBoilerTemperatureRetryCount = 0;
+
         const float fTemperatureAveraged = m_boilerTemperatureAverage.UpdateValue(fTemperature);
         if (m_fBoilerTemperature != fTemperatureAveraged)
         {
           m_bPublishBoilerTemperature = true;
           m_fBoilerTemperature = fTemperatureAveraged;
-          m_iBoilerTemperatureRetryCount = 0;
         }
-      }
-      else if (++m_iBoilerTemperatureRetryCount >= TEMPERATURE_MAX_RETRIES)
-      {
-        // Overwrite averaged value when out of retries:
-        m_bPublishBoilerTemperature = true;
-        m_fBoilerTemperature = fTemperature;
-        m_boilerTemperatureAverage.Reset();
-      }
 
-      if (m_fBoilerTemperature > 0.0f)
-      {
-        m_legionella.UpdateTemperature(m_fBoilerTemperature);
-
-        // Over temperature protection
-        if (m_fBoilerTemperature >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
+        // Over temperature protection. Use raw value as the averaged value lags behind
+        if (fTemperature >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
         {
           m_bBoilerOverHeated = true;
           m_bPublishBoilerOverHeated = true;
         }
       }
+      else if (m_iBoilerTemperatureRetryCount < TEMPERATURE_MAX_RETRIES &&
+               ++m_iBoilerTemperatureRetryCount >= TEMPERATURE_MAX_RETRIES)
+      {
+        // Overwrite averaged value (once) when out of retries:
+        m_bPublishBoilerTemperature = true;
+        m_fBoilerTemperature = fTemperature;
+        m_boilerTemperatureAverage.Reset();
+      }
+
+      // Always update so legionella logic never runs on a stale temperature (invalid values are ignored by it)
+      m_legionella.UpdateTemperature(m_fBoilerTemperature);
 
       m_legionella.Loop();
 
@@ -146,6 +146,8 @@ void CPvBoiler::Reset()
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
   m_boilerTemperatureAverage.Reset();
+  m_iBoilerTemperatureRetryCount = 0;
+  m_legionella.UpdateTemperature(m_fBoilerTemperature);
   m_bBoilerOverHeated = false;
   m_bPublishBoilerOverHeated = true;
 
@@ -342,8 +344,15 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
     if (m_bPublishBoilerTemperature || bForce)
     {
       m_bPublishBoilerTemperature = false;
-      snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
-      m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
+      if (m_fBoilerTemperature > 0.0f)
+      {
+        snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
+        m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
+      }
+      else
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, "None"); // Home Assistant: state "unknown"
+      }
     }
 
     if (m_bPublishBoilerOverHeated || bForce)
