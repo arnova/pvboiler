@@ -13,9 +13,9 @@ class CMqttClient : public PubSubClient
     static void PrintDataError(void);
     static void GetFriendlyName(const char* strName, char* strFriendly, const size_t iMaxSize);
 
-    void PublishSwitchConfig(const char* strItem);
-    void PublishNumberConfig(const char* strItem, const float fStep = 1.0f, const float fMin = 0.0f, const float fMax = 100.0f, const char* strUnit = "", const char* strDeviceClass = "", const bool bBox = true);
-    void PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount);
+    void PublishSwitchConfig(const char* strItem, const bool bRetain = true);
+    void PublishNumberConfig(const char* strItem, const float fStep = 1.0f, const float fMin = 0.0f, const float fMax = 100.0f, const char* strUnit = "", const char* strDeviceClass = "", const bool bBox = true, const bool bRetain = true);
+    void PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount, const bool bRetain = true);
     void PublishBinarySensorConfig(const char* strItem, const bool bDiag = false);
     void PublishSensorConfig(const char* strItem, const char* strUnit = "", const char* strDeviceClass = "", const char* strStateClass = "", const bool bDiag = false);
 
@@ -24,7 +24,7 @@ class CMqttClient : public PubSubClient
     void UnpublishBinarySensorConfig(const char* strItem);
     void UnpublishSensorConfig(const char* strItem);
 
-    bool PublishMessage(const char* strItem, const char* strPayload, const bool bRetained = true);
+    bool PublishMessage(const char* strItem, const char* strPayload, const bool bRetain = false);
 
     void Init(const uint8_t* serverIp, const char* strHostName, const char* strUser, const char* strPassword);
     bool ServerConnect();
@@ -33,7 +33,7 @@ class CMqttClient : public PubSubClient
   private:
     void ConstructConfigMessage(JsonDocument& root, const char* strItem);
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
-    void PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
+    void PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bRetain = true);
     void PublishGetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bDiag = false);
     void UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter = false);
 

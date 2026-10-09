@@ -459,7 +459,8 @@ void CPvBoiler::MqttPublishConfig()
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power");
+  // Note: Don't retain power budget: a stale (retained) budget would be applied after (re)connect and also feed the network watchdog
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power", true, false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
 
