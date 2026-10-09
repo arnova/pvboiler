@@ -78,7 +78,7 @@ class CPvBoiler
 
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
-    void SetTemperatureOverride(const uint8_t iTemperature) { m_iTemperatureOverride = iTemperature; m_bPublishTemperatureOverride = true; };
+    void SetTemperatureOverride(const uint8_t iTemperature);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);

@@ -143,6 +143,10 @@ void CPvBoiler::Reset()
   m_iZeroCrossWindow = ZERO_CROSS_WINDOW_INVALID;
   m_bPublishMainsValues = true;
 
+  // Re-detect temperature sensor(s) (eg. when connected after boot)
+  m_tempSensors.begin();
+  m_tempSensors.requestTemperatures();
+
   m_fBoilerTemperature = -1.0f;
   m_bPublishBoilerTemperature = true;
   m_boilerTemperatureAverage.Reset();
@@ -151,8 +155,7 @@ void CPvBoiler::Reset()
   m_bBoilerOverHeated = false;
   m_bPublishBoilerOverHeated = true;
 
-  m_iTemperatureOverride = TEMPERATURE_OVERRIDE_MAX;
-  m_bPublishTemperatureOverride = true;
+  m_bPublishTemperatureOverride = true; // Value itself is (re)loaded by LoadSettings()
   m_bThermostatAllowsHeating = true;
 
   m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
@@ -522,8 +525,9 @@ void CPvBoiler::LoadSettings()
   }
   m_iBudgetMargin = iVal16;
 
+  // Note: MODE_BOOST is never stored
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_mode = (iVal8 == 0x01) ? CPvBoiler::MODE_PERCENT : CPvBoiler::MODE_BUDGET;
+  m_mode = (iVal8 <= CPvBoiler::MODE_ON) ? static_cast<CPvBoiler::mode_t>(iVal8) : CPvBoiler::MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
@@ -583,7 +587,29 @@ void CPvBoiler::LoadSettings()
     m_iMqttUpdateInterval = MQTT_UPDATE_TIME_DEFAULT;
   }
 
+  EEPROM.get(EEPROM_TEMP_OVERRIDE, iVal8);
+  if (iVal8 < TEMPERATURE_OVERRIDE_MIN || iVal8 > TEMPERATURE_OVERRIDE_MAX)
+  {
+    iVal8 = TEMPERATURE_OVERRIDE_MAX; // Default: disabled
+  }
+  m_iTemperatureOverride = iVal8;
+  m_bPublishTemperatureOverride = true;
+
   m_bPublishSettings = true;
+}
+
+
+void CPvBoiler::SetTemperatureOverride(const uint8_t iTemperature)
+{
+  if (iTemperature != m_iTemperatureOverride)
+  {
+    EEPROM.put(EEPROM_TEMP_OVERRIDE, iTemperature);
+    EEPROM.commit();
+
+    m_iTemperatureOverride = iTemperature;
+  }
+
+  m_bPublishTemperatureOverride = true;
 }
 
 
@@ -786,6 +812,8 @@ void CPvBoiler::FactoryReset()
   SetStepClampNeg(STEP_CLAMP_NEG_DEFAULT);
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
+  SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
+  SetTemperatureOverride(TEMPERATURE_OVERRIDE_MAX);
 
   // Reset controller
   Reset();

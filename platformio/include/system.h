@@ -187,6 +187,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define STEP_CLAMP_SIZE         sizeof(float)
 #define DEAD_ZONE_SIZE          1
 #define BUDGET_MARGIN_SIZE      2
+#define TEMP_OVERRIDE_SIZE      1
 
 // EEPROM locations
 #define EEPROM_CHECKSUM       0                                                   // 0
@@ -212,7 +213,8 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_STEP_CLAMP_NEG EEPROM_STEP_CLAMP_POS + STEP_CLAMP_SIZE             // 365
 #define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP_NEG + STEP_CLAMP_SIZE             // 369
 #define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // 370
-                                                                                  // end 372
+#define EEPROM_TEMP_OVERRIDE  EEPROM_BUDGET_MARGIN + BUDGET_MARGIN_SIZE           // 372
+                                                                                  // end 373
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
