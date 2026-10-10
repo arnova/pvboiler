@@ -97,6 +97,9 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_MAX_TOPIC_ITEM_SIZE                64
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
 
+// Home Assistant birth/last will topic (HA publishes "online" here after it (re)started)
+#define MQTT_HA_STATUS_TOPIC                    "homeassistant/status"
+
 #define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
 #define MQTT_UPDATE_TIME_MIN                    1      // Seconds
 #define MQTT_UPDATE_TIME_MAX                    254    // Seconds

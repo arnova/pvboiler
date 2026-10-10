@@ -71,6 +71,7 @@ class CPvBoiler
 
     bool MqttPublishValues(const bool bForce = false);
     void MqttPublishConfig();
+    void MqttRequestRepublish();
     void LoadSettings();
     void FactoryReset();
 
@@ -149,6 +150,7 @@ class CPvBoiler
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
     elapsedMillis m_mqttSetterHoldOffTimer = 0;
+    bool m_bMqttRepublish = false;
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 

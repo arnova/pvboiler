@@ -214,10 +214,24 @@ void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
 }
 
 
-bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
+void CPvBoiler::MqttRequestRepublish()
+{
+  // Force (re)publishing all values on next MqttPublishValues() call, including the interval timed ones
+  m_bMqttRepublish = true;
+  m_mqttPublishTimer = m_iMqttUpdateInterval * 1000 + 1;
+}
+
+
+bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
 {
   if (!m_network.IsMqttConnected())
     return false;
+
+  if (m_bMqttRepublish)
+  {
+    m_bMqttRepublish = false;
+    bForce = true;
+  }
 
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 

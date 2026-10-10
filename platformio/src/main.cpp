@@ -48,6 +48,16 @@ void IRAM_ATTR TriacTimerISR()
 
 void MqttCallback(char* topic, byte *payload, const unsigned int length)
 {
+  if (STRIEQUALS(topic, MQTT_HA_STATUS_TOPIC))
+  {
+    // Home Assistant (re)started: it lost our (non-retained) states so republish them
+    if (length == 6 && strncasecmp((const char*) payload, "online", 6) == 0)
+    {
+      g_app.MqttRequestRepublish();
+    }
+    return;
+  }
+
   const size_t iLen = strlen(g_app.GetNetwork().GetHostName());
   if (strncmp(topic, g_app.GetNetwork().GetHostName(), iLen) != 0 ||
       strlen(topic) < iLen + 2)

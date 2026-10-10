@@ -32,6 +32,8 @@ class CApp
     CNetwork& GetNetwork() { return m_network; };
     CPvBoiler& GetPvBoiler() { return m_pvBoiler; };
 
+    void MqttRequestRepublish() { m_bMqttRepublish = true; };
+
   private:
     void IRAM_ATTR ScheduleTriac(const uint32_t iNow);
 
@@ -41,6 +43,7 @@ class CApp
 
     CNetwork m_network;
     CPvBoiler m_pvBoiler;
+    bool m_bMqttRepublish = false;
     CPvBoilerCommandHandler m_commandHandler;
     CTerminal m_terminal;
     CSsd1306 m_display;

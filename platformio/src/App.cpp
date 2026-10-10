@@ -200,7 +200,15 @@ void CApp::HandleNetwork()
   {
     // MQTT (re)connection: publish config & values
     m_pvBoiler.MqttPublishConfig();
-    m_pvBoiler.MqttPublishValues(true);
+    m_bMqttRepublish = true;
+  }
+
+  if (m_bMqttRepublish && m_network.IsMqttConnected())
+  {
+    // Note: Not published directly from the MQTT callback as that would overwrite PubSubClient's (shared) receive buffer
+    m_bMqttRepublish = false;
+    m_pvBoiler.MqttRequestRepublish();
+    m_pvBoiler.MqttPublishValues();
     m_network.MqttPublishValues();
   }
 
