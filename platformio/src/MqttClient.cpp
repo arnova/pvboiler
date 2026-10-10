@@ -329,6 +329,9 @@ bool CMqttClient::ServerConnect()
 
   publish(strWillTopic, "online", true);
 
+  // Get notified when Home Assistant (re)starts so we can republish our (non-retained) states
+  subscribe(MQTT_HA_STATUS_TOPIC, 1);
+
 #ifdef MQTT_DEBUG
   CTerminal::println("OK");
 #endif
