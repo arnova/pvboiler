@@ -119,17 +119,6 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_SET_THERMOSTAT_ENABLE "/set"))
-  {
-    if (bValidInt && (iVal == 0 || iVal == 1))
-    {
-      g_app.GetPvBoiler().SetThermostatEnable(iVal == 1);
-    }
-    else
-    {
-      CMqttClient::PrintDataError();
-    }
-  }
   else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set"))
   {
     if (bValidInt && iVal >=0)
@@ -154,25 +143,10 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   }
   else if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
   {
-    if (strcasecmp(strVal, "Budget") == 0)
+    CPvBoiler::mode_t mode;
+    if (CPvBoiler::GetModeFromName(strVal, mode))
     {
-      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_BUDGET);
-    }
-    else if (strcasecmp(strVal, "Percentage") == 0)
-    {
-      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_PERCENT);
-    }
-    else if (strcasecmp(strVal, "Off") == 0)
-    {
-      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_OFF);
-    }
-    else if (strcasecmp(strVal, "On") == 0)
-    {
-      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_ON);
-    }
-    else if (strcasecmp(strVal, "Boost") == 0)
-    {
-      g_app.GetPvBoiler().SetMode(CPvBoiler::MODE_BOOST);
+      g_app.GetPvBoiler().SetMode(mode);
     }
     else
     {

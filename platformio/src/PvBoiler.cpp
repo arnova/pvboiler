@@ -156,7 +156,6 @@ void CPvBoiler::Reset()
   m_bPublishBoilerOverHeated = true;
 
   m_bPublishThermostatSetpoint = true; // Value itself is (re)loaded by LoadSettings()
-  m_bPublishThermostatEnable = true; // Value itself is (re)loaded by LoadSettings()
   m_bThermostatAllowsHeating = true;
   m_bPublishThermostatAllowsHeating = true;
 
@@ -242,56 +241,25 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
     snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
     m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
 
-    switch(m_mode)
-    {
-      case MODE_BUDGET:
-      {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Budget");
+    m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, m_strModeNames[m_mode]);
 
-        snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
-        m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
+    m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
-        m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
+    m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainPos);
-        m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_POS, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainPos);
+    m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_POS, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainNeg);
-        m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_NEG, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainNeg);
+    m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_NEG, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampPos);
-        m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_POS, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampPos);
+    m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_POS, strBuf);
 
-        snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampNeg);
-        m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_NEG, strBuf);
-      }
-      break;
-
-      case MODE_PERCENT:
-      {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Percentage");
-      }
-      break;
-
-      case MODE_OFF:
-      {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Off");
-      }
-      break;
-
-      case MODE_ON:
-      {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "On");
-      }
-      break;
-
-      case MODE_BOOST:
-      {
-        m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, "Boost");
-      }
-      break;
-    }
+    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampNeg);
+    m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_NEG, strBuf);
 
     m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_SSR) ? "SSR" : "Phase-angle");
 
@@ -335,12 +303,6 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
 
       snprintf(strBuf, sizeof(strBuf), "%u", m_iThermostatSetpoint);
       m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_SETPOINT, strBuf);
-    }
-
-    if (m_bPublishThermostatEnable || bForce)
-    {
-      m_bPublishThermostatEnable = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_ENABLE, m_bThermostatEnable ? "1" : "0");
     }
 
     if (m_bPublishOutputPercentage || bForce)
@@ -484,7 +446,6 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power", true, false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
-  m_network.GetMqttClient().PublishSwitchConfig(MQTT_SET_THERMOSTAT_ENABLE);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
@@ -496,8 +457,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  static const char* strSelectValues[] = { "Percentage", "Budget", "Off", "On", "Boost" };
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strSelectValues, 5);
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, m_strModeNames, MODE_COUNT);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -564,7 +524,7 @@ void CPvBoiler::LoadSettings()
 
   // Note: MODE_BOOST is never stored
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_mode = (iVal8 <= CPvBoiler::MODE_ON) ? static_cast<CPvBoiler::mode_t>(iVal8) : CPvBoiler::MODE_BUDGET;
+  m_mode = (iVal8 < CPvBoiler::MODE_COUNT && iVal8 != CPvBoiler::MODE_BOOST) ? static_cast<CPvBoiler::mode_t>(iVal8) : CPvBoiler::MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
@@ -625,22 +585,12 @@ void CPvBoiler::LoadSettings()
   }
 
   EEPROM.get(EEPROM_THERMOSTAT_SP, iVal8);
-  const bool bThermostatSetpointValid = (iVal8 >= THERMOSTAT_SETPOINT_MIN && iVal8 <= THERMOSTAT_SETPOINT_MAX);
-  if (!bThermostatSetpointValid)
+  if (iVal8 < THERMOSTAT_SETPOINT_MIN || iVal8 > THERMOSTAT_SETPOINT_MAX)
   {
     iVal8 = THERMOSTAT_SETPOINT_DEFAULT;
   }
   m_iThermostatSetpoint = iVal8;
   m_bPublishThermostatSetpoint = true;
-
-  EEPROM.get(EEPROM_THERMOSTAT_EN, iVal8);
-  if (iVal8 > 1)
-  {
-    // Not stored yet: migrate from older firmware where setpoint THERMOSTAT_SETPOINT_MAX meant disabled
-    iVal8 = (bThermostatSetpointValid && m_iThermostatSetpoint < THERMOSTAT_SETPOINT_MAX) ? 1 : 0;
-  }
-  m_bThermostatEnable = (iVal8 == 1);
-  m_bPublishThermostatEnable = true;
 
   m_bPublishSettings = true;
 }
@@ -657,20 +607,6 @@ void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
   }
 
   m_bPublishThermostatSetpoint = true;
-}
-
-
-void CPvBoiler::SetThermostatEnable(const bool bEnable)
-{
-  if (bEnable != m_bThermostatEnable)
-  {
-    EEPROM.put(EEPROM_THERMOSTAT_EN, (uint8_t) (bEnable ? 1 : 0));
-    EEPROM.commit();
-
-    m_bThermostatEnable = bEnable;
-  }
-
-  m_bPublishThermostatEnable = true;
 }
 
 
@@ -713,6 +649,21 @@ void CPvBoiler::SetBudgetMargin(const uint16_t iMargin)
 
     m_bPublishSettings = true;
   }
+}
+
+
+bool CPvBoiler::GetModeFromName(const char* strName, CPvBoiler::mode_t& mode)
+{
+  for (uint8_t it = 0; it < MODE_COUNT; it++)
+  {
+    if (strcasecmp(strName, m_strModeNames[it]) == 0)
+    {
+      mode = static_cast<CPvBoiler::mode_t>(it);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 
@@ -875,7 +826,6 @@ void CPvBoiler::FactoryReset()
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
   SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
-  SetThermostatEnable(false);
 
   // Reset controller
   Reset();
@@ -970,19 +920,60 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
 
 void CPvBoiler::Update()
 {
+  const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
+
+  // Software thermostat. When not in a thermostat mode or when no temperature sensor is installed
+  // the hardware thermostat takes over
+  if (IsThermostatMode() && m_tempSensors.getDeviceCount() > 0)
+  {
+    // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
+    uint8_t iSetpoint = m_iThermostatSetpoint;
+    if (m_bLegionellaDisinfectionRequired && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
+    {
+      iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
+    }
+
+    if (m_fBoilerTemperature <= 0.0f)
+    {
+      m_bThermostatAllowsHeating = false; // Sensor installed but no valid reading: fail safe
+    }
+    else if (m_fBoilerTemperature >= iSetpoint)
+    {
+      m_bThermostatAllowsHeating = false;
+    }
+    else if (m_fBoilerTemperature < iSetpoint - THERMOSTAT_SETPOINT_HYSTERESIS)
+    {
+      m_bThermostatAllowsHeating = true;
+    }
+  }
+  else
+  {
+    // Without sensor never force heating in "setpoint, then budget" mode (only budget control remains)
+    m_bThermostatAllowsHeating = (m_mode != MODE_SETPOINT_BUDGET);
+  }
+
+  if (m_bThermostatAllowsHeating != bThermostatAllowedHeating)
+  {
+    m_bPublishThermostatAllowsHeating = true;
+  }
+
   float fNewPercentage = m_fCurrentPercentage;
 
   if (m_bBoilerOverHeated)
   {
     fNewPercentage = 0.0f;
   }
-  else if (m_bLegionellaDisinfectionRequired)
+  else if (m_bLegionellaDisinfectionRequired && m_mode != MODE_OFF)
   {
     fNewPercentage = 100.0f;
   }
-  else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_OFF)
+  else if (m_mode == MODE_SETPOINT || (m_mode == MODE_SETPOINT_BUDGET && m_bThermostatAllowsHeating))
   {
-    if (m_mode == MODE_OFF)
+    fNewPercentage = 100.0f; // Below setpoint: always heat, independent of (network) budget/watchdog
+  }
+  else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_STANDBY || m_mode == MODE_OFF)
+  {
+    if (m_mode == MODE_STANDBY || m_mode == MODE_OFF)
     {
       m_iNetworkWatchdogRecoveryCounter = 0; // When off: quick recovery
     }
@@ -992,11 +983,11 @@ void CPvBoiler::Update()
       fNewPercentage -= m_fStepClampNeg; // Device off or watch-dog triggered: output to 0%
     }
   }
-  else if (m_mode == MODE_BOOST || m_mode == MODE_ON)
+  else if (m_mode == MODE_BOOST)
   {
     fNewPercentage = 100.0f; // Immediately 100% power
   }
-  else if (m_mode == MODE_PERCENT)
+  else if (m_mode == MODE_PERCENT || m_mode == MODE_PERCENT_SETPOINT)
   {
     fNewPercentage = m_iPowerPercentage;
   }
@@ -1033,43 +1024,8 @@ void CPvBoiler::Update()
     fNewPercentage = 0.0f;
   }
 
-  const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
-
-  // Software thermostat. When disabled or when no temperature sensor is installed
-  // the hardware thermostat takes over
-  if (m_bThermostatEnable && m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST)
-  {
-    // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
-    uint8_t iSetpoint = m_iThermostatSetpoint;
-    if (m_bLegionellaDisinfectionRequired && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
-    {
-      iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
-    }
-
-    if (m_fBoilerTemperature <= 0.0f)
-    {
-      m_bThermostatAllowsHeating = false; // Sensor installed but no valid reading: fail safe
-    }
-    else if (m_fBoilerTemperature >= iSetpoint)
-    {
-      m_bThermostatAllowsHeating = false;
-    }
-    else if (m_fBoilerTemperature <= iSetpoint - THERMOSTAT_SETPOINT_HYSTERESIS)
-    {
-      m_bThermostatAllowsHeating = true;
-    }
-  }
-  else
-  {
-    m_bThermostatAllowsHeating = true;
-  }
-
-  if (m_bThermostatAllowsHeating != bThermostatAllowedHeating)
-  {
-    m_bPublishThermostatAllowsHeating = true;
-  }
-
-  if (!m_bThermostatAllowsHeating)
+  // Thermostat limits heating, except in "setpoint, then budget" mode where it only adds heating
+  if (!m_bThermostatAllowsHeating && (m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT))
   {
     fNewPercentage = 0.0f;
   }

@@ -56,15 +56,36 @@ class CPvBoiler
     };
     typedef enum dim_style_e dim_style_t;
 
+    // Note: Value is stored in EEPROM (except MODE_BOOST), so reordering changes the mode after a flash
     enum mode_e
     {
-      MODE_BUDGET = 0,
-      MODE_PERCENT,
-      MODE_OFF,
-      MODE_ON,
-      MODE_BOOST
+      MODE_OFF = 0,             // Output off, including legionella protection (only overheat protection remains)
+      MODE_STANDBY,             // Output off, legionella protection remains active
+      MODE_BUDGET,              // Heat using available (surplus) power budget
+      MODE_PERCENT,             // Heat at a fixed (manually set) power percentage
+      MODE_SETPOINT,            // Always heat (100%) to (software) thermostat setpoint
+      MODE_BOOST,               // Heat at 100%, ignoring (software) thermostat setpoint. Note: Never stored
+      MODE_BUDGET_SETPOINT,     // Budget control, limited by (software) thermostat setpoint
+      MODE_PERCENT_SETPOINT,    // Percentage control, limited by (software) thermostat setpoint
+      MODE_SETPOINT_BUDGET      // Always heat to (software) thermostat setpoint, above it heat using budget control
     };
     typedef enum mode_e mode_t;
+
+    // Mode names (eg. for MQTT), indexed by mode_t. Note: Must match order of mode_e
+    static constexpr const char* m_strModeNames[] =
+    {
+      "Off",                        // MODE_OFF
+      "Standby",                    // MODE_STANDBY
+      "Budget",                     // MODE_BUDGET
+      "Percentage",                 // MODE_PERCENT
+      "Setpoint",                   // MODE_SETPOINT
+      "Boost",                      // MODE_BOOST
+      "Budget up to Setpoint",      // MODE_BUDGET_SETPOINT
+      "Percentage up to Setpoint",  // MODE_PERCENT_SETPOINT
+      "Setpoint, then Budget"       // MODE_SETPOINT_BUDGET
+    };
+    static constexpr uint8_t MODE_COUNT = sizeof(m_strModeNames) / sizeof(m_strModeNames[0]);
+    static_assert(MODE_COUNT == MODE_SETPOINT_BUDGET + 1, "m_strModeNames does not match mode_e");
 
     void Loop();
     void Reset();
@@ -80,7 +101,6 @@ class CPvBoiler
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
     void SetThermostatSetpoint(const uint8_t iTemperature);
-    void SetThermostatEnable(const bool bEnable);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
@@ -113,6 +133,8 @@ class CPvBoiler
     uint8_t GetDeadZone() const { return m_iDeadZone; };
     uint16_t GetBudgetMargin() const { return m_iBudgetMargin; };
     mode_t GetMode() const { return m_mode; };
+    static bool GetModeFromName(const char* strName, mode_t& mode);
+    bool IsThermostatMode() const { return m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT || m_mode == MODE_SETPOINT_BUDGET; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetErrorGainPos() const { return m_fErrorGainPos; };
@@ -129,7 +151,6 @@ class CPvBoiler
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetThermostatSetpoint() const { return m_iThermostatSetpoint; };
-    bool GetThermostatEnable() const { return m_bThermostatEnable; };
     bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
@@ -212,8 +233,6 @@ class CPvBoiler
 
     uint8_t m_iThermostatSetpoint = THERMOSTAT_SETPOINT_DEFAULT;
     bool m_bPublishThermostatSetpoint = true;
-    bool m_bThermostatEnable = false;
-    bool m_bPublishThermostatEnable = true;
     bool m_bThermostatAllowsHeating = true;
     bool m_bPublishThermostatAllowsHeating = true;
 
