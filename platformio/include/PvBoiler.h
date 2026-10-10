@@ -101,6 +101,7 @@ class CPvBoiler
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
     void SetThermostatSetpoint(const uint8_t iTemperature);
+    void SetDisinfectionEnable(const bool bEnable);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
@@ -151,6 +152,7 @@ class CPvBoiler
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetThermostatSetpoint() const { return m_iThermostatSetpoint; };
+    bool GetDisinfectionEnable() const { return m_bDisinfectionEnable; };
     bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
@@ -251,6 +253,8 @@ class CPvBoiler
     uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
     bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;
 
+    bool m_bDisinfectionEnable = true; // When disabled disinfection is tracked, but never forced
+    bool m_bPublishDisinfectionEnable = true;
     bool m_bLegionellaDisinfectionRequired = false;
     bool m_bPublishLegionellaDisinfectionRequired = true;
 };

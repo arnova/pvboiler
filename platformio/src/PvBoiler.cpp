@@ -351,6 +351,12 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
     }
 
+    if (m_bPublishDisinfectionEnable || bForce)
+    {
+      m_bPublishDisinfectionEnable = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_ENABLE, m_bDisinfectionEnable ? "1" : "0");
+    }
+
     if (m_bPublishLegionellaDisinfectionRequired || bForce)
     {
       m_bPublishLegionellaDisinfectionRequired = false;
@@ -479,6 +485,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_ALLOWS_HEATING, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_ENABLE, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
 
@@ -592,6 +599,11 @@ void CPvBoiler::LoadSettings()
   m_iThermostatSetpoint = iVal8;
   m_bPublishThermostatSetpoint = true;
 
+  // Note: Anything other than 0x00 (eg. erased EEPROM) means enabled
+  EEPROM.get(EEPROM_DISINFECT_EN, iVal8);
+  m_bDisinfectionEnable = (iVal8 != 0x00);
+  m_bPublishDisinfectionEnable = true;
+
   m_bPublishSettings = true;
 }
 
@@ -607,6 +619,20 @@ void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
   }
 
   m_bPublishThermostatSetpoint = true;
+}
+
+
+void CPvBoiler::SetDisinfectionEnable(const bool bEnable)
+{
+  if (bEnable != m_bDisinfectionEnable)
+  {
+    EEPROM.put(EEPROM_DISINFECT_EN, (uint8_t) (bEnable ? 0x01 : 0x00));
+    EEPROM.commit();
+
+    m_bDisinfectionEnable = bEnable;
+  }
+
+  m_bPublishDisinfectionEnable = true;
 }
 
 
@@ -826,6 +852,7 @@ void CPvBoiler::FactoryReset()
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
   SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
+  SetDisinfectionEnable(true);
 
   // Reset controller
   Reset();
@@ -920,6 +947,8 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
 
 void CPvBoiler::Update()
 {
+  const bool bLegionellaDisinfect = m_bLegionellaDisinfectionRequired && m_bDisinfectionEnable && m_mode != MODE_OFF;
+
   const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
 
   // Software thermostat. When not in a thermostat mode or when no temperature sensor is installed
@@ -928,7 +957,7 @@ void CPvBoiler::Update()
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
     uint8_t iSetpoint = m_iThermostatSetpoint;
-    if (m_bLegionellaDisinfectionRequired && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
+    if (bLegionellaDisinfect && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
     {
       iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
     }
@@ -963,7 +992,7 @@ void CPvBoiler::Update()
   {
     fNewPercentage = 0.0f;
   }
-  else if (m_bLegionellaDisinfectionRequired && m_mode != MODE_OFF)
+  else if (bLegionellaDisinfect)
   {
     fNewPercentage = 100.0f;
   }
