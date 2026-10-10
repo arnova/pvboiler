@@ -156,6 +156,7 @@ void CPvBoiler::Reset()
   m_bPublishBoilerOverHeated = true;
 
   m_bPublishThermostatSetpoint = true; // Value itself is (re)loaded by LoadSettings()
+  m_bPublishThermostatEnable = true; // Value itself is (re)loaded by LoadSettings()
   m_bThermostatAllowsHeating = true;
   m_bPublishThermostatAllowsHeating = true;
 
@@ -322,6 +323,12 @@ bool CPvBoiler::MqttPublishValues(const bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_SETPOINT, strBuf);
     }
 
+    if (m_bPublishThermostatEnable || bForce)
+    {
+      m_bPublishThermostatEnable = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_ENABLE, m_bThermostatEnable ? "1" : "0");
+    }
+
     if (m_bPublishOutputPercentage || bForce)
     {
       m_bPublishOutputPercentage = false;
@@ -463,6 +470,7 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power", true, false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
   m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
+  m_network.GetMqttClient().PublishSwitchConfig(MQTT_SET_THERMOSTAT_ENABLE);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
@@ -603,12 +611,22 @@ void CPvBoiler::LoadSettings()
   }
 
   EEPROM.get(EEPROM_THERMOSTAT_SP, iVal8);
-  if (iVal8 < THERMOSTAT_SETPOINT_MIN || iVal8 > THERMOSTAT_SETPOINT_MAX)
+  const bool bThermostatSetpointValid = (iVal8 >= THERMOSTAT_SETPOINT_MIN && iVal8 <= THERMOSTAT_SETPOINT_MAX);
+  if (!bThermostatSetpointValid)
   {
-    iVal8 = THERMOSTAT_SETPOINT_MAX; // Default: disabled
+    iVal8 = THERMOSTAT_SETPOINT_DEFAULT;
   }
   m_iThermostatSetpoint = iVal8;
   m_bPublishThermostatSetpoint = true;
+
+  EEPROM.get(EEPROM_THERMOSTAT_EN, iVal8);
+  if (iVal8 > 1)
+  {
+    // Not stored yet: migrate from older firmware where setpoint THERMOSTAT_SETPOINT_MAX meant disabled
+    iVal8 = (bThermostatSetpointValid && m_iThermostatSetpoint < THERMOSTAT_SETPOINT_MAX) ? 1 : 0;
+  }
+  m_bThermostatEnable = (iVal8 == 1);
+  m_bPublishThermostatEnable = true;
 
   m_bPublishSettings = true;
 }
@@ -625,6 +643,20 @@ void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
   }
 
   m_bPublishThermostatSetpoint = true;
+}
+
+
+void CPvBoiler::SetThermostatEnable(const bool bEnable)
+{
+  if (bEnable != m_bThermostatEnable)
+  {
+    EEPROM.put(EEPROM_THERMOSTAT_EN, (uint8_t) (bEnable ? 1 : 0));
+    EEPROM.commit();
+
+    m_bThermostatEnable = bEnable;
+  }
+
+  m_bPublishThermostatEnable = true;
 }
 
 
@@ -828,7 +860,8 @@ void CPvBoiler::FactoryReset()
   SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
-  SetThermostatSetpoint(THERMOSTAT_SETPOINT_MAX);
+  SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
+  SetThermostatEnable(false);
 
   // Reset controller
   Reset();
@@ -988,10 +1021,9 @@ void CPvBoiler::Update()
 
   const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
 
-  // Software thermostat. When set to THERMOSTAT_SETPOINT_MAX or when no temperature sensor
-  // is installed it's disabled and the hardware thermostat takes over
-  if (m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST &&
-      m_iThermostatSetpoint >= THERMOSTAT_SETPOINT_MIN && m_iThermostatSetpoint < THERMOSTAT_SETPOINT_MAX)
+  // Software thermostat. When disabled or when no temperature sensor is installed
+  // the hardware thermostat takes over
+  if (m_bThermostatEnable && m_tempSensors.getDeviceCount() > 0 && m_mode != MODE_BOOST)
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
     uint8_t iSetpoint = m_iThermostatSetpoint;

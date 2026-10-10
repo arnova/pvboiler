@@ -109,6 +109,17 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
+  else if (STRIEQUALS(subTopic, "/" MQTT_SET_THERMOSTAT_ENABLE "/set"))
+  {
+    if (bValidInt && (iVal == 0 || iVal == 1))
+    {
+      g_app.GetPvBoiler().SetThermostatEnable(iVal == 1);
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+  }
   else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set"))
   {
     if (bValidInt && iVal >=0)

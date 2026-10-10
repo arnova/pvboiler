@@ -70,6 +70,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define TEMPERATURE_OVERHEATING_MAX             90.0f
 #define THERMOSTAT_SETPOINT_MIN                 55
 #define THERMOSTAT_SETPOINT_MAX                 95
+#define THERMOSTAT_SETPOINT_DEFAULT             60
 #define THERMOSTAT_SETPOINT_HYSTERESIS          2     // C
 #define TEMPERATURE_DISINFECT_SETPOINT          65    // C. Minimum override setpoint during legionella disinfection
 
@@ -105,6 +106,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_SET_POWER_PERCENTAGE               "power_percentage"
 #define MQTT_SET_POWER_BUDGET                   "power_budget"
 #define MQTT_SET_THERMOSTAT_SETPOINT            "thermostat_setpoint"
+#define MQTT_SET_THERMOSTAT_ENABLE              "thermostat_enable"
 
 // Status topic items
 #define MQTT_FW_VERSION                         "firmware_version"
@@ -189,6 +191,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define DEAD_ZONE_SIZE          1
 #define BUDGET_MARGIN_SIZE      2
 #define THERMOSTAT_SP_SIZE      1
+#define THERMOSTAT_EN_SIZE      1
 
 // EEPROM locations
 #define EEPROM_CHECKSUM       0                                                   // 0
@@ -215,7 +218,8 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_DEAD_ZONE      EEPROM_STEP_CLAMP_NEG + STEP_CLAMP_SIZE             // 369
 #define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // 370
 #define EEPROM_THERMOSTAT_SP  EEPROM_BUDGET_MARGIN + BUDGET_MARGIN_SIZE           // 372
-                                                                                  // end 373
+#define EEPROM_THERMOSTAT_EN  EEPROM_THERMOSTAT_SP + THERMOSTAT_SP_SIZE           // 373
+                                                                                  // end 374
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.

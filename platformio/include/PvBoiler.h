@@ -79,6 +79,7 @@ class CPvBoiler
     void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
     void SetThermostatSetpoint(const uint8_t iTemperature);
+    void SetThermostatEnable(const bool bEnable);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
@@ -127,6 +128,7 @@ class CPvBoiler
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetThermostatSetpoint() const { return m_iThermostatSetpoint; };
+    bool GetThermostatEnable() const { return m_bThermostatEnable; };
     bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
@@ -206,8 +208,10 @@ class CPvBoiler
     bool m_bBoilerOverHeated = false;
     bool m_bPublishBoilerOverHeated = true;
 
-    uint8_t m_iThermostatSetpoint = THERMOSTAT_SETPOINT_MAX;
+    uint8_t m_iThermostatSetpoint = THERMOSTAT_SETPOINT_DEFAULT;
     bool m_bPublishThermostatSetpoint = true;
+    bool m_bThermostatEnable = false;
+    bool m_bPublishThermostatEnable = true;
     bool m_bThermostatAllowsHeating = true;
     bool m_bPublishThermostatAllowsHeating = true;
 
