@@ -309,9 +309,33 @@ void CApp::HandleDisplay()
           }
           break;
 
-          case CPvBoiler::MODE_ON:
+          case CPvBoiler::MODE_SETPOINT:
           {
-            snprintf(strLine, sizeof(strLine), "On - %u%%", iPercent);
+            snprintf(strLine, sizeof(strLine), "Setpoint - %u%%", iPercent);
+          }
+          break;
+
+          case CPvBoiler::MODE_BUDGET_SETPOINT:
+          {
+            snprintf(strLine, sizeof(strLine), "Budget<=SP - %u%%", iPercent);
+          }
+          break;
+
+          case CPvBoiler::MODE_PERCENT_SETPOINT:
+          {
+            snprintf(strLine, sizeof(strLine), "Perc<=SP - %u%%", iPercent);
+          }
+          break;
+
+          case CPvBoiler::MODE_SETPOINT_BUDGET:
+          {
+            snprintf(strLine, sizeof(strLine), "SP>Budget - %u%%", iPercent);
+          }
+          break;
+
+          case CPvBoiler::MODE_STANDBY:
+          {
+            snprintf(strLine, sizeof(strLine), "Standby - %u%%", iPercent);
           }
           break;
 

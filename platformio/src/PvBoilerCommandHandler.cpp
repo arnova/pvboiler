@@ -19,9 +19,9 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "uptime                 : Show device uptime\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
-                                  "thermostat [t]         : Set thermostat setpoint to [t] Celsius (55-95, 95=disabled)\r\n"
+                                  "thermsp [t]            : Set thermostat setpoint to [t] Celsius (55-95)\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
-                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"off\", \"on\", \"boost\")\r\n"
+                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"percent_sp\", \"budget_sp\", \"sp_budget\", \"standby\", \"off\", \"setpoint\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
@@ -412,15 +412,39 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
     }
     break;
 
-    case CPvBoiler::MODE_ON:
+    case CPvBoiler::MODE_SETPOINT:
     {
-      CTerminal::print("on");
+      CTerminal::print("setpoint");
+    }
+    break;
+
+    case CPvBoiler::MODE_STANDBY:
+    {
+      CTerminal::print("standby");
     }
     break;
 
     case CPvBoiler::MODE_OFF:
     {
       CTerminal::print("off");
+    }
+    break;
+
+    case CPvBoiler::MODE_BUDGET_SETPOINT:
+    {
+      CTerminal::print("budget_sp");
+    }
+    break;
+
+    case CPvBoiler::MODE_PERCENT_SETPOINT:
+    {
+      CTerminal::print("percent_sp");
+    }
+    break;
+
+    case CPvBoiler::MODE_SETPOINT_BUDGET:
+    {
+      CTerminal::print("sp_budget");
     }
     break;
   }
@@ -460,14 +484,11 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
 
   CTerminal::print(" thermostat_set=");
-  if (m_pvBoiler.GetThermostatSetpoint() < THERMOSTAT_SETPOINT_MAX)
+  snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetThermostatSetpoint());
+  CTerminal::print(strBuf);
+  if (!m_pvBoiler.IsThermostatMode())
   {
-    snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetThermostatSetpoint());
-    CTerminal::print(strBuf);
-  }
-  else
-  {
-    CTerminal::print("off");
+    CTerminal::print("(off)");
   }
 
   CTerminal::print(" thermostat_allows_heating=");
@@ -697,10 +718,18 @@ result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
     m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT);
   else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET);
+  else if (STRIEQUALS(strArgs, "percent_sp") || STRIEQUALS(strArgs, "psp"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT_SETPOINT);
+  else if (STRIEQUALS(strArgs, "budget_sp") || STRIEQUALS(strArgs, "bsp"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET_SETPOINT);
+  else if (STRIEQUALS(strArgs, "sp_budget") || STRIEQUALS(strArgs, "spb"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_SETPOINT_BUDGET);
+  else if (STRIEQUALS(strArgs, "standby") || STRIEQUALS(strArgs, "s"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_STANDBY);
   else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_OFF);
-  else if (STRIEQUALS(strArgs, "on") || STRIEQUALS(strArgs, "1"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_ON);
+  else if (STRIEQUALS(strArgs, "setpoint") || STRIEQUALS(strArgs, "sp"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_SETPOINT);
   else if (STRIEQUALS(strArgs, "boost"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_BOOST);
   else
@@ -927,7 +956,7 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetPowerPercentage(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "thermostat"))
+  else if (STRIEQUALS(strCommand, "thermsp") || STRIEQUALS(strCommand, "tsp"))
   {
     result = CmdSetThermostatSetpoint(strArgs);
   }

@@ -213,7 +213,7 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* 
 }
 
 
-void CMqttClient::PublishSelectConfig(const char* strItem, const char** strValues, const uint8_t iCount, const bool bRetain /* = true */)
+void CMqttClient::PublishSelectConfig(const char* strItem, const char* const* strValues, const uint8_t iCount, const bool bRetain /* = true */)
 {
   JsonDocument root;
 
