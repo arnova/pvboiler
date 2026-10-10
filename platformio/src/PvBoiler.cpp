@@ -13,7 +13,7 @@ CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE
   m_tempSensors.setWaitForConversion(false); // Do not block but poll
   m_tempSensors.requestTemperatures(); // Request first temperature
 
-  m_boilerTemperatureAverage.SetAvgCount(100);
+  m_boilerTemperatureAverage.SetAvgCount(30);
 }
 
 
@@ -45,7 +45,7 @@ void CPvBoiler::Loop()
         }
 
         // Over temperature protection. Use raw value as the averaged value lags behind
-        if (fTemperature >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
+        if (fTemperatureAveraged >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
         {
           m_bBoilerOverHeated = true;
           m_bPublishBoilerOverHeated = true;
