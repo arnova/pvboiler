@@ -44,6 +44,8 @@ class CApp
     CNetwork m_network;
     CPvBoiler m_pvBoiler;
     bool m_bMqttRepublish = false;
+    bool m_bMqttDelayedRepublish = false;
+    elapsedMillis m_mqttDelayedRepublishTimer = 0;
     CPvBoilerCommandHandler m_commandHandler;
     CTerminal m_terminal;
     CSsd1306 m_display;

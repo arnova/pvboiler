@@ -372,7 +372,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
 
     // Hold off publishing setters directly after subscribing so the (retained) broker values are
     // received first. Else we'd overwrite them with our own (reset) values
-    const bool bSetterHoldOff = (m_mqttSetterHoldOffTimer < MQTT_SETTER_HOLD_OFF_TIME_MS);
+    const bool bSetterHoldOff = (m_mqttSetterHoldOffTimer < MQTT_SETTLE_TIME_MS);
 
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
     if (m_bPublishLegionellaHoursSinceDisinfectionSetter && !bSetterHoldOff)
