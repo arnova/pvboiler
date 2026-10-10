@@ -20,6 +20,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "thermsp [t]            : Set thermostat setpoint to [t] Celsius (55-95)\r\n"
+                                  "disinfection [e]       : Set legionella disinfection to [e] (\"on\" or \"off\")\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"percent_sp\", \"budget_sp\", \"sp_budget\", \"standby\", \"off\", \"setpoint\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
@@ -494,6 +495,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(" thermostat_allows_heating=");
   CTerminal::print(m_pvBoiler.GetThermostatAllowsHeating() ? "1" : "0");
 
+  CTerminal::print(" disinfection=");
+  CTerminal::print(m_pvBoiler.GetDisinfectionEnable() ? "on" : "off");
+
   CTerminal::print(" disinfection_required=");
   CTerminal::print(m_pvBoiler.GetLegionellaDisinfectionRequired() ? "1" : "0");
 
@@ -653,6 +657,23 @@ result_code_t CPvBoilerCommandHandler::CmdSetThermostatSetpoint(const char *strA
     return result;
 
   m_pvBoiler.SetThermostatSetpoint(iTemperature);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnable(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  bool bEnable;
+  result = get_bool_from_string(strArgs, &bEnable, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetDisinfectionEnable(bEnable);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -959,6 +980,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "thermsp") || STRIEQUALS(strCommand, "tsp"))
   {
     result = CmdSetThermostatSetpoint(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfection") || STRIEQUALS(strCommand, "disinfect"))
+  {
+    result = CmdSetDisinfectionEnable(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {
