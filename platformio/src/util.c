@@ -827,7 +827,7 @@ char* bytes_to_macstr(const uint8_t *bufMAC, char* strMAC)
 }
 
 
-bool bytes_to_int32(const uint8_t* buf, const uint8_t iBufSize, int32_t* pValue)
+bool bytes_to_int32(const uint8_t* buf, const size_t iBufSize, int32_t* pValue)
 {
   char strBytes[12];
 
@@ -847,4 +847,26 @@ bool bytes_to_int32(const uint8_t* buf, const uint8_t iBufSize, int32_t* pValue)
 
   // Check range
   return (!(iResult32 == LONG_MIN || iResult32 == LONG_MAX));
+}
+
+
+bool bytes_to_float(const uint8_t* buf, const size_t iBufSize, float* pValue)
+{
+  char strBytes[16];
+
+  if (iBufSize >= sizeof(strBytes))
+    return false;
+
+  memcpy(strBytes, buf, iBufSize);
+  strBytes[iBufSize] = '\0';
+
+  char *end;
+  *pValue = strtof(strBytes, &end);
+
+  // Make sure it's not zero-length and it's a proper number (not suffixed with anything):
+  if (*end || end == strBytes)
+    return false;
+
+  // Check range (also rejects eg. "nan" and "inf")
+  return isfinite(*pValue);
 }

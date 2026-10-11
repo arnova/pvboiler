@@ -19,6 +19,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "uptime                 : Show device uptime\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
+                                  "budgetsrc [s]          : Set power budget source to [s] (\"direct\" or \"dsmr-reader\")\r\n"
                                   "thermsp [t]            : Set thermostat setpoint to [t] Celsius (55-95)\r\n"
                                   "disinfection [e]       : Set legionella disinfection to [e] (\"on\" or \"off\")\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
@@ -328,7 +329,10 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("error_gain_pos=");
+  CTerminal::print("budget_src=");
+  CTerminal::print(m_pvBoiler.GetDsmrPowerBudget() ? "dsmr-reader" : "direct");
+
+  CTerminal::print(" error_gain_pos=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainPos());
   CTerminal::print(strBuf);
 
@@ -629,6 +633,22 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
     return result;
 
   m_pvBoiler.SetPowerBudget(iPower);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetBudgetSource(const char *strArgs)
+{
+  if (strArgs == NULL || !*strArgs)
+    return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
+
+  if (STRIEQUALS(strArgs, "direct"))
+    m_pvBoiler.SetDsmrPowerBudget(false);
+  else if (STRIEQUALS(strArgs, "dsmr-reader") || STRIEQUALS(strArgs, "dsmr"))
+    m_pvBoiler.SetDsmrPowerBudget(true);
+  else
+    return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -980,6 +1000,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "budget"))
   {
     result = CmdSetPowerBudget(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "budgetsrc"))
+  {
+    result = CmdSetBudgetSource(strArgs);
   }
   else if (STRIEQUALS(strCommand, "percent"))
   {

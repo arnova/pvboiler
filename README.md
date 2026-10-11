@@ -96,4 +96,4 @@ Only do this when you have sufficient confidence you understand what you are doi
 > **Notes**
 >
 > - Only change other settings when you understand what they do!
-> - When using budget logic mode, you must regularly (at least at 5-second intervals is recommended) tell the PvBoiler controller how much "budget" (= excess solar PV electricity) is available, e.g. from Home Assistant. A sample automation for Home Assistant can be found in the `home assistant` folder.
+> - When using budget logic mode, you must regularly (at least at 5-second intervals is recommended) tell the PvBoiler controller how much "budget" (= excess solar PV electricity) is available, e.g. from Home Assistant. A sample automation for Home Assistant can be found in the `home assistant` folder. Alternatively, use the terminal command `budgetsrc dsmr` to let the controller calculate the budget itself from DSMR-reader's MQTT topics (`dsmr/reading/electricity_currently_delivered` and `dsmr/reading/electricity_currently_returned`).

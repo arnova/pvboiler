@@ -48,21 +48,6 @@ void IRAM_ATTR TriacTimerISR()
 
 void MqttCallback(char* topic, byte *payload, const unsigned int length)
 {
-  if (STRIEQUALS(topic, MQTT_HA_STATUS_TOPIC))
-  {
-    // Home Assistant (re)started: it lost our (non-retained) states so republish them
-    if (length == 6 && strncasecmp((const char*) payload, "online", 6) == 0)
-    {
-      g_app.MqttRequestRepublish();
-    }
-    return;
-  }
-
-  const size_t iLen = strlen(g_app.GetNetwork().GetHostName());
-  if (strncmp(topic, g_app.GetNetwork().GetHostName(), iLen) != 0 ||
-      strlen(topic) < iLen + 2)
-    return; // Hostname mismatch or length too small
-
 #ifdef MQTT_DEBUG
   CTerminal::println("-------new message from broker-----");
   CTerminal::print("topic: ");
@@ -74,11 +59,56 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   }
   CTerminal::println("");
 #endif
-  //float fVal;
-  //const bool bValidFloat = BytesToFloat(payload, length, fVal);
+
+  float fVal;
+  const bool bValidFloat = bytes_to_float(payload, length, &fVal);
 
   int32_t iVal;
   const bool bValidInt = bytes_to_int32(payload, length, &iVal);
+
+  if (STRIEQUALS(topic, MQTT_HA_STATUS_TOPIC))
+  {
+    // Home Assistant (re)started: it lost our (non-retained) states so republish them
+    if (length == 6 && strncasecmp((const char*) payload, "online", 6) == 0)
+    {
+      g_app.MqttRequestRepublish();
+    }
+    return;
+  }
+
+  // Got a message so network is still ok. Note: Not for Home Assistant's status, as that doesn't feed us any data
+  g_app.GetPvBoiler().TrigNetworkWatchdog();
+
+  if (STRIEQUALS(topic, MQTT_DSMR_ELECTRICITY_DELIVERED))
+  {
+    if (bValidFloat)
+    {
+      g_app.GetPvBoiler().SetPowerDelivered(lroundf(fVal * 1000.0f)); // kW -> Watt
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+    return;
+  }
+
+  if (STRIEQUALS(topic, MQTT_DSMR_ELECTRICITY_RETURNED))
+  {
+    if (bValidFloat)
+    {
+      g_app.GetPvBoiler().SetPowerReturned(lroundf(fVal * 1000.0f)); // kW -> Watt
+    }
+    else
+    {
+      CMqttClient::PrintDataError();
+    }
+    return;
+  }
+
+  const size_t iLen = strlen(g_app.GetNetwork().GetHostName());
+  if (strncmp(topic, g_app.GetNetwork().GetHostName(), iLen) != 0 ||
+      strlen(topic) < iLen + 2)
+    return; // Hostname mismatch or length too small
 
   char strVal[32] = { 0 };
   memcpy(strVal, payload, (length < sizeof(strVal)) ? length : sizeof(strVal) - 1);
@@ -153,9 +183,6 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
       CMqttClient::PrintDataError();
     }
   }
-
-  // Got a message so network is still ok:
-  g_app.GetPvBoiler().TrigNetworkWatchdog();
 }
 
 
