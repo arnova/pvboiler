@@ -216,28 +216,14 @@ void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
 }
 
 
-void CPvBoiler::MqttRequestRepublish()
-{
-  // Force (re)publishing all values on next MqttPublishValues() call, including the interval timed ones
-  m_bMqttRepublish = true;
-  m_mqttPublishTimer = m_iMqttUpdateInterval * 1000 + 1;
-}
-
-
-bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
+bool CPvBoiler::MqttPublishValues()
 {
   if (!m_network.IsMqttConnected())
     return false;
 
-  if (m_bMqttRepublish)
-  {
-    m_bMqttRepublish = false;
-    bForce = true;
-  }
-
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 
-  if (m_bPublishSettings || bForce)
+  if (m_bPublishSettings || m_bMqttRepublish)
   {
     m_bPublishSettings = false;
 
@@ -280,11 +266,11 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
   }
 
   // Publish these MQTT values (if any) when timer expires (and connected)
-  if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000)
+  if (m_mqttPublishTimer > m_iMqttUpdateInterval * 1000 || m_bMqttRepublish)
   {
     m_mqttPublishTimer = 0;
 
-    if (m_bPublishPowerBudget || bForce)
+    if (m_bPublishPowerBudget || m_bMqttRepublish)
     {
       m_bPublishPowerBudget = false;
 
@@ -292,7 +278,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
     }
 
-    if (m_bPublishPowerPercentage || bForce)
+    if (m_bPublishPowerPercentage || m_bMqttRepublish)
     {
       m_bPublishPowerPercentage = false;
 
@@ -300,7 +286,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
     }
 
-    if (m_bPublishThermostatSetpoint || bForce)
+    if (m_bPublishThermostatSetpoint || m_bMqttRepublish)
     {
       m_bPublishThermostatSetpoint = false;
 
@@ -308,7 +294,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_SETPOINT, strBuf);
     }
 
-    if (m_bPublishOutputPercentage || bForce)
+    if (m_bPublishOutputPercentage || m_bMqttRepublish)
     {
       m_bPublishOutputPercentage = false;
 
@@ -328,7 +314,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       }
     }
 
-    if (m_bPublishBoilerTemperature || bForce)
+    if (m_bPublishBoilerTemperature || m_bMqttRepublish)
     {
       m_bPublishBoilerTemperature = false;
       if (m_fBoilerTemperature > 0.0f)
@@ -342,31 +328,31 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
       }
     }
 
-    if (m_bPublishBoilerOverHeated || bForce)
+    if (m_bPublishBoilerOverHeated || m_bMqttRepublish)
     {
       m_bPublishBoilerOverHeated = false;
       m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
     }
 
-    if (m_bPublishThermostatAllowsHeating || bForce)
+    if (m_bPublishThermostatAllowsHeating || m_bMqttRepublish)
     {
       m_bPublishThermostatAllowsHeating = false;
       m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
     }
 
-    if (m_bPublishDisinfectionEnable || bForce)
+    if (m_bPublishDisinfectionEnable || m_bMqttRepublish)
     {
       m_bPublishDisinfectionEnable = false;
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_ENABLE, m_bDisinfectionEnable ? "1" : "0");
     }
 
-    if (m_bPublishLegionellaDisinfectionRequired || bForce)
+    if (m_bPublishLegionellaDisinfectionRequired || m_bMqttRepublish)
     {
       m_bPublishLegionellaDisinfectionRequired = false;
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_REQUIRED, m_bLegionellaDisinfectionRequired ? "1" : "0");
     }
 
-    if (m_bPublishLegionellaDisinfectRunTimeSeconds || bForce)
+    if (m_bPublishLegionellaDisinfectRunTimeSeconds || m_bMqttRepublish)
     {
       m_bPublishLegionellaDisinfectRunTimeSeconds = false;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectRunTimeSeconds);
@@ -387,7 +373,7 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
     }
 
     // Publish state?
-    if (m_bPublishLegionellaHoursSinceDisinfection || bForce)
+    if (m_bPublishLegionellaHoursSinceDisinfection || m_bMqttRepublish)
     {
       m_bPublishLegionellaHoursSinceDisinfection = false;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
@@ -404,21 +390,21 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
     }
 
     // Publish state?
-    if (m_bPublishLegionellaDangerZoneHours || bForce)
+    if (m_bPublishLegionellaDangerZoneHours || m_bMqttRepublish)
     {
       m_bPublishLegionellaDangerZoneHours = false;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
     }
 
-    if (m_bPublishPowerGoodFlag || bForce)
+    if (m_bPublishPowerGoodFlag || m_bMqttRepublish)
     {
       // Note: Clear before GetPowerGoodFlag() since it may set it again when the flag is restored
       m_bPublishPowerGoodFlag = false;
       m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
     }
 
-    if (m_bPublishMainsValues || bForce)
+    if (m_bPublishMainsValues || m_bMqttRepublish)
     {
       m_bPublishMainsValues = false;
 
@@ -438,6 +424,8 @@ bool CPvBoiler::MqttPublishValues(bool bForce /* = false */)
     snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
     m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
   }
+
+  m_bMqttRepublish = false;
 
   return true;
 }
