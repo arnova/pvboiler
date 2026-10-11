@@ -78,7 +78,8 @@ bool binstr_to_bytes(const char *strBin, uint8_t *pBuf, const size_t iBufSize);
 bool hexstr_to_bytes(const char *strHex, uint8_t *pBuf, const size_t iBufSize);
 char* bytes_to_ipstr(const uint8_t *bufIP, char* strIP);
 char* bytes_to_macstr(const uint8_t *bufMAC, char* strMAC);
-bool bytes_to_int32(const uint8_t* buf, const uint8_t iBufSize, int32_t* pValue);
+bool bytes_to_int32(const uint8_t* buf, const size_t iBufSize, int32_t* pValue);
+bool bytes_to_float(const uint8_t* buf, const size_t iBufSize, float* pValue);
 
 #ifdef __cplusplus
 } // extern "C"

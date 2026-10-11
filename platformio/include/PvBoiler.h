@@ -13,6 +13,7 @@
 #include "PvBoilerCommandHandler.h"
 #include "RollingAverage.h"
 #include "Legionella.h"
+#include "Terminal.h"
 
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
@@ -101,10 +102,16 @@ class CPvBoiler
 
     void TrigNetworkWatchdog() { m_iNetworkWatchdogCounter = 0; };
 
-    void SetPowerBudget(const int32_t iVal) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; };
+    // Note: Once a power budget is set directly, DSMR delivered/returned values are ignored (until reset)
+    // Note: Power budget is either set directly or calculated from DSMR delivered/returned values, depending on budget source
+    void SetPowerBudget(const int32_t iVal) { if (!m_bDsmrPowerBudget) { m_iPowerBudget = iVal; m_bPublishPowerBudget = true; } };
+    void SetPowerDelivered(const int32_t iVal) { m_iPowerDelivered = iVal; UpdateDsmrPowerBudget(); };
+    void SetPowerReturned(const int32_t iVal) { m_iPowerReturned = iVal; UpdateDsmrPowerBudget(); };
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
+
     void SetThermostatSetpoint(const uint8_t iTemperature);
     void SetDisinfectionEnable(const bool bEnable);
+    void SetDsmrPowerBudget(const bool bEnable);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
@@ -131,6 +138,7 @@ class CPvBoiler
     uint16_t GetTriacPhaseAngle() const { return m_iTriacPhaseAngle; };
 
     int32_t GetPowerBudget() const { return m_iPowerBudget; };
+    bool GetDsmrPowerBudget() const { return m_bDsmrPowerBudget; };
     uint8_t GetPowerPercentage() const { return m_iPowerPercentage; };
 
     uint16_t GetBoilerPowerRating() const { return m_iBoilerPowerRating; };
@@ -168,6 +176,8 @@ class CPvBoiler
     bool GetPowerGoodFlag();
 
   private:
+    void UpdateDsmrPowerBudget() { if (m_bDsmrPowerBudget) { m_iPowerBudget = m_iPowerReturned - m_iPowerDelivered; m_bPublishPowerBudget = true; } };
+    void MqttSubscribeDsmr();
     bool MqttPublishValues();
     void Update();
     void CheckNetworkWatchDog();
@@ -181,7 +191,10 @@ class CPvBoiler
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 
+    int32_t m_iPowerDelivered = 0;
+    int32_t m_iPowerReturned = 0;
     int32_t m_iPowerBudget = 0;
+    bool m_bDsmrPowerBudget = false; // Power budget source: DSMR delivered/returned (else set directly)
     bool m_bPublishPowerBudget = true;
 
     uint8_t m_iPowerPercentage = 0;

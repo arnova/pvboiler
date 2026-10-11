@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // Version string:
-#define MY_VERSION "1.08"
+#define MY_VERSION "1.09"
 
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
@@ -97,9 +97,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_MAX_TOPIC_ITEM_SIZE                64
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
 
-// Home Assistant birth/last will topic (HA publishes "online" here after it (re)started)
-#define MQTT_HA_STATUS_TOPIC                    "homeassistant/status"
-
 #define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
 #define MQTT_UPDATE_TIME_MIN                    1      // Seconds
 #define MQTT_UPDATE_TIME_MAX                    254    // Seconds
@@ -149,6 +146,13 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "legionella_hours_since_disinfection"
 #define MQTT_LEGIONELLA_DANGER_ZONE_HOURS       "legionella_danger_zone_hours"
 
+// Home Assistant birth/last will topic (HA publishes "online" here after it (re)started)
+#define MQTT_HA_STATUS_TOPIC                    "homeassistant/status"
+
+// DSMR-reader topics
+#define MQTT_DSMR_ELECTRICITY_DELIVERED         "dsmr/reading/electricity_currently_delivered"
+#define MQTT_DSMR_ELECTRICITY_RETURNED          "dsmr/reading/electricity_currently_returned"
+
 // Socket server settings
 #define SOCKET_SERVER_PORT                      8000
 
@@ -195,6 +199,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define BUDGET_MARGIN_SIZE      2
 #define THERMOSTAT_SP_SIZE      1
 #define DISINFECT_EN_SIZE       1
+#define BUDGET_SRC_SIZE         1
 
 // EEPROM locations
 #define EEPROM_CHECKSUM       0                                                   // 0
@@ -222,7 +227,8 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_BUDGET_MARGIN  EEPROM_DEAD_ZONE + DEAD_ZONE_SIZE                   // 370
 #define EEPROM_THERMOSTAT_SP  EEPROM_BUDGET_MARGIN + BUDGET_MARGIN_SIZE           // 372
 #define EEPROM_DISINFECT_EN   EEPROM_THERMOSTAT_SP + THERMOSTAT_SP_SIZE           // 373
-                                                                                  // end 374
+#define EEPROM_BUDGET_SRC     EEPROM_DISINFECT_EN + DISINFECT_EN_SIZE             // 374
+                                                                                  // end 375
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.

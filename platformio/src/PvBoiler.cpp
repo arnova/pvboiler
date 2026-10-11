@@ -126,6 +126,8 @@ void CPvBoiler::Reset()
   m_iNetworkWatchdogRecoveryCounter = 0;
 
   m_iPowerBudget = 0;
+  m_iPowerDelivered = 0;
+  m_iPowerReturned = 0;
   m_bPublishPowerBudget = true;
 
   m_iPowerPercentage = 0;
@@ -431,10 +433,29 @@ bool CPvBoiler::MqttPublishValues()
 }
 
 
+void CPvBoiler::MqttSubscribeDsmr()
+{
+  // Get current grid power from DSMR-reader (used as power budget). Note: Only subscribe when used,
+  // else its messages would keep feeding the network watchdog
+  if (m_bDsmrPowerBudget)
+  {
+    m_network.GetMqttClient().subscribe(MQTT_DSMR_ELECTRICITY_DELIVERED, 1);
+    m_network.GetMqttClient().subscribe(MQTT_DSMR_ELECTRICITY_RETURNED, 1);
+  }
+  else
+  {
+    m_network.GetMqttClient().unsubscribe(MQTT_DSMR_ELECTRICITY_DELIVERED);
+    m_network.GetMqttClient().unsubscribe(MQTT_DSMR_ELECTRICITY_RETURNED);
+  }
+}
+
+
 void CPvBoiler::MqttPublishConfig()
 {
   // (Re)subscribing makes the broker resend retained setter values: hold off publishing our own
   m_mqttSetterHoldOffTimer = 0;
+
+  MqttSubscribeDsmr();
 
   // Publish MQTT config for eg. HA discovery and subscribe to control topics
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
@@ -595,6 +616,10 @@ void CPvBoiler::LoadSettings()
   m_bDisinfectionEnable = (iVal8 != 0x00);
   m_bPublishDisinfectionEnable = true;
 
+  // Note: Anything other than 0x01 (eg. erased EEPROM) means direct
+  EEPROM.get(EEPROM_BUDGET_SRC, iVal8);
+  m_bDsmrPowerBudget = (iVal8 == 0x01);
+
   m_bPublishSettings = true;
 }
 
@@ -624,6 +649,23 @@ void CPvBoiler::SetDisinfectionEnable(const bool bEnable)
   }
 
   m_bPublishDisinfectionEnable = true;
+}
+
+
+void CPvBoiler::SetDsmrPowerBudget(const bool bEnable)
+{
+  if (bEnable != m_bDsmrPowerBudget)
+  {
+    EEPROM.put(EEPROM_BUDGET_SRC, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
+    EEPROM.commit();
+
+    m_bDsmrPowerBudget = bEnable;
+
+    if (m_network.IsMqttConnected())
+    {
+      MqttSubscribeDsmr();
+    }
+  }
 }
 
 
@@ -844,6 +886,7 @@ void CPvBoiler::FactoryReset()
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
   SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
   SetDisinfectionEnable(true);
+  SetDsmrPowerBudget(false);
 
   // Reset controller
   Reset();
