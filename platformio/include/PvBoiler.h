@@ -2,6 +2,7 @@
 #ifndef PVBOILER_H
 #define PVBOILER_H
 
+#include <iterator>
 #include <elapsedMillis.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -61,31 +62,32 @@ class CPvBoiler
     {
       MODE_OFF = 0,             // Output off, including legionella protection (only overheat protection remains)
       MODE_STANDBY,             // Output off, legionella protection remains active
+      MODE_BOOST,               // Heat at 100%, ignoring (software) thermostat setpoint. Note: Never stored
       MODE_BUDGET,              // Heat using available (surplus) power budget
       MODE_PERCENT,             // Heat at a fixed (manually set) power percentage
       MODE_SETPOINT,            // Always heat (100%) to (software) thermostat setpoint
-      MODE_BOOST,               // Heat at 100%, ignoring (software) thermostat setpoint. Note: Never stored
       MODE_BUDGET_SETPOINT,     // Budget control, limited by (software) thermostat setpoint
       MODE_PERCENT_SETPOINT,    // Percentage control, limited by (software) thermostat setpoint
-      MODE_SETPOINT_BUDGET      // Always heat to (software) thermostat setpoint, above it heat using budget control
+      MODE_SETPOINT_BUDGET,     // Always heat to (software) thermostat setpoint, above it heat using budget control
+      MODE_LAST = MODE_SETPOINT_BUDGET // Note: Must refer to the last mode
     };
     typedef enum mode_e mode_t;
+    static constexpr uint8_t MODE_COUNT = MODE_LAST + 1;
 
     // Mode names (eg. for MQTT), indexed by mode_t. Note: Must match order of mode_e
     static constexpr const char* m_strModeNames[] =
     {
       "Off",                        // MODE_OFF
       "Standby",                    // MODE_STANDBY
+      "Boost",                      // MODE_BOOST
       "Budget",                     // MODE_BUDGET
       "Percentage",                 // MODE_PERCENT
       "Setpoint",                   // MODE_SETPOINT
-      "Boost",                      // MODE_BOOST
       "Budget up to Setpoint",      // MODE_BUDGET_SETPOINT
       "Percentage up to Setpoint",  // MODE_PERCENT_SETPOINT
       "Setpoint, then Budget"       // MODE_SETPOINT_BUDGET
     };
-    static constexpr uint8_t MODE_COUNT = sizeof(m_strModeNames) / sizeof(m_strModeNames[0]);
-    static_assert(MODE_COUNT == MODE_SETPOINT_BUDGET + 1, "m_strModeNames does not match mode_e");
+    static_assert(sizeof(m_strModeNames) / sizeof(m_strModeNames[0]) == MODE_COUNT, "m_strModeNames does not match mode_e");
 
     void Loop();
     void Reset();
