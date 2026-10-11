@@ -505,7 +505,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::print(" thermostat_allows_heating=");
   CTerminal::print(m_pvBoiler.GetThermostatAllowsHeating() ? "1" : "0");
 
-  CTerminal::print(" disinfection=");
+  CTerminal::println("");
+
+  CTerminal::print("disinfection=");
   CTerminal::print(m_pvBoiler.GetDisinfectionEnable() ? "on" : "off");
 
   CTerminal::print(" disinfection_required=");
