@@ -20,17 +20,16 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Home Assistant (MQTT) support
 - Phase angle control (default) or SSR dim style
 - Configuration via USB serial connection or network terminal connection (port 8000)
-- OTA updates (e.g. via PlatformIO)
+- OTA updates (via PlatformIO)
+- Support for an optional one-wire DS18B20 temperature sensor (probe) for sensing the boiler's internal temperature
+- Automatic legionella prevention (using the optional one-wire temperature sensor)
 - Operating modes: automatic power budget mode (using e.g. P1/HA information), (manual) power percentage mode, boost mode (100% power, ignores software thermostat), standby mode (output off, legionella protection remains active) and off mode (output off, including legionella protection). The mode can be dynamically changed using MQTT
-- Setpoint (software thermostat) modes (require the external temperature sensor):
+- Setpoint (software thermostat) modes (require the optional one-wire temperature sensor):
   - "Setpoint": always heats (100%) until the software thermostat setpoint is reached
   - "Budget up to Setpoint" / "Percentage up to Setpoint": like budget/percentage mode, but heating stops at the software thermostat setpoint
   - "Setpoint, then Budget": always heats (100%) until the software thermostat setpoint is reached; above it, surplus budget is used to heat further (up to the boiler's own thermostat)
-- Support for an optional one-wire DS18B20 temperature sensor (probe) for sensing the boiler's internal temperature
-- Automatic legionella prevention (using the external temperature sensor)
-- Boiler overheating-protection (using the external temperature sensor) in case the boiler hardware thermostat somehow fails
-- Temperature (thermostat) override function to allow setting a lower set-point from software than the one set on the boiler (using one of the setpoint modes)
-- Support for an optional OLED 128×64 screen to display output power/percentage and connection status
+- Boiler overheating-protection (using the optional one-wire temperature sensor) in case the boiler hardware thermostat/protection somehow fails
+- Support for an optional OLED 128×64 screen to display output power/percentage, temperature and connection status
 - The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while (e.g. when the network fails), the output will automatically decrease to 0% instead of being stuck on the last value. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.
 
 ## Planned features & improvements
@@ -38,7 +37,7 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - New PCB design to fit a (dual-core) ESP32-DevKit module
 - Improve control loop for budget logic mode
 - Standalone support to directly interface with MQTT P1 providers like DSMR Reader
-- Support for CT current clamp
+- Support for a CT current clamp
 
 ## Known issues
 
@@ -54,7 +53,7 @@ Phase-angle control inherently generates harmonics and electromagnetic interfere
 2. Use a sufficiently sized heatsink with a little thermal compound for mounting the BTA-triac. Generally it is recommended to use a heatsink with a thermal resistance better than 1.0 °C/W when using a ~2500 W boiler. Don't forget to connect the heatsink to the mains ground for safety! You should also use triacs with an electrically insulated tab, like the BTA-type triacs in the design
 3. Around some power traces the mask has been intentionally left out. You should solder these traces with extra solder to reduce the power losses due to trace resistance
 4. It is recommended to use 1.5 mm² flexible wires for internal wiring
-5. When using a one-wire DS18B20 temperature sensor (probe) there are a few things you must adhere to make it work properly. Its supply should be connected to the board's +5V (not +3.3V), and the cable's ground shield should be connected to the (digital) low-voltage ground (NOT the mains ground) of the board. Most (sealed) temperature probes use a metal probe housing which is connected to the cable shield. Since this may short to the mains ground and introduce (switching) noise into the system, it should be isolated. The easiest way to accomplish this is using some shrink-tube
+5. When using the optional one-wire DS18B20 temperature sensor (probe) there are a few things you must adhere to make it work properly. Its supply should be connected to the board's +5V (not +3.3V), and the cable's ground shield should be connected to the (digital) low-voltage ground (NOT the mains ground) of the board. Most (sealed) temperature probes use a metal probe housing which is connected to the cable shield. Since this may short to the mains ground and introduce (switching) noise into the system, it should be isolated. The easiest way to accomplish this is using some shrink-tube
 6. The electronics are designed for ~230 VAC grids. For other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
 7. The controller can only be connected directly to the normal mains connections of "dumb" hot water boilers. Boilers featuring any kind of (digital) electronics (except for an analog thermostat) require a modification of the boiler's internal wiring, see [Boilers with built-in electronics](#boilers-with-built-in-electronics)
 
