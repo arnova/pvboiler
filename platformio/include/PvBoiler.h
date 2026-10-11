@@ -90,9 +90,8 @@ class CPvBoiler
     void Loop();
     void Reset();
 
-    bool MqttPublishValues(const bool bForce = false);
     void MqttPublishConfig();
-    void MqttRequestRepublish();
+    void MqttRequestRepublish() { m_bMqttRepublish = true; }; // Publish all values on next loop
     void LoadSettings();
     void FactoryReset();
 
@@ -165,6 +164,7 @@ class CPvBoiler
     bool GetPowerGoodFlag();
 
   private:
+    bool MqttPublishValues();
     void Update();
     void CheckNetworkWatchDog();
 
@@ -173,7 +173,7 @@ class CPvBoiler
     elapsedMillis m_loopTimer = 0;
     elapsedMillis m_mqttPublishTimer = 0;
     elapsedMillis m_mqttSetterHoldOffTimer = 0;
-    bool m_bMqttRepublish = false;
+    bool m_bMqttRepublish = false; // Publish all values, including the interval timed ones
     uint32_t m_iNetworkWatchdogCounter = 0;
     uint32_t m_iNetworkWatchdogRecoveryCounter = 0;
 

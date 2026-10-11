@@ -198,27 +198,18 @@ void CApp::HandleNetwork()
 
   if (m_network.HandleMqttClient())
   {
-    // MQTT (re)connection: publish config, values follow after a delay. Note: HA subscribes to state topics
-    // of newly discovered entities only after processing their config, so it would miss (non-retained) values
-    // published right away
+    // MQTT (re)connection: publish config (values follow after the republish delay)
     m_pvBoiler.MqttPublishConfig();
-    m_bMqttDelayedRepublish = true;
-    m_mqttDelayedRepublishTimer = 0;
+    MqttRequestRepublish();
   }
 
-  if (m_bMqttDelayedRepublish && m_mqttDelayedRepublishTimer > MQTT_SETTLE_TIME_MS)
+  // Delay republishing: HA subscribes to state topics of (newly) discovered entities only after processing
+  // their config, so it would miss our (non-retained) values
+  if (m_bMqttRepublish && m_mqttRepublishTimer > MQTT_SETTLE_TIME_MS)
   {
-    m_bMqttDelayedRepublish = false;
-    m_bMqttRepublish = true;
-  }
-
-  if (m_bMqttRepublish && m_network.IsMqttConnected())
-  {
-    // Note: Not published directly from the MQTT callback as that would overwrite PubSubClient's (shared) receive buffer
     m_bMqttRepublish = false;
     m_pvBoiler.MqttRequestRepublish();
-    m_pvBoiler.MqttPublishValues();
-    m_network.MqttPublishValues();
+    m_network.MqttRequestRepublish();
   }
 
   if (!m_network.IsConnected() || !m_network.IsMqttConnected())

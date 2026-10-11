@@ -289,6 +289,10 @@ void CNetwork::SetMqttPassword(const char* strPassword)
 
 void CNetwork::MqttPublishValues()
 {
+  // Note: Values are static so only published on request
+  if (!m_bMqttRepublish || !IsMqttConnected())
+    return;
+
   m_mqttClient.PublishMessage(MQTT_WIFI_SSID, m_strWifiSsid);
 
   char strBuf[16]; // Enough room for a standard IPv4 address
@@ -297,6 +301,8 @@ void CNetwork::MqttPublishValues()
 
 //  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.net()[0], WiFi.net()[1], WiFi.net()[2], WiFi.net()[3]);
 //  m_mqttClient.PublishMessage(MQTT_IP_NETMASK, strBuf);
+
+  m_bMqttRepublish = false;
 }
 
 
@@ -426,4 +432,6 @@ void CNetwork::Loop()
 
   // Always perform mqtt loop to detect connection failures
   m_mqttClient.loop();
+
+  MqttPublishValues();
 }

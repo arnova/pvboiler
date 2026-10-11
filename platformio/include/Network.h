@@ -43,7 +43,7 @@ class CNetwork
     void SetMqttUser(const char* strUser);
     void SetMqttPassword(const char* strPassword);
 
-    void MqttPublishValues();
+    void MqttRequestRepublish() { m_bMqttRepublish = true; }; // Publish all values on next loop
 
     const char* GetHostName() { return m_strHostName; };
     const char* GetWifiSsid() { return m_strWifiSsid; };
@@ -66,6 +66,7 @@ class CNetwork
 
   private:
     static bool IsValidAlpha(const char* str);
+    void MqttPublishValues();
 
     char m_strHostName[HOST_NAME_MAX_SIZE + 1] = { 0 };
     char m_strWifiSsid[WIFI_SSID_MAX_SIZE + 1] = { 0 };
@@ -77,6 +78,7 @@ class CNetwork
     uint8_t m_mqttIpAddr[4] = { 0 };
 
     bool m_bWifiConnected = false;
+    bool m_bMqttRepublish = false;
     elapsedMillis m_wifiTimeoutTimer = 0;
     elapsedMillis m_mqttTimeoutTimer = 0;
 
