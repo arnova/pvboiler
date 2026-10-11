@@ -71,7 +71,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define THERMOSTAT_SETPOINT_MIN                 55
 #define THERMOSTAT_SETPOINT_MAX                 95
 #define THERMOSTAT_SETPOINT_DEFAULT             60
-#define THERMOSTAT_SETPOINT_HYSTERESIS          2     // C
+#define THERMOSTAT_SETPOINT_HYSTERESIS          1     // C
 #define TEMPERATURE_DISINFECT_SETPOINT          65    // C. Minimum override setpoint during legionella disinfection
 
 // Network watchdog timer settings
