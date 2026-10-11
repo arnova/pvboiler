@@ -519,7 +519,7 @@ void CPvBoiler::LoadSettings()
 
   // Note: MODE_BOOST is never stored
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
-  m_mode = (iVal8 < CPvBoiler::MODE_COUNT && iVal8 != CPvBoiler::MODE_BOOST) ? static_cast<CPvBoiler::mode_t>(iVal8) : CPvBoiler::MODE_BUDGET;
+  m_mode = (iVal8 < MODE_COUNT && iVal8 != CPvBoiler::MODE_BOOST) ? static_cast<CPvBoiler::mode_t>(iVal8) : CPvBoiler::MODE_BUDGET;
 
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
@@ -687,7 +687,7 @@ void CPvBoiler::SetMode(const CPvBoiler::mode_t mode)
   {
     if (mode != CPvBoiler::MODE_BOOST)
     {
-      EEPROM.put(EEPROM_CTRL_MODE, mode);
+      EEPROM.put(EEPROM_CTRL_MODE, static_cast<uint8_t>(mode));
       EEPROM.commit();
     }
 
@@ -702,7 +702,7 @@ void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t dimStyle)
 {
   if (dimStyle != m_dimStyle)
   {
-    EEPROM.put(EEPROM_DIM_STYLE, (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00);
+    EEPROM.put(EEPROM_DIM_STYLE, static_cast<uint8_t>((dimStyle == CPvBoiler::DIM_STYLE_SSR) ? 0x01 : 0x00));
     EEPROM.commit();
 
     m_dimStyle = dimStyle;
