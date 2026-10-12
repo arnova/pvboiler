@@ -4,27 +4,6 @@
 
 #include "system.h"
 
-#ifndef DANGER_ZONE_LOW_TEMPERATURE
-#define DANGER_ZONE_LOW_TEMPERATURE   20.0f // Celsius. FIXME: Should be configurable
-#endif
-
-#ifndef DANGER_ZONE_HIGH_TEMPERATURE
-#define DANGER_ZONE_HIGH_TEMPERATURE  45.0f // Celsius. FIXME: Should be configurable
-#endif
-
-#ifndef DANGER_ZONE_DWELL_LIMIT_DAYS
-#define DANGER_ZONE_DWELL_LIMIT_DAYS  7     // Days. FIXME: Should be configurable
-#endif
-
-#ifndef DISINFECT_RUN_TIME_MINUTES
-#define DISINFECT_RUN_TIME_MINUTES    15    // Minutes. FIXME: Should be configurable
-#endif
-
-#ifndef DISINFECT_TEMPERATURE
-#define DISINFECT_TEMPERATURE         60.0f // Celcius. FIXME: Should be configurable
-#endif
-
-
 class CLegionella
 {
   public:
@@ -43,10 +22,22 @@ class CLegionella
     void SetHoursPassedSinceLastDisinfect(const uint32_t iHours) { m_iSecondsPassedSinceLastDisinfect = iHours * 3600; };
     void SetHoursInDangerZone(const uint32_t iHours) { m_iSecondsInDangerZone = iHours * 3600; };
 
+    void SetDangerZoneLowTemperature(const uint8_t iTemperature) { m_iDangerZoneLowTemperature = iTemperature; };
+    void SetDangerZoneHighTemperature(const uint8_t iTemperature) { m_iDangerZoneHighTemperature = iTemperature; };
+    void SetDisinfectIntervalDays(const uint8_t iDays) { m_iDisinfectIntervalDays = iDays; };
+    void SetDisinfectRunTimeMinutes(const uint8_t iMinutes) { m_iDisinfectRunTimeMinutes = iMinutes; };
+    void SetDisinfectTemperature(const uint8_t iTemperature) { m_iDisinfectTemperature = iTemperature; };
+
   private:
     uint32_t m_iSecondsPassedSinceLastDisinfect = 0; // s
     uint32_t m_iDisinfectRuntimeSeconds = 0; // s
     uint32_t m_iSecondsInDangerZone = 0; // s
+
+    uint8_t m_iDangerZoneLowTemperature = DANGER_ZONE_LOW_TEMPERATURE_DEFAULT; // C
+    uint8_t m_iDangerZoneHighTemperature = DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT; // C
+    uint8_t m_iDisinfectIntervalDays = DISINFECT_INTERVAL_DAYS_DEFAULT; // days
+    uint8_t m_iDisinfectRunTimeMinutes = DISINFECT_RUN_TIME_MINUTES_DEFAULT; // minutes
+    uint8_t m_iDisinfectTemperature = DISINFECT_TEMPERATURE_DEFAULT; // C
 
     float m_fTemperature = -1.0f;
     bool m_bDisinfectionRequired = false;

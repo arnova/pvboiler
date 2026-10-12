@@ -111,11 +111,17 @@ class CPvBoiler
 
     void SetThermostatSetpoint(const uint8_t iTemperature);
     void SetDisinfectionEnable(const bool bEnable);
-    void SetDsmrPowerBudget(const bool bEnable);
+    void SetThermostatHysteresis(const uint8_t iHysteresis);
+    void SetDangerZoneLowTemperature(const uint8_t iTemperature);
+    void SetDangerZoneHighTemperature(const uint8_t iTemperature);
+    void SetDisinfectIntervalDays(const uint8_t iDays);
+    void SetDisinfectRunTimeMinutes(const uint8_t iMinutes);
+    void SetDisinfectTemperature(const uint8_t iTemperature);
 
     void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
     void SetLegionellaDangerZoneHours(const uint32_t iVal);
 
+    void SetDsmrPowerBudget(const bool bEnable);
     void SetBoilerPowerRating(const uint16_t iPower);
     void SetDeadZone(const uint8_t iDeadZone);
     void SetBudgetMargin(const uint16_t iMargin);
@@ -164,6 +170,12 @@ class CPvBoiler
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetThermostatSetpoint() const { return m_iThermostatSetpoint; };
     bool GetDisinfectionEnable() const { return m_bDisinfectionEnable; };
+    uint8_t GetThermostatHysteresis() const { return m_iThermostatHysteresis; };
+    uint8_t GetDangerZoneLowTemperature() const { return m_iDangerZoneLowTemperature; };
+    uint8_t GetDangerZoneHighTemperature() const { return m_iDangerZoneHighTemperature; };
+    uint8_t GetDisinfectIntervalDays() const { return m_iDisinfectIntervalDays; };
+    uint8_t GetDisinfectRunTimeMinutes() const { return m_iDisinfectRunTimeMinutes; };
+    uint8_t GetDisinfectTemperature() const { return m_iDisinfectTemperature; };
     bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
     uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
@@ -252,6 +264,7 @@ class CPvBoiler
 
     uint8_t m_iThermostatSetpoint = THERMOSTAT_SETPOINT_DEFAULT;
     bool m_bPublishThermostatSetpoint = true;
+    uint8_t m_iThermostatHysteresis = THERMOSTAT_HYSTERESIS_DEFAULT; // C
     bool m_bThermostatAllowsHeating = true;
     bool m_bPublishThermostatAllowsHeating = true;
 
@@ -269,6 +282,12 @@ class CPvBoiler
 
     uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
     bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+
+    uint8_t m_iDangerZoneLowTemperature = DANGER_ZONE_LOW_TEMPERATURE_DEFAULT; // C
+    uint8_t m_iDangerZoneHighTemperature = DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT; // C
+    uint8_t m_iDisinfectIntervalDays = DISINFECT_INTERVAL_DAYS_DEFAULT; // days
+    uint8_t m_iDisinfectRunTimeMinutes = DISINFECT_RUN_TIME_MINUTES_DEFAULT; // minutes
+    uint8_t m_iDisinfectTemperature = DISINFECT_TEMPERATURE_DEFAULT; // C
 
     bool m_bDisinfectionEnable = true; // When disabled disinfection is tracked, but never forced
     bool m_bPublishDisinfectionEnable = true;

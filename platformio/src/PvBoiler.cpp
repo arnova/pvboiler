@@ -6,9 +6,6 @@
 // Out-of-class definition required pre-C++17 (ESP32 core builds with gnu++11), redundant but harmless with C++17
 constexpr const char* CPvBoiler::m_strModeNames[];
 
-// Make sure the thermostat never drops to/below the disinfect temperature during disinfection (this would reset the disinfect run time)
-static_assert(TEMPERATURE_DISINFECT_SETPOINT - THERMOSTAT_SETPOINT_HYSTERESIS > DISINFECT_TEMPERATURE, "TEMPERATURE_DISINFECT_SETPOINT too low");
-
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
   m_tempSensors.begin();
@@ -265,6 +262,24 @@ bool CPvBoiler::MqttPublishValues()
 
     snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogRecovery);
     m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iThermostatHysteresis);
+    m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_HYSTERESIS, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDangerZoneLowTemperature);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDangerZoneHighTemperature);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectIntervalDays);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_INTERVAL, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectRunTimeMinutes);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_TIME, strBuf);
+
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectTemperature);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_TEMPERATURE, strBuf);
   }
 
   // Publish these MQTT values (if any) when timer expires (and connected)
@@ -504,6 +519,13 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f, "h");
   m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, 1.0f, 0.0f, 10000000.0f, "h");
 
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_THERMOSTAT_HYSTERESIS, "°C", "temperature", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, "°C", "temperature", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, "°C", "temperature", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_INTERVAL, "d", "duration", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_TIME, "min", "duration", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_TEMPERATURE, "°C", "temperature", "", true);
+
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
@@ -620,6 +642,51 @@ void CPvBoiler::LoadSettings()
   EEPROM.get(EEPROM_BUDGET_SRC, iVal8);
   m_bDsmrPowerBudget = (iVal8 == 0x01);
 
+  EEPROM.get(EEPROM_THERMOSTAT_HYST, iVal8);
+  if (iVal8 < THERMOSTAT_HYSTERESIS_MIN || iVal8 > THERMOSTAT_HYSTERESIS_MAX)
+  {
+    iVal8 = THERMOSTAT_HYSTERESIS_DEFAULT;
+  }
+  m_iThermostatHysteresis = iVal8;
+
+  uint8_t iLowTemp = 0;
+  uint8_t iHighTemp = 0;
+  EEPROM.get(EEPROM_DZ_LOW_TEMP, iLowTemp);
+  EEPROM.get(EEPROM_DZ_HIGH_TEMP, iHighTemp);
+  if (iLowTemp < DANGER_ZONE_TEMPERATURE_MIN || iHighTemp > DANGER_ZONE_TEMPERATURE_MAX || iLowTemp >= iHighTemp)
+  {
+    iLowTemp = DANGER_ZONE_LOW_TEMPERATURE_DEFAULT;
+    iHighTemp = DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT;
+  }
+  m_iDangerZoneLowTemperature = iLowTemp;
+  m_legionella.SetDangerZoneLowTemperature(iLowTemp);
+  m_iDangerZoneHighTemperature = iHighTemp;
+  m_legionella.SetDangerZoneHighTemperature(iHighTemp);
+
+  EEPROM.get(EEPROM_DISINFECT_INTERVAL, iVal8);
+  if (iVal8 < DISINFECT_INTERVAL_DAYS_MIN || iVal8 > DISINFECT_INTERVAL_DAYS_MAX)
+  {
+    iVal8 = DISINFECT_INTERVAL_DAYS_DEFAULT;
+  }
+  m_iDisinfectIntervalDays = iVal8;
+  m_legionella.SetDisinfectIntervalDays(iVal8);
+
+  EEPROM.get(EEPROM_DISINFECT_RUN_TIME, iVal8);
+  if (iVal8 < DISINFECT_RUN_TIME_MINUTES_MIN || iVal8 > DISINFECT_RUN_TIME_MINUTES_MAX)
+  {
+    iVal8 = DISINFECT_RUN_TIME_MINUTES_DEFAULT;
+  }
+  m_iDisinfectRunTimeMinutes = iVal8;
+  m_legionella.SetDisinfectRunTimeMinutes(iVal8);
+
+  EEPROM.get(EEPROM_DISINFECT_TEMP, iVal8);
+  if (iVal8 < DISINFECT_TEMPERATURE_MIN || iVal8 > DISINFECT_TEMPERATURE_MAX)
+  {
+    iVal8 = DISINFECT_TEMPERATURE_DEFAULT;
+  }
+  m_iDisinfectTemperature = iVal8;
+  m_legionella.SetDisinfectTemperature(iVal8);
+
   m_bPublishSettings = true;
 }
 
@@ -665,6 +732,95 @@ void CPvBoiler::SetDsmrPowerBudget(const bool bEnable)
     {
       MqttSubscribeDsmr();
     }
+  }
+}
+
+
+void CPvBoiler::SetThermostatHysteresis(const uint8_t iHysteresis)
+{
+  if (iHysteresis != m_iThermostatHysteresis)
+  {
+    EEPROM.put(EEPROM_THERMOSTAT_HYST, iHysteresis);
+    EEPROM.commit();
+
+    m_iThermostatHysteresis = iHysteresis;
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetDangerZoneLowTemperature(const uint8_t iTemperature)
+{
+  if (iTemperature != m_iDangerZoneLowTemperature)
+  {
+    EEPROM.put(EEPROM_DZ_LOW_TEMP, iTemperature);
+    EEPROM.commit();
+
+    m_iDangerZoneLowTemperature = iTemperature;
+    m_legionella.SetDangerZoneLowTemperature(iTemperature);
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetDangerZoneHighTemperature(const uint8_t iTemperature)
+{
+  if (iTemperature != m_iDangerZoneHighTemperature)
+  {
+    EEPROM.put(EEPROM_DZ_HIGH_TEMP, iTemperature);
+    EEPROM.commit();
+
+    m_iDangerZoneHighTemperature = iTemperature;
+    m_legionella.SetDangerZoneHighTemperature(iTemperature);
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetDisinfectIntervalDays(const uint8_t iDays)
+{
+  if (iDays != m_iDisinfectIntervalDays)
+  {
+    EEPROM.put(EEPROM_DISINFECT_INTERVAL, iDays);
+    EEPROM.commit();
+
+    m_iDisinfectIntervalDays = iDays;
+    m_legionella.SetDisinfectIntervalDays(iDays);
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetDisinfectRunTimeMinutes(const uint8_t iMinutes)
+{
+  if (iMinutes != m_iDisinfectRunTimeMinutes)
+  {
+    EEPROM.put(EEPROM_DISINFECT_RUN_TIME, iMinutes);
+    EEPROM.commit();
+
+    m_iDisinfectRunTimeMinutes = iMinutes;
+    m_legionella.SetDisinfectRunTimeMinutes(iMinutes);
+
+    m_bPublishSettings = true;
+  }
+}
+
+
+void CPvBoiler::SetDisinfectTemperature(const uint8_t iTemperature)
+{
+  if (iTemperature != m_iDisinfectTemperature)
+  {
+    EEPROM.put(EEPROM_DISINFECT_TEMP, iTemperature);
+    EEPROM.commit();
+
+    m_iDisinfectTemperature = iTemperature;
+    m_legionella.SetDisinfectTemperature(iTemperature);
+
+    m_bPublishSettings = true;
   }
 }
 
@@ -887,6 +1043,12 @@ void CPvBoiler::FactoryReset()
   SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
   SetDisinfectionEnable(true);
   SetDsmrPowerBudget(false);
+  SetThermostatHysteresis(THERMOSTAT_HYSTERESIS_DEFAULT);
+  SetDangerZoneLowTemperature(DANGER_ZONE_LOW_TEMPERATURE_DEFAULT);
+  SetDangerZoneHighTemperature(DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT);
+  SetDisinfectIntervalDays(DISINFECT_INTERVAL_DAYS_DEFAULT);
+  SetDisinfectRunTimeMinutes(DISINFECT_RUN_TIME_MINUTES_DEFAULT);
+  SetDisinfectTemperature(DISINFECT_TEMPERATURE_DEFAULT);
 
   // Reset controller
   Reset();
@@ -990,10 +1152,12 @@ void CPvBoiler::Update()
   if (IsThermostatMode() && m_tempSensors.getDeviceCount() > 0)
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
+    // Note: Hysteresis is included so the temperature never drops to/below the disinfect temperature (this would reset the disinfect run time)
     uint8_t iSetpoint = m_iThermostatSetpoint;
-    if (bLegionellaDisinfect && iSetpoint < TEMPERATURE_DISINFECT_SETPOINT)
+    const uint8_t iDisinfectSetpoint = m_iDisinfectTemperature + m_iThermostatHysteresis + DISINFECT_SETPOINT_MARGIN;
+    if (bLegionellaDisinfect && iSetpoint < iDisinfectSetpoint)
     {
-      iSetpoint = TEMPERATURE_DISINFECT_SETPOINT;
+      iSetpoint = iDisinfectSetpoint;
     }
 
     if (m_fBoilerTemperature <= 0.0f)
@@ -1004,7 +1168,7 @@ void CPvBoiler::Update()
     {
       m_bThermostatAllowsHeating = false;
     }
-    else if (m_fBoilerTemperature < iSetpoint - THERMOSTAT_SETPOINT_HYSTERESIS)
+    else if (m_fBoilerTemperature < iSetpoint - m_iThermostatHysteresis)
     {
       m_bThermostatAllowsHeating = true;
     }
