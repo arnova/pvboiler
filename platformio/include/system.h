@@ -67,12 +67,33 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 
 // Temperature related
 #define TEMPERATURE_MAX_RETRIES                 255
-#define TEMPERATURE_OVERHEATING_MAX             90.0f
-#define THERMOSTAT_SETPOINT_MIN                 55
-#define THERMOSTAT_SETPOINT_MAX                 95
-#define THERMOSTAT_SETPOINT_DEFAULT             60
-#define THERMOSTAT_SETPOINT_HYSTERESIS          1     // C
-#define TEMPERATURE_DISINFECT_SETPOINT          65    // C. Minimum override setpoint during legionella disinfection
+#define TEMPERATURE_OVERHEATING_MAX             90.0f // Celsius
+#define THERMOSTAT_SETPOINT_DEFAULT             55    // Celsius
+#define THERMOSTAT_SETPOINT_MIN                 45    // Celsius
+#define THERMOSTAT_SETPOINT_MAX                 90    // Celsius
+#define THERMOSTAT_HYSTERESIS_DEFAULT           1     // Celsius
+#define THERMOSTAT_HYSTERESIS_MIN               1     // Celsius
+#define THERMOSTAT_HYSTERESIS_MAX               10    // Celsius
+
+// Legionella related
+#define DANGER_ZONE_LOW_TEMPERATURE_DEFAULT     20    // Celsius
+#define DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT    45    // Celsius
+#define DANGER_ZONE_TEMPERATURE_MIN             10    // Celsius
+#define DANGER_ZONE_TEMPERATURE_MAX             60    // Celsius
+
+#define DISINFECT_INTERVAL_DAYS_DEFAULT         7     // Days. Max. time spent in danger zone before disinfection is required
+#define DISINFECT_INTERVAL_DAYS_MIN             1     // Days
+#define DISINFECT_INTERVAL_DAYS_MAX             30    // Days
+
+#define DISINFECT_RUN_TIME_MINUTES_DEFAULT      15    // Minutes
+#define DISINFECT_RUN_TIME_MINUTES_MIN          2     // Minutes
+#define DISINFECT_RUN_TIME_MINUTES_MAX          150   // Minutes
+
+#define DISINFECT_TEMPERATURE_DEFAULT           60    // Celsius
+#define DISINFECT_TEMPERATURE_MIN               45    // Celsius
+#define DISINFECT_TEMPERATURE_MAX               80    // Celsius
+
+#define DISINFECT_SETPOINT_MARGIN               4     // Celsius. Minimum override setpoint during legionella disinfection = disinfect temperature + hysteresis + margin
 
 // Network watchdog timer settings
 #define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        60    // Seconds = 1 minute
@@ -137,6 +158,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_NET_WD_RECOVERY                    "network_watchdog_recovery"
 #define MQTT_UP_TIME                            "up_time"
 
+// Value (diag) sensors
 #define MQTT_BOILER_TEMPERATURE                 "boiler_temperature"
 #define MQTT_BOILER_OVERHEATED                  "boiler_overheated"
 #define MQTT_THERMOSTAT_ALLOWS_HEATING          "thermostat_allows_heating"
@@ -145,6 +167,14 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS   "legionella_disinfect_run_seconds"
 #define MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "legionella_hours_since_disinfection"
 #define MQTT_LEGIONELLA_DANGER_ZONE_HOURS       "legionella_danger_zone_hours"
+
+// Setting diag sensors
+#define MQTT_THERMOSTAT_HYSTERESIS              "thermostat_hysteresis"
+#define MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP    "legionella_danger_zone_low_temperature"
+#define MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP   "legionella_danger_zone_high_temperature"
+#define MQTT_LEGIONELLA_DISINFECT_INTERVAL      "legionella_disinfect_interval"
+#define MQTT_LEGIONELLA_DISINFECT_RUN_TIME      "legionella_disinfect_run_time"
+#define MQTT_LEGIONELLA_DISINFECT_TEMPERATURE   "legionella_disinfect_temperature"
 
 // Home Assistant birth/last will topic (HA publishes "online" here after it (re)started)
 #define MQTT_HA_STATUS_TOPIC                    "homeassistant/status"
@@ -200,6 +230,12 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define THERMOSTAT_SP_SIZE      1
 #define DISINFECT_EN_SIZE       1
 #define BUDGET_SRC_SIZE         1
+#define THERMOSTAT_HYST_SIZE    1
+#define DZ_LOW_TEMP_SIZE        1
+#define DZ_HIGH_TEMP_SIZE       1
+#define DISINFECT_INTERVAL_SIZE 1
+#define DISINFECT_RUN_TIME_SIZE 1
+#define DISINFECT_TEMP_SIZE     1
 
 // EEPROM locations
 #define EEPROM_CHECKSUM       0                                                   // 0
@@ -228,7 +264,13 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_THERMOSTAT_SP  EEPROM_BUDGET_MARGIN + BUDGET_MARGIN_SIZE           // 372
 #define EEPROM_DISINFECT_EN   EEPROM_THERMOSTAT_SP + THERMOSTAT_SP_SIZE           // 373
 #define EEPROM_BUDGET_SRC     EEPROM_DISINFECT_EN + DISINFECT_EN_SIZE             // 374
-                                                                                  // end 375
+#define EEPROM_THERMOSTAT_HYST EEPROM_BUDGET_SRC + BUDGET_SRC_SIZE                // 375
+#define EEPROM_DZ_LOW_TEMP    EEPROM_THERMOSTAT_HYST + THERMOSTAT_HYST_SIZE       // 376
+#define EEPROM_DZ_HIGH_TEMP   EEPROM_DZ_LOW_TEMP + DZ_LOW_TEMP_SIZE               // 377
+#define EEPROM_DISINFECT_INTERVAL EEPROM_DZ_HIGH_TEMP + DZ_HIGH_TEMP_SIZE         // 378
+#define EEPROM_DISINFECT_RUN_TIME EEPROM_DISINFECT_INTERVAL + DISINFECT_INTERVAL_SIZE // 379
+#define EEPROM_DISINFECT_TEMP EEPROM_DISINFECT_RUN_TIME + DISINFECT_RUN_TIME_SIZE // 380
+                                                                                  // end 381
 
 // Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
 // Maximum ~104 ms at this prescaler; no need for DIV256 in our range.

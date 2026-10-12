@@ -49,6 +49,12 @@ const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "egn [g]                : Set budget mode negative error-gain to value [g]\r\n"
                                   "bmargin [m]            : Set budget mode margin to [m] Watt\r\n"
                                   "deadzone [d]           : Set budget mode deadzone to [d] Watt\r\n"
+                                  "thermhyst [h]          : Set thermostat hysteresis to [h] Celsius (1-10)\r\n"
+                                  "dzlow [t]              : Set legionella danger zone low temperature to [t] Celsius (0-54)\r\n"
+                                  "dzhigh [t]             : Set legionella danger zone high temperature to [t] Celsius (0-54)\r\n"
+                                  "disinfint [d]          : Set legionella disinfect interval (max. time in danger zone) to [d] days (1-60)\r\n"
+                                  "disinfrt [m]           : Set legionella disinfect run-time to [m] minutes (1-240)\r\n"
+                                  "disinftemp [t]         : Set legionella disinfect temperature to [t] Celsius (55-75)\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -354,6 +360,32 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::print(" budget_margin=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBudgetMargin());
+  CTerminal::print(strBuf);
+
+  CTerminal::println("");
+
+  CTerminal::print("thermostat_hysteresis=");
+  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetThermostatHysteresis());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" danger_zone_low=");
+  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneLowTemperature());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" danger_zone_high=");
+  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneHighTemperature());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" disinfect_interval=");
+  snprintf(strBuf, sizeof(strBuf), "%ud", m_pvBoiler.GetDisinfectIntervalDays());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" disinfect_run_time=");
+  snprintf(strBuf, sizeof(strBuf), "%umin", m_pvBoiler.GetDisinfectRunTimeMinutes());
+  CTerminal::print(strBuf);
+
+  CTerminal::print(" disinfect_temp=");
+  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDisinfectTemperature());
   CTerminal::print(strBuf);
 
   CTerminal::println("");
@@ -707,6 +739,122 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnable(const char *strA
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdSetThermostatHysteresis(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iHysteresis;
+  result = get_int32_from_string(strArgs, &iHysteresis, THERMOSTAT_HYSTERESIS_MIN, THERMOSTAT_HYSTERESIS_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetThermostatHysteresis(iHysteresis);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneLowTemperature(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iTemperature;
+  result = get_int32_from_string(strArgs, &iTemperature, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  // Low temperature must be below high temperature
+  if (iTemperature >= m_pvBoiler.GetDangerZoneHighTemperature())
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_VAL_MAX, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, m_pvBoiler.GetDangerZoneHighTemperature() - 1);
+  }
+
+  m_pvBoiler.SetDangerZoneLowTemperature(iTemperature);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneHighTemperature(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iTemperature;
+  result = get_int32_from_string(strArgs, &iTemperature, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  // High temperature must be above low temperature
+  if (iTemperature <= m_pvBoiler.GetDangerZoneLowTemperature())
+  {
+    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_VAL_MIN, ARG_INT32_NUM1);
+    return store_arg1_int32(resultCode, m_pvBoiler.GetDangerZoneLowTemperature() + 1);
+  }
+
+  m_pvBoiler.SetDangerZoneHighTemperature(iTemperature);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectInterval(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iDays;
+  result = get_int32_from_string(strArgs, &iDays, DISINFECT_INTERVAL_DAYS_MIN, DISINFECT_INTERVAL_DAYS_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetDisinfectIntervalDays(iDays);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectRunTime(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iMinutes;
+  result = get_int32_from_string(strArgs, &iMinutes, DISINFECT_RUN_TIME_MINUTES_MIN, DISINFECT_RUN_TIME_MINUTES_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetDisinfectRunTimeMinutes(iMinutes);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectTemperature(const char *strArgs)
+{
+  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  int32_t iTemperature;
+  result = get_int32_from_string(strArgs, &iTemperature, DISINFECT_TEMPERATURE_MIN, DISINFECT_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  if (result.code != ERR_CODE_OK)
+    return result;
+
+  m_pvBoiler.SetDisinfectTemperature(iTemperature);
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
@@ -1018,6 +1166,30 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "disinfection") || STRIEQUALS(strCommand, "disinfect"))
   {
     result = CmdSetDisinfectionEnable(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "thermhyst") || STRIEQUALS(strCommand, "thyst"))
+  {
+    result = CmdSetThermostatHysteresis(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "dzlow"))
+  {
+    result = CmdSetDangerZoneLowTemperature(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "dzhigh"))
+  {
+    result = CmdSetDangerZoneHighTemperature(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfint") || STRIEQUALS(strCommand, "disinfinterval"))
+  {
+    result = CmdSetDisinfectInterval(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfrt") || STRIEQUALS(strCommand, "disinfruntime"))
+  {
+    result = CmdSetDisinfectRunTime(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinftemp"))
+  {
+    result = CmdSetDisinfectTemperature(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {

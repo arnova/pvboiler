@@ -4,9 +4,9 @@ void CLegionella::Loop()
 {
   m_iSecondsPassedSinceLastDisinfect++;
 
-  if (m_fTemperature > DISINFECT_TEMPERATURE)
+  if (m_fTemperature > m_iDisinfectTemperature)
   {
-    if (++m_iDisinfectRuntimeSeconds >= DISINFECT_RUN_TIME_MINUTES * 60)
+    if (++m_iDisinfectRuntimeSeconds >= m_iDisinfectRunTimeMinutes * 60UL)
     {
       m_bDisinfectionRequired = false;
       m_iSecondsInDangerZone = 0;
@@ -18,15 +18,15 @@ void CLegionella::Loop()
     m_iDisinfectRuntimeSeconds = 0;
   }
 
-  if (m_fTemperature >= DANGER_ZONE_LOW_TEMPERATURE && m_fTemperature <= DANGER_ZONE_HIGH_TEMPERATURE)
+  if (m_fTemperature >= m_iDangerZoneLowTemperature && m_fTemperature <= m_iDangerZoneHighTemperature)
   {
 
-    if (++m_iSecondsInDangerZone >= DANGER_ZONE_DWELL_LIMIT_DAYS * 3600 * 24)
+    if (++m_iSecondsInDangerZone >= m_iDisinfectIntervalDays * 3600UL * 24)
     {
       m_bDisinfectionRequired = true;
     }
   }
 
-  // FIXME: Perhaps when below DANGER_ZONE_LOW_TEMPERATURE also check absolute time since last
+  // FIXME: Perhaps when below danger zone low temperature also check absolute time since last
   // run + time spend in danger zone to detect whether we got e.g. flushed. When flush detected reset m_iSecondsInDangerZone
 }

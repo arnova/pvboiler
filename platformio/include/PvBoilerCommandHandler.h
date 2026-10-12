@@ -62,6 +62,12 @@ class CPvBoilerCommandHandler : public CCommandHandler
     result_code_t CmdSetPowerPercentage(const char *strArgs);
     result_code_t CmdSetThermostatSetpoint(const char *strArgs);
     result_code_t CmdSetDisinfectionEnable(const char *strArgs);
+    result_code_t CmdSetThermostatHysteresis(const char *strArgs);
+    result_code_t CmdSetDangerZoneLowTemperature(const char *strArgs);
+    result_code_t CmdSetDangerZoneHighTemperature(const char *strArgs);
+    result_code_t CmdSetDisinfectInterval(const char *strArgs);
+    result_code_t CmdSetDisinfectRunTime(const char *strArgs);
+    result_code_t CmdSetDisinfectTemperature(const char *strArgs);
 
     result_code_t CmdSetBoilerPowerRating(const char *strArgs);
     result_code_t CmdSetDeadZone(const char *strArgs);
