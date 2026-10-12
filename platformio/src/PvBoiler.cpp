@@ -709,7 +709,7 @@ void CPvBoiler::SetDisinfectionEnable(const bool bEnable)
 {
   if (bEnable != m_bDisinfectionEnable)
   {
-    EEPROM.put(EEPROM_DISINFECT_EN, (uint8_t) (bEnable ? 0x01 : 0x00));
+    EEPROM.put(EEPROM_DISINFECT_EN, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
     EEPROM.commit();
 
     m_bDisinfectionEnable = bEnable;
