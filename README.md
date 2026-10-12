@@ -28,6 +28,7 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
   - "Setpoint": always heats (100%) until the software thermostat setpoint is reached
   - "Budget up to Setpoint" / "Percentage up to Setpoint": like budget/percentage mode, but heating stops at the software thermostat setpoint
   - "Setpoint, then Budget": always heats (100%) until the software thermostat setpoint is reached; above it, surplus budget is used to heat further (up to the boiler's own thermostat)
+  - "Percentage to Setpoint, then Budget": heats at the set percentage until the software thermostat setpoint is reached; above it, surplus budget is used to heat further (up to the boiler's own thermostat)
 - Boiler overheating-protection (using the optional one-wire temperature sensor) in case the boiler hardware thermostat/protection somehow fails
 - Support for an optional OLED 128×64 screen to display output power/percentage, temperature and connection status
 - The controller has a network watchdog. If there hasn't been any MQTT traffic to the controller for a while (e.g. when the network fails), the output will automatically decrease to 0% instead of being stuck on the last value. This behaviour can be disabled/configured with the `netwdt` and `netwdr` commands.

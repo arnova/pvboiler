@@ -60,16 +60,17 @@ class CPvBoiler
     // Note: Value is stored in EEPROM (except MODE_BOOST), so reordering changes the mode after a flash
     enum mode_e
     {
-      MODE_OFF = 0,             // Output off, including legionella protection (only overheat protection remains)
-      MODE_STANDBY,             // Output off, legionella protection remains active
-      MODE_BOOST,               // Heat at 100%, ignoring (software) thermostat setpoint. Note: Never stored
-      MODE_BUDGET,              // Heat using available (surplus) power budget
-      MODE_PERCENT,             // Heat at a fixed (manually set) power percentage
-      MODE_SETPOINT,            // Always heat (100%) to (software) thermostat setpoint
-      MODE_BUDGET_SETPOINT,     // Budget control, limited by (software) thermostat setpoint
-      MODE_PERCENT_SETPOINT,    // Percentage control, limited by (software) thermostat setpoint
-      MODE_SETPOINT_BUDGET,     // Always heat to (software) thermostat setpoint, above it heat using budget control
-      MODE_LAST = MODE_SETPOINT_BUDGET // Note: Must refer to the last mode
+      MODE_OFF = 0,                 // Boiler off, legionella protection off too (only overheat protection remains)
+      MODE_STANDBY,                 // Boiler off, legionella protection remains active
+      MODE_BOOST,                   // Heat at 100%, ignoring (software) thermostat setpoint. Note: Never stored
+      MODE_BUDGET,                  // Heat using available (surplus) power budget
+      MODE_PERCENT,                 // Heat at fixed (manually set) power percentage
+      MODE_SETPOINT,                // Heat at 100% up to (software) thermostat setpoint
+      MODE_BUDGET_SETPOINT,         // Heat using available (surplus) power budget up to (software) thermostat setpoint
+      MODE_PERCENT_SETPOINT,        // Heat at fixed (manually set) power percentage up to (software) thermostat setpoint
+      MODE_SETPOINT_BUDGET,         // Heat at 100% up to (software) thermostat setpoint, above it heat using available (surplus) power budget
+      MODE_PERCENT_SETPOINT_BUDGET, // Heat at fixed (manually set) power percentage up to (software) thermostat setpoint, above it heat using available (surplus) power budget
+      MODE_LAST = MODE_PERCENT_SETPOINT_BUDGET // Note: Must refer to the last mode
     };
     typedef enum mode_e mode_t;
     static constexpr uint8_t MODE_COUNT = MODE_LAST + 1;
@@ -85,7 +86,8 @@ class CPvBoiler
       "Setpoint",                   // MODE_SETPOINT
       "Budget up to Setpoint",      // MODE_BUDGET_SETPOINT
       "Percentage up to Setpoint",  // MODE_PERCENT_SETPOINT
-      "Setpoint, then Budget"       // MODE_SETPOINT_BUDGET
+      "Setpoint, then Budget",      // MODE_SETPOINT_BUDGET
+      "Percentage to Setpoint, then Budget" // MODE_PERCENT_SETPOINT_BUDGET
     };
     static_assert(sizeof(m_strModeNames) / sizeof(m_strModeNames[0]) == MODE_COUNT, "m_strModeNames does not match mode_e");
 
@@ -136,7 +138,7 @@ class CPvBoiler
     uint16_t GetBudgetMargin() const { return m_iBudgetMargin; };
     mode_t GetMode() const { return m_mode; };
     static bool GetModeFromName(const char* strName, mode_t& mode);
-    bool IsThermostatMode() const { return m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT || m_mode == MODE_SETPOINT_BUDGET; };
+    bool IsThermostatMode() const { return m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT || m_mode == MODE_SETPOINT_BUDGET || m_mode == MODE_PERCENT_SETPOINT_BUDGET; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
     float GetErrorGainPos() const { return m_fErrorGainPos; };

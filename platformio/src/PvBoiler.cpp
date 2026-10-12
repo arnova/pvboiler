@@ -968,8 +968,8 @@ void CPvBoiler::Update()
   }
   else
   {
-    // Without sensor never force heating in "setpoint, then budget" mode (only budget control remains)
-    m_bThermostatAllowsHeating = (m_mode != MODE_SETPOINT_BUDGET);
+    // Without sensor never force heating in "setpoint, then budget" modes (only budget control remains)
+    m_bThermostatAllowsHeating = (m_mode != MODE_SETPOINT_BUDGET && m_mode != MODE_PERCENT_SETPOINT_BUDGET);
   }
 
   if (m_bThermostatAllowsHeating != bThermostatAllowedHeating)
@@ -990,6 +990,10 @@ void CPvBoiler::Update()
   else if (m_mode == MODE_SETPOINT || (m_mode == MODE_SETPOINT_BUDGET && m_bThermostatAllowsHeating))
   {
     fNewPercentage = 100.0f; // Below setpoint: always heat, independent of (network) budget/watchdog
+  }
+  else if (m_mode == MODE_PERCENT_SETPOINT_BUDGET && m_bThermostatAllowsHeating)
+  {
+    fNewPercentage = m_iPowerPercentage; // Below setpoint: always heat at set percentage, independent of (network) budget/watchdog
   }
   else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_STANDBY || m_mode == MODE_OFF)
   {
@@ -1044,7 +1048,7 @@ void CPvBoiler::Update()
     fNewPercentage = 0.0f;
   }
 
-  // Thermostat limits heating, except in "setpoint, then budget" mode where it only adds heating
+  // Thermostat limits heating, except in "setpoint, then budget" modes where it only adds heating
   if (!m_bThermostatAllowsHeating && (m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT))
   {
     fNewPercentage = 0.0f;

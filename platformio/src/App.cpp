@@ -333,6 +333,12 @@ void CApp::HandleDisplay()
           }
           break;
 
+          case CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET:
+          {
+            snprintf(strLine, sizeof(strLine), "P>SP>Bdgt - %u%%", iPercent);
+          }
+          break;
+
           case CPvBoiler::MODE_STANDBY:
           {
             snprintf(strLine, sizeof(strLine), "Standby - %u%%", iPercent);

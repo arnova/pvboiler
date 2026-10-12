@@ -22,7 +22,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "thermsp [t]            : Set thermostat setpoint to [t] Celsius (55-95)\r\n"
                                   "disinfection [e]       : Set legionella disinfection to [e] (\"on\" or \"off\")\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
-                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"percent_sp\", \"budget_sp\", \"sp_budget\", \"standby\", \"off\", \"setpoint\", \"boost\")\r\n"
+                                  "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"percent_sp\", \"budget_sp\", \"sp_budget\", \"percent_sp_budget\", \"standby\", \"off\", \"setpoint\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
                                   "ssid [s]               : Set WiFi SSID to [s]\r\n"
                                   "pass [w]               : Set WiFi password to [w]\r\n"
@@ -448,6 +448,12 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
       CTerminal::print("sp_budget");
     }
     break;
+
+    case CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET:
+    {
+      CTerminal::print("percent_sp_budget");
+    }
+    break;
   }
 
   CTerminal::print(" perc_set=");
@@ -745,6 +751,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
     m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET_SETPOINT);
   else if (STRIEQUALS(strArgs, "sp_budget") || STRIEQUALS(strArgs, "spb"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_SETPOINT_BUDGET);
+  else if (STRIEQUALS(strArgs, "percent_sp_budget") || STRIEQUALS(strArgs, "pspb"))
+    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET);
   else if (STRIEQUALS(strArgs, "standby") || STRIEQUALS(strArgs, "s"))
     m_pvBoiler.SetMode(CPvBoiler::MODE_STANDBY);
   else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
