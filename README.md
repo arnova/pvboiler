@@ -22,7 +22,7 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 - Configuration via USB serial connection or network terminal connection (port 8000)
 - OTA updates (via PlatformIO)
 - Support for an optional one-wire DS18B20 temperature sensor (probe) for sensing the boiler's internal temperature
-- Automatic legionella prevention (using the optional one-wire temperature sensor). Danger zone temperatures, disinfect interval, run-time and temperature are configurable via the terminal (see `exhelp`)
+- Automatic legionella prevention (using the optional one-wire temperature sensor). Danger zone temperatures, disinfection interval, duration and temperature are configurable via the terminal (see `exhelp`)
 - Operating modes: automatic power budget mode (using e.g. P1/HA information), (manual) power percentage mode, boost mode (100% power, ignores software thermostat), standby mode (output off, legionella protection remains active) and off mode (output off, including legionella protection). The mode can be dynamically changed using MQTT
 - Setpoint (software thermostat) modes (require the optional one-wire temperature sensor):
   - "Setpoint": always heats (100%) until the software thermostat setpoint is reached

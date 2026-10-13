@@ -21,7 +21,6 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "budgetsrc [s]          : Set power budget source to [s] (\"direct\" or \"dsmr-reader\")\r\n"
                                   "thermsp [t]            : Set thermostat setpoint to [t] Celsius (" STRINGIZE(THERMOSTAT_SETPOINT_MIN) "-" STRINGIZE(THERMOSTAT_SETPOINT_MAX) ")\r\n"
-                                  "disinfection [e]       : Set legionella disinfection to [e] (\"on\" or \"off\")\r\n"
                                   "boiler [p]             : Set boiler power rating to [p] Watt\r\n"
                                   "mode [m]               : Set (operating) mode to [m] (\"percent\", \"budget\", \"percent_sp\", \"budget_sp\", \"sp_budget\", \"percent_sp_budget\", \"standby\", \"off\", \"setpoint\", \"boost\")\r\n"
                                   "hostname [h]           : Set hostname to [n]\r\n"
@@ -50,11 +49,12 @@ const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "bmargin [m]            : Set budget mode margin to [m] Watt\r\n"
                                   "deadzone [d]           : Set budget mode deadzone to [d] Watt\r\n"
                                   "thermhyst [h]          : Set thermostat hysteresis to [h] Celsius (" STRINGIZE(THERMOSTAT_HYSTERESIS_MIN) "-" STRINGIZE(THERMOSTAT_HYSTERESIS_MAX) ")\r\n"
+                                  "disinfen [e]           : Set legionella disinfection to [e] (\"on\" or \"off\")\r\n"
+                                  "disinfint [d]          : Set legionella disinfect interval (max. time in danger zone) to [d] days (" STRINGIZE(DISINFECTION_INTERVAL_DAYS_MIN) "-" STRINGIZE(DISINFECTION_INTERVAL_DAYS_MAX) ")\r\n"
+                                  "disinfdur [m]          : Set legionella disinfection duration to [m] minutes (" STRINGIZE(DISINFECTION_DURATION_MINUTES_MIN) "-" STRINGIZE(DISINFECTION_DURATION_MINUTES_MAX) ")\r\n"
+                                  "disinftemp [t]         : Set legionella disinfect temperature to [t] Celsius (" STRINGIZE(DISINFECTION_TEMPERATURE_MIN) "-" STRINGIZE(DISINFECTION_TEMPERATURE_MAX) ")\r\n"
                                   "dzlow [t]              : Set legionella danger zone low temperature to [t] Celsius (" STRINGIZE(DANGER_ZONE_TEMPERATURE_MIN) "-" STRINGIZE(DANGER_ZONE_TEMPERATURE_MAX) ")\r\n"
                                   "dzhigh [t]             : Set legionella danger zone high temperature to [t] Celsius (" STRINGIZE(DANGER_ZONE_TEMPERATURE_MIN) "-" STRINGIZE(DANGER_ZONE_TEMPERATURE_MAX) ")\r\n"
-                                  "disinfint [d]          : Set legionella disinfect interval (max. time in danger zone) to [d] days (" STRINGIZE(DISINFECT_INTERVAL_DAYS_MIN) "-" STRINGIZE(DISINFECT_INTERVAL_DAYS_MAX) ")\r\n"
-                                  "disinfrt [m]           : Set legionella disinfect run-time to [m] minutes (" STRINGIZE(DISINFECT_RUN_TIME_MINUTES_MIN) "-" STRINGIZE(DISINFECT_RUN_TIME_MINUTES_MAX) ")\r\n"
-                                  "disinftemp [t]         : Set legionella disinfect temperature to [t] Celsius (" STRINGIZE(DISINFECT_TEMPERATURE_MIN) "-" STRINGIZE(DISINFECT_TEMPERATURE_MAX) ")\r\n"
                                   ;
 
 // Show copyright + firmware version
@@ -377,15 +377,15 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   CTerminal::print(strBuf);
 
   CTerminal::print(" disinfect_interval=");
-  snprintf(strBuf, sizeof(strBuf), "%ud", m_pvBoiler.GetDisinfectIntervalDays());
+  snprintf(strBuf, sizeof(strBuf), "%ud", m_pvBoiler.GetDisinfectionIntervalDays());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" disinfect_run_time=");
-  snprintf(strBuf, sizeof(strBuf), "%umin", m_pvBoiler.GetDisinfectRunTimeMinutes());
+  CTerminal::print(" disinfect_duration=");
+  snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetDisinfectionDurationMinutes());
   CTerminal::print(strBuf);
 
   CTerminal::print(" disinfect_temp=");
-  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDisinfectTemperature());
+  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDisinfectionTemperature());
   CTerminal::print(strBuf);
 
   CTerminal::println("");
@@ -539,22 +539,22 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   CTerminal::println("");
 
-  CTerminal::print("disinfection=");
-  CTerminal::print(m_pvBoiler.GetDisinfectionEnable() ? "on" : "off");
+  CTerminal::print("disinfection_en=");
+  CTerminal::print(m_pvBoiler.GetDisinfectionEnabled() ? "on" : "off");
 
   CTerminal::print(" disinfection_required=");
   CTerminal::print(m_pvBoiler.GetLegionellaDisinfectionRequired() ? "1" : "0");
 
-  CTerminal::print(" danger_zone=");
-  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDangerZoneHours());
+  CTerminal::print(" in_danger_zone=");
+  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaInDangerZoneHours());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" disinfect_passed=");
-  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaHoursSinceDisinfection());
+  CTerminal::print(" disinfection_age=");
+  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDisinfectionAgeHours());
   CTerminal::print(strBuf);
 
-  CTerminal::print(" disinfect_runtime=");
-  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetLegionellaDisinfectRunTimeSeconds());
+  CTerminal::print(" disinfecting_elapsed=");
+  snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetLegionellaDisinfectingElapsedMinutes());
   CTerminal::print(strBuf);
 
   CTerminal::println("");
@@ -722,7 +722,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetThermostatSetpoint(const char *strA
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnable(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnabled(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
@@ -733,7 +733,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnable(const char *strA
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetDisinfectionEnable(bEnable);
+  m_pvBoiler.SetDisinfectionEnabled(bEnable);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -811,28 +811,28 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectInterval(const char *strAr
     return result;
 
   int32_t iDays;
-  result = get_int32_from_string(strArgs, &iDays, DISINFECT_INTERVAL_DAYS_MIN, DISINFECT_INTERVAL_DAYS_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iDays, DISINFECTION_INTERVAL_DAYS_MIN, DISINFECTION_INTERVAL_DAYS_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetDisinfectIntervalDays(iDays);
+  m_pvBoiler.SetDisinfectionIntervalDays(iDays);
 
   return pack_result_code(ERR_CODE_OK);
 }
 
 
-result_code_t CPvBoilerCommandHandler::CmdSetDisinfectRunTime(const char *strArgs)
+result_code_t CPvBoilerCommandHandler::CmdSetDisinfectDuration(const char *strArgs)
 {
   result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
   int32_t iMinutes;
-  result = get_int32_from_string(strArgs, &iMinutes, DISINFECT_RUN_TIME_MINUTES_MIN, DISINFECT_RUN_TIME_MINUTES_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iMinutes, DISINFECTION_DURATION_MINUTES_MIN, DISINFECTION_DURATION_MINUTES_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetDisinfectRunTimeMinutes(iMinutes);
+  m_pvBoiler.SetDisinfectionDurationMinutes(iMinutes);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -845,11 +845,11 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectTemperature(const char *st
     return result;
 
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, DISINFECT_TEMPERATURE_MIN, DISINFECT_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iTemperature, DISINFECTION_TEMPERATURE_MIN, DISINFECTION_TEMPERATURE_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
-  m_pvBoiler.SetDisinfectTemperature(iTemperature);
+  m_pvBoiler.SetDisinfectionTemperature(iTemperature);
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -1163,13 +1163,25 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   {
     result = CmdSetThermostatSetpoint(strArgs);
   }
-  else if (STRIEQUALS(strCommand, "disinfection") || STRIEQUALS(strCommand, "disinfect"))
-  {
-    result = CmdSetDisinfectionEnable(strArgs);
-  }
   else if (STRIEQUALS(strCommand, "thermhyst") || STRIEQUALS(strCommand, "thyst"))
   {
     result = CmdSetThermostatHysteresis(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfen") || STRIEQUALS(strCommand, "disinfect"))
+  {
+    result = CmdSetDisinfectionEnabled(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfint") || STRIEQUALS(strCommand, "disinfinterval"))
+  {
+    result = CmdSetDisinfectInterval(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinfdur") || STRIEQUALS(strCommand, "disinfduration"))
+  {
+    result = CmdSetDisinfectDuration(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "disinftemp"))
+  {
+    result = CmdSetDisinfectTemperature(strArgs);
   }
   else if (STRIEQUALS(strCommand, "dzlow"))
   {
@@ -1178,18 +1190,6 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "dzhigh"))
   {
     result = CmdSetDangerZoneHighTemperature(strArgs);
-  }
-  else if (STRIEQUALS(strCommand, "disinfint") || STRIEQUALS(strCommand, "disinfinterval"))
-  {
-    result = CmdSetDisinfectInterval(strArgs);
-  }
-  else if (STRIEQUALS(strCommand, "disinfrt") || STRIEQUALS(strCommand, "disinfruntime"))
-  {
-    result = CmdSetDisinfectRunTime(strArgs);
-  }
-  else if (STRIEQUALS(strCommand, "disinftemp"))
-  {
-    result = CmdSetDisinfectTemperature(strArgs);
   }
   else if (STRIEQUALS(strCommand, "boiler"))
   {

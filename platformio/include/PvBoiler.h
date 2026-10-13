@@ -110,16 +110,16 @@ class CPvBoiler
     void SetPowerPercentage(const uint8_t iVal) { m_iPowerPercentage = iVal; m_bPublishPowerPercentage = true; };
 
     void SetThermostatSetpoint(const uint8_t iTemperature);
-    void SetDisinfectionEnable(const bool bEnable);
+    void SetDisinfectionEnabled(const bool bEnable);
     void SetThermostatHysteresis(const uint8_t iHysteresis);
     void SetDangerZoneLowTemperature(const uint8_t iTemperature);
     void SetDangerZoneHighTemperature(const uint8_t iTemperature);
-    void SetDisinfectIntervalDays(const uint8_t iDays);
-    void SetDisinfectRunTimeMinutes(const uint8_t iMinutes);
-    void SetDisinfectTemperature(const uint8_t iTemperature);
+    void SetDisinfectionIntervalDays(const uint8_t iDays);
+    void SetDisinfectionDurationMinutes(const uint8_t iMinutes);
+    void SetDisinfectionTemperature(const uint8_t iTemperature);
 
-    void SetLegionellaHoursSinceDisinfection(const uint32_t iVal);
-    void SetLegionellaDangerZoneHours(const uint32_t iVal);
+    void SetLegionellaDisinfectionAgeHours(const uint32_t iVal);
+    void SetLegionellaInDangerZoneHours(const uint32_t iVal);
 
     void SetDsmrPowerBudget(const bool bEnable);
     void SetBoilerPowerRating(const uint16_t iPower);
@@ -169,18 +169,18 @@ class CPvBoiler
     float GetBoilerTemperature() const { return m_fBoilerTemperature; };
     bool IsBoilerOverheated() const { return m_bBoilerOverHeated; };
     uint8_t GetThermostatSetpoint() const { return m_iThermostatSetpoint; };
-    bool GetDisinfectionEnable() const { return m_bDisinfectionEnable; };
+    bool GetDisinfectionEnabled() const { return m_bDisinfectionEnabled; };
     uint8_t GetThermostatHysteresis() const { return m_iThermostatHysteresis; };
     uint8_t GetDangerZoneLowTemperature() const { return m_iDangerZoneLowTemperature; };
     uint8_t GetDangerZoneHighTemperature() const { return m_iDangerZoneHighTemperature; };
-    uint8_t GetDisinfectIntervalDays() const { return m_iDisinfectIntervalDays; };
-    uint8_t GetDisinfectRunTimeMinutes() const { return m_iDisinfectRunTimeMinutes; };
-    uint8_t GetDisinfectTemperature() const { return m_iDisinfectTemperature; };
+    uint8_t GetDisinfectionIntervalDays() const { return m_iDisinfectionIntervalDays; };
+    uint8_t GetDisinfectionDurationMinutes() const { return m_iDisinfectionDurationMinutes; };
+    uint8_t GetDisinfectionTemperature() const { return m_iDisinfectionTemperature; };
     bool GetThermostatAllowsHeating() const { return m_bThermostatAllowsHeating; };
 
-    uint32_t GetLegionellaHoursSinceDisinfection() const { return m_iLegionellaHoursSinceDisinfection; };
-    uint32_t GetLegionellaDangerZoneHours() const { return m_iLegionellaDangerZoneHours; };
-    uint32_t GetLegionellaDisinfectRunTimeSeconds() const { return m_iLegionellaDisinfectRunTimeSeconds; };
+    uint32_t GetLegionellaDisinfectionAgeHours() const { return m_iLegionellaDisinfectionAgeHours; };
+    uint32_t GetLegionellaInDangerZoneHours() const { return m_iLegionellaInDangerZoneHours; };
+    uint32_t GetLegionellaDisinfectingElapsedMinutes() const { return m_iLegionellaDisinfectingElapsedMinutes; };
     bool GetLegionellaDisinfectionRequired() const { return m_bLegionellaDisinfectionRequired; };
 
     void SetPowerGood(const bool bPowerGood);
@@ -270,27 +270,27 @@ class CPvBoiler
 
     CLegionella m_legionella;
 
-    uint32_t m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
-    bool m_bPublishLegionellaHoursSinceDisinfection = true;
-    bool m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
-    uint32_t m_iLegionellaHoursSinceDisinfectionSetter = UINT32_MAX; // Last value we published to the setter topic
+    uint32_t m_iLegionellaDisinfectionAgeHours = UINT32_MAX;
+    bool m_bPublishLegionellaDisinfectionAgeHours = true;
+    bool m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
+    uint32_t m_iLegionellaDisinfectionAgeHoursSetter = UINT32_MAX; // Last value we published to the setter topic
 
-    uint32_t m_iLegionellaDangerZoneHours = UINT32_MAX;
-    bool m_bPublishLegionellaDangerZoneHours = true;
-    bool m_bPublishLegionellaDangerZoneHoursSetter = false;
-    uint32_t m_iLegionellaDangerZoneHoursSetter = UINT32_MAX; // Last value we published to the setter topic
+    uint32_t m_iLegionellaInDangerZoneHours = UINT32_MAX;
+    bool m_bPublishLegionellaInDangerZoneHours = true;
+    bool m_bPublishLegionellaInDangerZoneHoursSetter = false;
+    uint32_t m_iLegionellaInDangerZoneHoursSetter = UINT32_MAX; // Last value we published to the setter topic
 
-    uint32_t m_iLegionellaDisinfectRunTimeSeconds = 0;
-    bool m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+    uint32_t m_iLegionellaDisinfectingElapsedMinutes = 0;
+    bool m_bPublishLegionellaDisinfectingElapsedMinutes = true;
 
     uint8_t m_iDangerZoneLowTemperature = DANGER_ZONE_LOW_TEMPERATURE_DEFAULT; // C
     uint8_t m_iDangerZoneHighTemperature = DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT; // C
-    uint8_t m_iDisinfectIntervalDays = DISINFECT_INTERVAL_DAYS_DEFAULT; // days
-    uint8_t m_iDisinfectRunTimeMinutes = DISINFECT_RUN_TIME_MINUTES_DEFAULT; // minutes
-    uint8_t m_iDisinfectTemperature = DISINFECT_TEMPERATURE_DEFAULT; // C
+    uint8_t m_iDisinfectionIntervalDays = DISINFECTION_INTERVAL_DAYS_DEFAULT; // days
+    uint8_t m_iDisinfectionDurationMinutes = DISINFECTION_DURATION_MINUTES_DEFAULT; // minutes
+    uint8_t m_iDisinfectionTemperature = DISINFECTION_TEMPERATURE_DEFAULT; // C
 
-    bool m_bDisinfectionEnable = true; // When disabled disinfection is tracked, but never forced
-    bool m_bPublishDisinfectionEnable = true;
+    bool m_bDisinfectionEnabled = true; // When disabled disinfection is tracked, but never forced
+    bool m_bPublishDisinfectionEnabled = true;
     bool m_bLegionellaDisinfectionRequired = false;
     bool m_bPublishLegionellaDisinfectionRequired = true;
 };

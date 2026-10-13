@@ -85,27 +85,27 @@ void CPvBoiler::Loop()
       m_bPublishLegionellaDisinfectionRequired = true;
     }
 
-    const uint32_t iDisinfectRunTimeSeconds = m_legionella.GetDisinfectRunTimeSeconds();
-    if (m_iLegionellaDisinfectRunTimeSeconds != iDisinfectRunTimeSeconds)
+    const uint32_t iDisinfectingElapsedMinutes = m_legionella.GetDisinfectingElapsedMinutes();
+    if (m_iLegionellaDisinfectingElapsedMinutes != iDisinfectingElapsedMinutes)
     {
-      m_iLegionellaDisinfectRunTimeSeconds = iDisinfectRunTimeSeconds;
-      m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+      m_iLegionellaDisinfectingElapsedMinutes = iDisinfectingElapsedMinutes;
+      m_bPublishLegionellaDisinfectingElapsedMinutes = true;
     }
 
     // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
-    const uint32_t iLegionellaHoursSinceDisinfection = m_legionella.GetHoursPassedSinceLastDisinfect();
-    if (m_iLegionellaHoursSinceDisinfection != iLegionellaHoursSinceDisinfection)
+    const uint32_t iLegionellaDisinfectionAgeHours = m_legionella.GetDisinfectionAgeHours();
+    if (m_iLegionellaDisinfectionAgeHours != iLegionellaDisinfectionAgeHours)
     {
-      m_iLegionellaHoursSinceDisinfection = iLegionellaHoursSinceDisinfection;
-      m_bPublishLegionellaHoursSinceDisinfectionSetter = true;
+      m_iLegionellaDisinfectionAgeHours = iLegionellaDisinfectionAgeHours;
+      m_bPublishLegionellaDisinfectionAgeHoursSetter = true;
     }
 
     // Publish new setter value only when changed else we'll loop on setting it over and over again via broker
-    const uint32_t iLegionellaDangerZoneHours = m_legionella.GetHoursInDangerZone();
-    if (m_iLegionellaDangerZoneHours != iLegionellaDangerZoneHours)
+    const uint32_t iLegionellaInDangerZoneHours = m_legionella.GetInDangerZoneHours();
+    if (m_iLegionellaInDangerZoneHours != iLegionellaInDangerZoneHours)
     {
-      m_iLegionellaDangerZoneHours = iLegionellaDangerZoneHours;
-      m_bPublishLegionellaDangerZoneHoursSetter = true;
+      m_iLegionellaInDangerZoneHours = iLegionellaInDangerZoneHours;
+      m_bPublishLegionellaInDangerZoneHoursSetter = true;
     }
 
     MqttPublishValues();
@@ -161,16 +161,16 @@ void CPvBoiler::Reset()
   m_bThermostatAllowsHeating = true;
   m_bPublishThermostatAllowsHeating = true;
 
-  m_iLegionellaHoursSinceDisinfection = UINT32_MAX;
-  m_bPublishLegionellaHoursSinceDisinfection = true;
-  m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
+  m_iLegionellaDisinfectionAgeHours = UINT32_MAX;
+  m_bPublishLegionellaDisinfectionAgeHours = true;
+  m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
 
-  m_iLegionellaDangerZoneHours = UINT32_MAX;
-  m_bPublishLegionellaDangerZoneHours = true;
-  m_bPublishLegionellaDangerZoneHoursSetter = false;
+  m_iLegionellaInDangerZoneHours = UINT32_MAX;
+  m_bPublishLegionellaInDangerZoneHours = true;
+  m_bPublishLegionellaInDangerZoneHoursSetter = false;
 
-  m_iLegionellaDisinfectRunTimeSeconds = 0;
-  m_bPublishLegionellaDisinfectRunTimeSeconds = true;
+  m_iLegionellaDisinfectingElapsedMinutes = 0;
+  m_bPublishLegionellaDisinfectingElapsedMinutes = true;
 
   m_bLegionellaDisinfectionRequired = false;
   m_bPublishLegionellaDisinfectionRequired = true;
@@ -179,7 +179,7 @@ void CPvBoiler::Reset()
 }
 
 
-void CPvBoiler::SetLegionellaHoursSinceDisinfection(const uint32_t iVal)
+void CPvBoiler::SetLegionellaDisinfectionAgeHours(const uint32_t iVal)
 {
   // May be set from both the mqtt broker (retained message) or
   // from ourselves when the value changes in the CLegionella-class
@@ -187,17 +187,17 @@ void CPvBoiler::SetLegionellaHoursSinceDisinfection(const uint32_t iVal)
   // and it's the retained message from the broker (or set by the user).
   // NOTE: Do not compare with the current value as our own echo may arrive after it changed
   // (eg. directly after (re)connect), which would reset the restored value
-  if (iVal != m_iLegionellaHoursSinceDisinfectionSetter)
+  if (iVal != m_iLegionellaDisinfectionAgeHoursSetter)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
-    m_legionella.SetHoursPassedSinceLastDisinfect(iVal + 1);
+    m_legionella.SetDisinfectionAgeHours(iVal + 1);
   }
 
-  m_bPublishLegionellaHoursSinceDisinfection = true;
+  m_bPublishLegionellaDisinfectionAgeHours = true;
 }
 
 
-void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
+void CPvBoiler::SetLegionellaInDangerZoneHours(const uint32_t iVal)
 {
   // May be set from both the mqtt broker (retained message) or
   // from ourselves when the value changes in the CLegionella-class
@@ -205,13 +205,13 @@ void CPvBoiler::SetLegionellaDangerZoneHours(const uint32_t iVal)
   // and it's the retained message from the broker (or set by the user).
   // NOTE: Do not compare with the current value as our own echo may arrive after it changed
   // (eg. directly after (re)connect), which would reset the restored value
-  if (iVal != m_iLegionellaDangerZoneHoursSetter)
+  if (iVal != m_iLegionellaInDangerZoneHoursSetter)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
-    m_legionella.SetHoursInDangerZone(iVal + 1);
+    m_legionella.SetInDangerZoneHours(iVal + 1);
   }
 
-  m_bPublishLegionellaDangerZoneHours = true;
+  m_bPublishLegionellaInDangerZoneHours = true;
 }
 
 
@@ -272,14 +272,14 @@ bool CPvBoiler::MqttPublishValues()
     snprintf(strBuf, sizeof(strBuf), "%u", m_iDangerZoneHighTemperature);
     m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, strBuf);
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectIntervalDays);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_INTERVAL, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionIntervalDays);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, strBuf);
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectRunTimeMinutes);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_TIME, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionDurationMinutes);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_DURATION, strBuf);
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectTemperature);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_TEMPERATURE, strBuf);
+    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionTemperature);
+    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, strBuf);
   }
 
   // Publish these MQTT values (if any) when timer expires (and connected)
@@ -357,10 +357,10 @@ bool CPvBoiler::MqttPublishValues()
       m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
     }
 
-    if (m_bPublishDisinfectionEnable || m_bMqttRepublish)
+    if (m_bPublishDisinfectionEnabled || m_bMqttRepublish)
     {
-      m_bPublishDisinfectionEnable = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_ENABLE, m_bDisinfectionEnable ? "1" : "0");
+      m_bPublishDisinfectionEnabled = false;
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_ENABLED, m_bDisinfectionEnabled ? "1" : "0");
     }
 
     if (m_bPublishLegionellaDisinfectionRequired || m_bMqttRepublish)
@@ -369,11 +369,11 @@ bool CPvBoiler::MqttPublishValues()
       m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_REQUIRED, m_bLegionellaDisinfectionRequired ? "1" : "0");
     }
 
-    if (m_bPublishLegionellaDisinfectRunTimeSeconds || m_bMqttRepublish)
+    if (m_bPublishLegionellaDisinfectingElapsedMinutes || m_bMqttRepublish)
     {
-      m_bPublishLegionellaDisinfectRunTimeSeconds = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectRunTimeSeconds);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, strBuf);
+      m_bPublishLegionellaDisinfectingElapsedMinutes = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectingElapsedMinutes);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, strBuf);
     }
 
     // Hold off publishing setters directly after subscribing so the (retained) broker values are
@@ -381,37 +381,37 @@ bool CPvBoiler::MqttPublishValues()
     const bool bSetterHoldOff = (m_mqttSetterHoldOffTimer < MQTT_SETTLE_TIME_MS);
 
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaHoursSinceDisinfectionSetter && !bSetterHoldOff)
+    if (m_bPublishLegionellaDisinfectionAgeHoursSetter && !bSetterHoldOff)
     {
-      m_bPublishLegionellaHoursSinceDisinfectionSetter = false;
-      m_iLegionellaHoursSinceDisinfectionSetter = m_iLegionellaHoursSinceDisinfection;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION "/set", strBuf);
+      m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
+      m_iLegionellaDisinfectionAgeHoursSetter = m_iLegionellaDisinfectionAgeHours;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectionAgeHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", strBuf);
     }
 
     // Publish state?
-    if (m_bPublishLegionellaHoursSinceDisinfection || m_bMqttRepublish)
+    if (m_bPublishLegionellaDisinfectionAgeHours || m_bMqttRepublish)
     {
-      m_bPublishLegionellaHoursSinceDisinfection = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaHoursSinceDisinfection);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, strBuf);
+      m_bPublishLegionellaDisinfectionAgeHours = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectionAgeHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE, strBuf);
     }
 
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaDangerZoneHoursSetter && !bSetterHoldOff)
+    if (m_bPublishLegionellaInDangerZoneHoursSetter && !bSetterHoldOff)
     {
-      m_bPublishLegionellaDangerZoneHoursSetter = false;
-      m_iLegionellaDangerZoneHoursSetter = m_iLegionellaDangerZoneHours;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS "/set", strBuf);
+      m_bPublishLegionellaInDangerZoneHoursSetter = false;
+      m_iLegionellaInDangerZoneHoursSetter = m_iLegionellaInDangerZoneHours;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaInDangerZoneHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", strBuf);
     }
 
     // Publish state?
-    if (m_bPublishLegionellaDangerZoneHours || m_bMqttRepublish)
+    if (m_bPublishLegionellaInDangerZoneHours || m_bMqttRepublish)
     {
-      m_bPublishLegionellaDangerZoneHours = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDangerZoneHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, strBuf);
+      m_bPublishLegionellaInDangerZoneHours = false;
+      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaInDangerZoneHours);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE, strBuf);
     }
 
     if (m_bPublishPowerGoodFlag || m_bMqttRepublish)
@@ -512,19 +512,19 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_ALLOWS_HEATING, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_ENABLE, true);
+  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_ENABLED, true);
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_SECONDS, "s", "", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, "min", "duration", "", true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_HOURS_SINCE_DISINFECTION, 1.0f, 0.0f, 10000000.0f, "h");
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DANGER_ZONE_HOURS, 1.0f, 0.0f, 10000000.0f, "h");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DISINFECTION_AGE, 1.0f, 0.0f, 10000000.0f, "h");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_IN_DANGER_ZONE, 1.0f, 0.0f, 10000000.0f, "h");
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_THERMOSTAT_HYSTERESIS, "°C", "temperature", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, "°C", "temperature", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, "°C", "temperature", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_INTERVAL, "d", "duration", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_RUN_TIME, "min", "duration", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECT_TEMPERATURE, "°C", "temperature", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, "d", "duration", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_DURATION, "min", "duration", "", true);
+  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, "°C", "temperature", "", true);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
@@ -634,9 +634,9 @@ void CPvBoiler::LoadSettings()
   m_bPublishThermostatSetpoint = true;
 
   // Note: Anything other than 0x00 (eg. erased EEPROM) means enabled
-  EEPROM.get(EEPROM_DISINFECT_EN, iVal8);
-  m_bDisinfectionEnable = (iVal8 != 0x00);
-  m_bPublishDisinfectionEnable = true;
+  EEPROM.get(EEPROM_DISINFECTION_EN, iVal8);
+  m_bDisinfectionEnabled = (iVal8 != 0x00);
+  m_bPublishDisinfectionEnabled = true;
 
   // Note: Anything other than 0x01 (eg. erased EEPROM) means direct
   EEPROM.get(EEPROM_BUDGET_SRC, iVal8);
@@ -663,29 +663,29 @@ void CPvBoiler::LoadSettings()
   m_iDangerZoneHighTemperature = iHighTemp;
   m_legionella.SetDangerZoneHighTemperature(iHighTemp);
 
-  EEPROM.get(EEPROM_DISINFECT_INTERVAL, iVal8);
-  if (iVal8 < DISINFECT_INTERVAL_DAYS_MIN || iVal8 > DISINFECT_INTERVAL_DAYS_MAX)
+  EEPROM.get(EEPROM_DISINFECTION_INTERVAL, iVal8);
+  if (iVal8 < DISINFECTION_INTERVAL_DAYS_MIN || iVal8 > DISINFECTION_INTERVAL_DAYS_MAX)
   {
-    iVal8 = DISINFECT_INTERVAL_DAYS_DEFAULT;
+    iVal8 = DISINFECTION_INTERVAL_DAYS_DEFAULT;
   }
-  m_iDisinfectIntervalDays = iVal8;
-  m_legionella.SetDisinfectIntervalDays(iVal8);
+  m_iDisinfectionIntervalDays = iVal8;
+  m_legionella.SetDisinfectionIntervalDays(iVal8);
 
-  EEPROM.get(EEPROM_DISINFECT_RUN_TIME, iVal8);
-  if (iVal8 < DISINFECT_RUN_TIME_MINUTES_MIN || iVal8 > DISINFECT_RUN_TIME_MINUTES_MAX)
+  EEPROM.get(EEPROM_DISINFECTION_DURATION, iVal8);
+  if (iVal8 < DISINFECTION_DURATION_MINUTES_MIN || iVal8 > DISINFECTION_DURATION_MINUTES_MAX)
   {
-    iVal8 = DISINFECT_RUN_TIME_MINUTES_DEFAULT;
+    iVal8 = DISINFECTION_DURATION_MINUTES_DEFAULT;
   }
-  m_iDisinfectRunTimeMinutes = iVal8;
-  m_legionella.SetDisinfectRunTimeMinutes(iVal8);
+  m_iDisinfectionDurationMinutes = iVal8;
+  m_legionella.SetDisinfectionDurationMinutes(iVal8);
 
-  EEPROM.get(EEPROM_DISINFECT_TEMP, iVal8);
-  if (iVal8 < DISINFECT_TEMPERATURE_MIN || iVal8 > DISINFECT_TEMPERATURE_MAX)
+  EEPROM.get(EEPROM_DISINFECTION_TEMP, iVal8);
+  if (iVal8 < DISINFECTION_TEMPERATURE_MIN || iVal8 > DISINFECTION_TEMPERATURE_MAX)
   {
-    iVal8 = DISINFECT_TEMPERATURE_DEFAULT;
+    iVal8 = DISINFECTION_TEMPERATURE_DEFAULT;
   }
-  m_iDisinfectTemperature = iVal8;
-  m_legionella.SetDisinfectTemperature(iVal8);
+  m_iDisinfectionTemperature = iVal8;
+  m_legionella.SetDisinfectionTemperature(iVal8);
 
   m_bPublishSettings = true;
 }
@@ -705,17 +705,17 @@ void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
 }
 
 
-void CPvBoiler::SetDisinfectionEnable(const bool bEnable)
+void CPvBoiler::SetDisinfectionEnabled(const bool bEnable)
 {
-  if (bEnable != m_bDisinfectionEnable)
+  if (bEnable != m_bDisinfectionEnabled)
   {
-    EEPROM.put(EEPROM_DISINFECT_EN, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
+    EEPROM.put(EEPROM_DISINFECTION_EN, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
     EEPROM.commit();
 
-    m_bDisinfectionEnable = bEnable;
+    m_bDisinfectionEnabled = bEnable;
   }
 
-  m_bPublishDisinfectionEnable = true;
+  m_bPublishDisinfectionEnabled = true;
 }
 
 
@@ -780,45 +780,45 @@ void CPvBoiler::SetDangerZoneHighTemperature(const uint8_t iTemperature)
 }
 
 
-void CPvBoiler::SetDisinfectIntervalDays(const uint8_t iDays)
+void CPvBoiler::SetDisinfectionIntervalDays(const uint8_t iDays)
 {
-  if (iDays != m_iDisinfectIntervalDays)
+  if (iDays != m_iDisinfectionIntervalDays)
   {
-    EEPROM.put(EEPROM_DISINFECT_INTERVAL, iDays);
+    EEPROM.put(EEPROM_DISINFECTION_INTERVAL, iDays);
     EEPROM.commit();
 
-    m_iDisinfectIntervalDays = iDays;
-    m_legionella.SetDisinfectIntervalDays(iDays);
+    m_iDisinfectionIntervalDays = iDays;
+    m_legionella.SetDisinfectionIntervalDays(iDays);
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetDisinfectRunTimeMinutes(const uint8_t iMinutes)
+void CPvBoiler::SetDisinfectionDurationMinutes(const uint8_t iMinutes)
 {
-  if (iMinutes != m_iDisinfectRunTimeMinutes)
+  if (iMinutes != m_iDisinfectionDurationMinutes)
   {
-    EEPROM.put(EEPROM_DISINFECT_RUN_TIME, iMinutes);
+    EEPROM.put(EEPROM_DISINFECTION_DURATION, iMinutes);
     EEPROM.commit();
 
-    m_iDisinfectRunTimeMinutes = iMinutes;
-    m_legionella.SetDisinfectRunTimeMinutes(iMinutes);
+    m_iDisinfectionDurationMinutes = iMinutes;
+    m_legionella.SetDisinfectionDurationMinutes(iMinutes);
 
     m_bPublishSettings = true;
   }
 }
 
 
-void CPvBoiler::SetDisinfectTemperature(const uint8_t iTemperature)
+void CPvBoiler::SetDisinfectionTemperature(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iDisinfectTemperature)
+  if (iTemperature != m_iDisinfectionTemperature)
   {
-    EEPROM.put(EEPROM_DISINFECT_TEMP, iTemperature);
+    EEPROM.put(EEPROM_DISINFECTION_TEMP, iTemperature);
     EEPROM.commit();
 
-    m_iDisinfectTemperature = iTemperature;
-    m_legionella.SetDisinfectTemperature(iTemperature);
+    m_iDisinfectionTemperature = iTemperature;
+    m_legionella.SetDisinfectionTemperature(iTemperature);
 
     m_bPublishSettings = true;
   }
@@ -1041,14 +1041,14 @@ void CPvBoiler::FactoryReset()
   SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
   SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
   SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
-  SetDisinfectionEnable(true);
+  SetDisinfectionEnabled(true);
   SetDsmrPowerBudget(false);
   SetThermostatHysteresis(THERMOSTAT_HYSTERESIS_DEFAULT);
   SetDangerZoneLowTemperature(DANGER_ZONE_LOW_TEMPERATURE_DEFAULT);
   SetDangerZoneHighTemperature(DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT);
-  SetDisinfectIntervalDays(DISINFECT_INTERVAL_DAYS_DEFAULT);
-  SetDisinfectRunTimeMinutes(DISINFECT_RUN_TIME_MINUTES_DEFAULT);
-  SetDisinfectTemperature(DISINFECT_TEMPERATURE_DEFAULT);
+  SetDisinfectionIntervalDays(DISINFECTION_INTERVAL_DAYS_DEFAULT);
+  SetDisinfectionDurationMinutes(DISINFECTION_DURATION_MINUTES_DEFAULT);
+  SetDisinfectionTemperature(DISINFECTION_TEMPERATURE_DEFAULT);
 
   // Reset controller
   Reset();
@@ -1143,7 +1143,7 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
 
 void CPvBoiler::Update()
 {
-  const bool bLegionellaDisinfect = m_bLegionellaDisinfectionRequired && m_bDisinfectionEnable && m_mode != MODE_OFF;
+  const bool bLegionellaDisinfect = m_bLegionellaDisinfectionRequired && m_bDisinfectionEnabled && m_mode != MODE_OFF;
 
   const bool bThermostatAllowedHeating = m_bThermostatAllowsHeating;
 
@@ -1152,9 +1152,9 @@ void CPvBoiler::Update()
   if (IsThermostatMode() && m_tempSensors.getDeviceCount() > 0)
   {
     // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
-    // Note: Hysteresis is included so the temperature never drops to/below the disinfect temperature (this would reset the disinfect run time)
+    // Note: Hysteresis is included so the temperature never drops to/below the disinfect temperature (this would reset the disinfecting counter)
     uint8_t iSetpoint = m_iThermostatSetpoint;
-    const uint8_t iDisinfectSetpoint = m_iDisinfectTemperature + m_iThermostatHysteresis + DISINFECT_SETPOINT_MARGIN;
+    const uint8_t iDisinfectSetpoint = m_iDisinfectionTemperature + m_iThermostatHysteresis + DISINFECTION_SETPOINT_MARGIN;
     if (bLegionellaDisinfect && iSetpoint < iDisinfectSetpoint)
     {
       iSetpoint = iDisinfectSetpoint;
