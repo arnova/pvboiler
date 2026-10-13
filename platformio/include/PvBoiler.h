@@ -137,7 +137,7 @@ class CPvBoiler
     void SetNetWatchDogRecovery(const uint16_t iTimeout);
 
     float GetCurrentPercentage() const { return m_fCurrentPercentage; };
-    uint16_t GetCurrentPower() const { return (m_fCurrentPercentage * m_iBoilerPowerRating) / 100; };
+    uint16_t GetCurrentPower() const { return lroundf((m_fCurrentPercentage * m_iBoilerPowerRating) / 100.0f); };
 
     uint16_t CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const uint16_t iZeroCrossWindow);
     float GetTriacAngleFactor() const { return m_fTriacAngleFactor; };

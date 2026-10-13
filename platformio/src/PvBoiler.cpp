@@ -1107,7 +1107,7 @@ uint16_t CPvBoiler::CalculateTriacPhaseDelay(const uint16_t iPeriodTime, const u
   else if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     // Update triac angle factor
-    const float fTriacAngleFactor = triac_percentage_factor[static_cast<uint8_t>(m_fCurrentPercentage)];
+    const float fTriacAngleFactor = triac_percentage_factor[lroundf(m_fCurrentPercentage)]; // Note: Percentage is clamped to 0-100
     if (fTriacAngleFactor != m_fTriacAngleFactor)
     {
       m_fTriacAngleFactor = fTriacAngleFactor;
