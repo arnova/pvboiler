@@ -59,6 +59,10 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     return;
   }
 
+  // Real period edge seen: cancel any (pending) backup firing, this edge takes over
+  m_bTriacBackupPending = false;
+  m_bTriacOn = false;
+
   if (iNewPeriodTime >= NET_PERIOD_INVALID)
   {
     // Gap: far too long to be a real period (dropout, missed pulses, boot)
@@ -97,50 +101,62 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
   // SSR: Always switch full cycles (both half periods) to prevent a DC component. The decision is made on
   // the first half period of a cycle and held for the second one. Counter also advances for missed edges
   // so it stays in sync with the mains polarity
-  if (iPeriodsPassed > 1)
-  {
-    m_bSSRCycleOn = false; // Missed edge(s): never complete a cycle we may not have started
-  }
-
   m_iSSRPeriodCounter = (m_iSSRPeriodCounter + iPeriodsPassed) % (m_iSSRPeriodCount * 2);
-  if ((m_iSSRPeriodCounter & 1) == 0)
+  const bool bFirstHalf = (m_iSSRPeriodCounter & 1) == 0;
+  if (bFirstHalf)
   {
     m_bSSRCycleOn = (m_iSSRPeriodCounter / 2) < m_iSSROnCycles;
   }
-
-  if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
+  else if (iPeriodsPassed > 1)
   {
-    // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
-    if (m_iTriacDelayUs != 0)
-    {
-      ScheduleTriac(iNow);
-    }
+    m_bSSRCycleOn = false; // First half period was missed: never complete a cycle we didn't start
   }
-  else if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR && m_bSSRCycleOn)
+
+  const bool bPhaseAngle = (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE);
+  const bool bFire = bPhaseAngle || (m_dimStyle == CPvBoiler::DIM_STYLE_SSR && m_bSSRCycleOn);
+  const bool bFireNext = bPhaseAngle || bFirstHalf; // SSR: Next cycle may be off
+
+  // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
+  if (bFire && m_iTriacDelayUs != 0)
   {
-    ScheduleTriac(iNow);
+    const uint32_t iFireTime = m_iLastPeriodStartTime + m_iTriacDelayUs;
+
+    // Also prepare a backup firing for the next half period (predicted with the flywheel period).
+    // This prevents a DC component when the next zero cross is missed
+    if (ScheduleTriac(iFireTime) && bFireNext)
+    {
+      m_iTriacBackupTime = iFireTime + m_period.Get();
+      m_bTriacBackupPending = true;
+    }
   }
 }
 
 
-void IRAM_ATTR CApp::ScheduleTriac(const uint32_t iNow)
+bool IRAM_ATTR CApp::ScheduleTriac(const uint32_t iFireTime)
 {
-  const int32_t iRemainingDelay = static_cast<int32_t>(m_iLastPeriodStartTime + m_iTriacDelayUs - iNow);
+  const int32_t iRemainingDelay = static_cast<int32_t>(iFireTime - micros());
 
   if (iRemainingDelay <= 0)
   {
     // Conservative: skip firing this half-cycle rather than
     // firing at an unintended (near-zero) delay
-    m_bTriacOn = false;
-    return;
+    return false;
   }
 
   m_bTriacOn = true;
+  ArmTriacTimer(iRemainingDelay);
+
+  return true;
+}
+
+
+void IRAM_ATTR CApp::ArmTriacTimer(const uint32_t iDelayUs)
+{
 #ifdef ESP8266
-  timer1_write(iRemainingDelay * ESP8266_TICKS_PER_US);
-#else
+  timer1_write(iDelayUs * ESP8266_TICKS_PER_US);
+#else // ESP32
   timerWrite(m_hTriacTimer, 0);
-  timerAlarmWrite(m_hTriacTimer, iRemainingDelay, false); // one-shot, tick = 1µs
+  timerAlarmWrite(m_hTriacTimer, iDelayUs, false); // one-shot, tick = 1µs
   timerAlarmEnable(m_hTriacTimer);
 #endif
 }
@@ -154,18 +170,20 @@ void IRAM_ATTR CApp::TriacGateHandler()
     digitalWrite(TRIAC_OUTPUT, HIGH); // On
 
     m_bTriacOn = false;
-#ifdef ESP8266
-    timer1_write(GATE_PULSE_WIDTH * ESP8266_TICKS_PER_US);
-#else // ESP32
-    timerWrite(m_hTriacTimer, 0);
-    timerAlarmWrite(m_hTriacTimer, GATE_PULSE_WIDTH, false);
-    timerAlarmEnable(m_hTriacTimer);
-#endif
+    ArmTriacTimer(GATE_PULSE_WIDTH);
   }
   else
   {
     digitalWrite(TRIAC_OUTPUT, LOW); // Off
     m_bGateBlanking = false;
+
+    // End of gate pulse: arm backup firing for the next half period. It's cancelled by its zero cross edge
+    // (which then schedules the firing itself), so it only fires when that edge is missed
+    if (m_bTriacBackupPending)
+    {
+      m_bTriacBackupPending = false;
+      ScheduleTriac(m_iTriacBackupTime);
+    }
   }
 }
 

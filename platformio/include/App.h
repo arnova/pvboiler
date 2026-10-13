@@ -35,7 +35,8 @@ class CApp
     void MqttRequestRepublish() { m_bMqttRepublish = true; m_mqttRepublishTimer = 0; };
 
   private:
-    void IRAM_ATTR ScheduleTriac(const uint32_t iNow);
+    bool IRAM_ATTR ScheduleTriac(const uint32_t iFireTime);
+    void IRAM_ATTR ArmTriacTimer(const uint32_t iDelayUs);
 
 #ifdef ESP32
     hw_timer_t *m_hTriacTimer = nullptr;
@@ -61,6 +62,8 @@ class CApp
 
     volatile bool m_bTriacOn = false;
     volatile bool m_bGateBlanking = false;
+    volatile bool m_bTriacBackupPending = false;
+    volatile uint32_t m_iTriacBackupTime = 0;
     uint16_t m_iSSRPeriodCounter = 0; // ISR only, half periods
     bool m_bSSRCycleOn = false; // ISR only
     volatile uint16_t m_iTriacDelayUs = 0;
