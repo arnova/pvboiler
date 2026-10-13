@@ -231,8 +231,8 @@ class CPvBoiler
     // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
     CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 
-    // Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
-    uint8_t m_iSsrPeriodCount = 50; // (= 0.5s @ 50 Hz).
+    // Amount of full (mains) periods when ssr style mode is used
+    uint8_t m_iSsrPeriodCount = SSR_PERIOD_COUNT_DEFAULT;
 
     float m_fTriacAngleFactor = 0.0f;
     uint16_t m_iTriacPhaseAngle = 0; // us

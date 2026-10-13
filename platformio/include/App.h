@@ -61,10 +61,11 @@ class CApp
 
     volatile bool m_bTriacOn = false;
     volatile bool m_bGateBlanking = false;
-    uint8_t m_iSSRPeriodCounter = 0; // ISR only
+    uint16_t m_iSSRPeriodCounter = 0; // ISR only, half periods
+    bool m_bSSRCycleOn = false; // ISR only
     volatile uint16_t m_iTriacDelayUs = 0;
-    volatile uint8_t m_iSSRPeriodCount = 0;
-    volatile uint8_t m_iCurrentPercentage = 0;
+    volatile uint8_t m_iSSRPeriodCount = SSR_PERIOD_COUNT_DEFAULT; // Full cycles, always non-zero
+    volatile uint8_t m_iSSROnCycles = 0; // Full cycles
     volatile CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 };
 #endif // APP_H

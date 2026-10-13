@@ -571,7 +571,7 @@ void CPvBoiler::LoadSettings()
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
 
   EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
-  if (iVal8 < 2 || iVal8 > SSR_PERIOD_COUNT_MAX)
+  if (iVal8 < SSR_PERIOD_COUNT_MIN || iVal8 > SSR_PERIOD_COUNT_MAX)
   {
     iVal8 = SSR_PERIOD_COUNT_DEFAULT;
   }

@@ -24,8 +24,9 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define BUDGET_MARGIN_MIN                       0     // Watt
 #define BUDGET_MARGIN_MAX                       5000  // Watt
 
-// Amount of (half) sinus / periods when ssr style mode is used. Always use an even number!
-#define SSR_PERIOD_COUNT_DEFAULT                50    // (= 0.5s @ 50 Hz).
+// Amount of full (mains) periods when ssr style mode is used
+#define SSR_PERIOD_COUNT_DEFAULT                25    // (= 0.5s @ 50 Hz).
+#define SSR_PERIOD_COUNT_MIN                    1
 #define SSR_PERIOD_COUNT_MAX                    254
 
 // Positive error gain

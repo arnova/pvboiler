@@ -41,7 +41,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
 
 const char EX_HELP_STR_P[] PROGMEM = "\r\n"
                                   "dimstyle [s]           : Set dim style to [s] (\"ssr\" or \"phase-angle\")\r\n"
-                                  "ssrperiod [p]          : When using SSR dim style use SSR period count [p]\r\n"
+                                  "ssrperiod [p]          : When using SSR dim style use SSR period count [p] (full periods)\r\n"
                                   "scp [c]                : Set positive step-clamp to value [c] percent\r\n"
                                   "scn [c]                : Set negative step-clamp to value [c] percent\r\n"
                                   "egp [g]                : Set budget mode positive error-gain to value [g]\r\n"
@@ -967,7 +967,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
     return result;
 
   int32_t iCount;
-  result = get_int32_from_string(strArgs, &iCount, 1, SSR_PERIOD_COUNT_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iCount, SSR_PERIOD_COUNT_MIN, SSR_PERIOD_COUNT_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 

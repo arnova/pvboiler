@@ -67,6 +67,7 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     return;
   }
 
+  uint32_t iPeriodsPassed = 1;
   switch (m_period.Update(iNewPeriodTime))
   {
     case CTrackedValue::RESULT_ACCEPTED:
@@ -79,7 +80,8 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
     {
       // Flywheel: advance by the number of whole periods passed (handles missed edges)
       const uint32_t iPeriod = m_period.Get();
-      m_iLastPeriodStartTime += ((iNow - m_iLastPeriodStartTime + iPeriod / 2) / iPeriod) * iPeriod;
+      iPeriodsPassed = (iNow - m_iLastPeriodStartTime + iPeriod / 2) / iPeriod;
+      m_iLastPeriodStartTime += iPeriodsPassed * iPeriod;
     }
     break;
 
@@ -92,6 +94,20 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
 
   digitalWrite(TRIAC_OUTPUT, LOW); // Off
 
+  // SSR: Always switch full cycles (both half periods) to prevent a DC component. The decision is made on
+  // the first half period of a cycle and held for the second one. Counter also advances for missed edges
+  // so it stays in sync with the mains polarity
+  if (iPeriodsPassed > 1)
+  {
+    m_bSSRCycleOn = false; // Missed edge(s): never complete a cycle we may not have started
+  }
+
+  m_iSSRPeriodCounter = (m_iSSRPeriodCounter + iPeriodsPassed) % (m_iSSRPeriodCount * 2);
+  if ((m_iSSRPeriodCounter & 1) == 0)
+  {
+    m_bSSRCycleOn = (m_iSSRPeriodCounter / 2) < m_iSSROnCycles;
+  }
+
   if (m_dimStyle == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
     // NOTE: m_iTriacDelayUs is 0 when for whatever reason triac should not be turned on
@@ -100,18 +116,9 @@ void IRAM_ATTR CApp::ZeroCrossHandler()
       ScheduleTriac(iNow);
     }
   }
-  else if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR && m_iCurrentPercentage != 0)
+  else if (m_dimStyle == CPvBoiler::DIM_STYLE_SSR && m_bSSRCycleOn)
   {
-    m_iSSRPeriodCounter++;
-    if ((m_iSSRPeriodCounter * 100) / m_iSSRPeriodCount <= m_iCurrentPercentage)
-    {
-      ScheduleTriac(iNow);
-    }
-
-    if (m_iSSRPeriodCounter >= m_iSSRPeriodCount)
-    {
-      m_iSSRPeriodCounter = 0;
-    }
+    ScheduleTriac(iNow);
   }
 }
 
@@ -287,7 +294,7 @@ void CApp::HandleDisplay()
           m_display.WriteDisplayStr(strLine, 0, true);
         }
 
-        const uint8_t iPercent = m_pvBoiler.GetCurrentPercentage();
+        const uint8_t iPercent = lroundf(m_pvBoiler.GetCurrentPercentage());
 
         switch (m_pvBoiler.GetMode())
         {
@@ -438,15 +445,17 @@ void CApp::UpdateValues()
   m_pvBoiler.SetPowerGood(bPeriodValid && bZeroCrossWindowValid);
 
   // Get updated values for ISR
-  const uint8_t iCurrentPercentage = m_pvBoiler.GetCurrentPercentage();
   const uint8_t iSSRPeriodCount = m_pvBoiler.GetSsrPeriodCount();
   const CPvBoiler::dim_style_t dimStyle = m_pvBoiler.GetDimStyle();
+
+  // Number of full cycles to switch on per SSR period. Note: Percentage is clamped to 0-100
+  const uint8_t iSSROnCycles = (dimStyle == CPvBoiler::DIM_STYLE_SSR) ? lroundf(m_pvBoiler.GetCurrentPercentage() * iSSRPeriodCount / 100.0f) : 0;
 
   const uint16_t iTriacDelayUs = m_pvBoiler.CalculateTriacPhaseDelay(iPeriodTime, iZeroCrossWindow);
 
   noInterrupts(); // Enter critical section
 
-  m_iCurrentPercentage = iCurrentPercentage;
+  m_iSSROnCycles = iSSROnCycles;
   m_iSSRPeriodCount = iSSRPeriodCount;
   m_dimStyle = dimStyle;
 
