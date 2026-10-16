@@ -1151,24 +1151,21 @@ void CPvBoiler::Update()
   // the hardware thermostat takes over
   if (IsThermostatMode() && m_tempSensors.getDeviceCount() > 0)
   {
-    // During legionella disinfection raise the setpoint so the disinfect temperature can be reached and held
-    // Note: Hysteresis is included so the temperature never drops to/below the disinfect temperature (this would reset the disinfecting counter)
-    uint8_t iSetpoint = m_iThermostatSetpoint;
-    const uint8_t iDisinfectSetpoint = m_iDisinfectionTemperature + m_iThermostatHysteresis + DISINFECTION_SETPOINT_MARGIN;
-    if (bLegionellaDisinfect && iSetpoint < iDisinfectSetpoint)
-    {
-      iSetpoint = iDisinfectSetpoint;
-    }
-
     if (m_fBoilerTemperature <= 0.0f)
     {
       m_bThermostatAllowsHeating = false; // Sensor installed but no valid reading: fail safe
     }
-    else if (m_fBoilerTemperature >= iSetpoint)
+    else if (bLegionellaDisinfect)
+    {
+      // Ignore setpoint during legionella disinfection: keep heating until the disinfect temperature has been held long enough.
+      // Note: Cycling around a setpoint could drop the temperature to/below the disinfect temperature (this would reset the disinfecting counter)
+      m_bThermostatAllowsHeating = true;
+    }
+    else if (m_fBoilerTemperature >= m_iThermostatSetpoint)
     {
       m_bThermostatAllowsHeating = false;
     }
-    else if (m_fBoilerTemperature < iSetpoint - m_iThermostatHysteresis)
+    else if (m_fBoilerTemperature < m_iThermostatSetpoint - m_iThermostatHysteresis)
     {
       m_bThermostatAllowsHeating = true;
     }
@@ -1192,7 +1189,7 @@ void CPvBoiler::Update()
   }
   else if (bLegionellaDisinfect)
   {
-    fNewPercentage = 100.0f;
+    fNewPercentage = (IsThermostatMode() && !m_bThermostatAllowsHeating) ? 0.0f : 100.0f; // Thermostat only blocks on invalid sensor reading
   }
   else if (m_mode == MODE_SETPOINT || (m_mode == MODE_SETPOINT_BUDGET && m_bThermostatAllowsHeating))
   {

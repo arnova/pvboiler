@@ -94,8 +94,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define DISINFECTION_TEMPERATURE_MIN            45    // Celsius
 #define DISINFECTION_TEMPERATURE_MAX            80    // Celsius
 
-#define DISINFECTION_SETPOINT_MARGIN            4     // Celsius. Minimum override setpoint during legionella disinfection = disinfect temperature + hysteresis + margin
-
 // Network watchdog timer settings
 #define NETWORK_WATCHDOG_TIMEOUT_DEFAULT        60    // Seconds = 1 minute
 #define NETWORK_WATCHDOG_TIMEOUT_MAX            65000
