@@ -12,7 +12,13 @@ result_code_t CCommandHandler::CmdReboot(const char *strArgs)
   if (strArgs != NULL && *strArgs)
     return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
 
+  CTerminal::println("OK");
+
+  delay(3000); // Delay to make sure network socket processing is done
+
   ESP.restart();
+
+  // In principle anything from here on is not executed
 
   return pack_result_code(ERR_CODE_OK);
 }
