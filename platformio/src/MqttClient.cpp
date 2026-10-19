@@ -91,7 +91,7 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   serializeJson(root, strMessage);
 
 #ifdef MQTT_DEBUG
-  CTerminal::println(message); //Prints it out on one line
+  CTerminal::println(strMessage); //Prints it out on one line
 #endif
 
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];

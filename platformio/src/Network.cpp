@@ -123,14 +123,14 @@ void CNetwork::InitWifi(const bool bReconnect)
     //CTerminal::println("");
     //CTerminal::println(PSTR("Disconnecting WiFi"));
 #endif
-
+#ifdef SOCKET_SERVER_PORT
     if (m_socketServerClient)
     {
       m_socketServerClient.stop();
     }
 
     m_socketServer.stop();
-
+#endif
     WiFi.disconnect();
   }
 
@@ -324,18 +324,17 @@ WiFiClient& CNetwork::GetSocketServerClient()
 
     m_socketServerClient = newClient;
 
-#ifdef WIFI_DEBUG
     if (m_socketServerClient)
     {
       CTerminal::SetSocketClient(m_socketServerClient);
-
+#ifdef WIFI_DEBUG
       CTerminal::print("Accepting connection from client: ");
 
       char strBuf[16]; // Enough room for a standard IPv4 address
       snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_socketServerClient.remoteIP()[0], m_socketServerClient.remoteIP()[1], m_socketServerClient.remoteIP()[2], m_socketServerClient.remoteIP()[3]);
       CTerminal::println(strBuf);
-    }
 #endif
+    }
   }
 
   return m_socketServerClient;
