@@ -263,7 +263,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetMqttPassword(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   m_network.InitWifi(true);
 
@@ -274,7 +274,7 @@ result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
@@ -415,7 +415,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   CTerminal::print("wifi_conn=");
   CTerminal::print(m_network.IsConnected() ? "1" : "0");
@@ -624,7 +624,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   // Publish uptime
   const CUptime::uptime_t upTime = m_pvBoiler.GetUpTime();
@@ -639,7 +639,7 @@ result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   m_pvBoiler.Reset();
 
@@ -650,7 +650,7 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   m_pvBoiler.FactoryReset();
 

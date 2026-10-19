@@ -10,7 +10,7 @@
 result_code_t CCommandHandler::CmdReboot(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS);
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
 
   CTerminal::println("OK");
 
