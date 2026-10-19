@@ -105,8 +105,10 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     return;
   }
 
-  const size_t iLen = strlen(g_app.GetNetwork().GetHostName());
-  if (strncmp(topic, g_app.GetNetwork().GetHostName(), iLen) != 0 ||
+  // Use the MQTT client's hostname: it's what we subscribed with (a changed hostname only applies after MQTT reinit)
+  const char* strHostName = g_app.GetNetwork().GetMqttClient().GetHostName();
+  const size_t iLen = strlen(strHostName);
+  if (strncmp(topic, strHostName, iLen) != 0 ||
       strlen(topic) < iLen + 2)
     return; // Hostname mismatch or length too small
 

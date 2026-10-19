@@ -30,6 +30,8 @@ class CMqttClient : public PubSubClient
     bool ServerConnect();
     void ServerDisconnect();
 
+    const char* GetHostName() const { return m_strHostName; };
+
   private:
     void ConstructConfigMessage(JsonDocument& root, const char* strItem);
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
