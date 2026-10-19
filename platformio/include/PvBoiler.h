@@ -97,7 +97,7 @@ class CPvBoiler
     void Loop();
     void Reset();
 
-    void MqttPublishConfig();
+    void MqttOnConnect();
     void MqttRequestRepublish() { m_bMqttRepublish = true; }; // Publish all values on next loop
     void LoadSettings();
     void FactoryReset();
@@ -190,9 +190,11 @@ class CPvBoiler
     bool GetPowerGoodFlag();
 
   private:
-    void UpdateDsmrPowerBudget() { if (m_bDsmrPowerBudget) { m_iPowerBudget = m_iPowerReturned - m_iPowerDelivered; m_bPublishPowerBudget = true; } };
-    void MqttSubscribeDsmr();
+    void MqttPublishDiscovery();
     bool MqttPublishValues();
+    void UpdateDsmrPowerBudget() { if (m_bDsmrPowerBudget) { m_iPowerBudget = m_iPowerReturned - m_iPowerDelivered; m_bPublishPowerBudget = true; } };
+    void MqttUpdateDsmrSubscription();
+
     void Update();
     void CheckNetworkWatchDog();
 

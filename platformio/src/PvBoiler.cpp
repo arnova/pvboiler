@@ -222,6 +222,12 @@ bool CPvBoiler::MqttPublishValues()
 
   char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
 
+  // Publish our f/w version. Note: Static so only published on request
+  if (m_bMqttRepublish)
+  {
+    m_network.GetMqttClient().PublishMessage(MQTT_FW_VERSION, MY_VERSION);
+  }
+
   if (m_bPublishSettings || m_bMqttRepublish)
   {
     m_bPublishSettings = false;
@@ -448,7 +454,7 @@ bool CPvBoiler::MqttPublishValues()
 }
 
 
-void CPvBoiler::MqttSubscribeDsmr()
+void CPvBoiler::MqttUpdateDsmrSubscription()
 {
   // Get current grid power from DSMR-reader (used as power budget). Note: Only subscribe when used,
   // else its messages would keep feeding the network watchdog
@@ -465,14 +471,12 @@ void CPvBoiler::MqttSubscribeDsmr()
 }
 
 
-void CPvBoiler::MqttPublishConfig()
+void CPvBoiler::MqttPublishDiscovery()
 {
   // (Re)subscribing makes the broker resend retained setter values: hold off publishing our own
   m_mqttSetterHoldOffTimer = 0;
 
-  MqttSubscribeDsmr();
-
-  // Publish MQTT config for eg. HA discovery and subscribe to control topics
+  // Publish HA discovery config and subscribe to control (setter) topics
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
   // Note: Don't retain power budget: a stale (retained) budget would be applied after (re)connect and also feed the network watchdog
@@ -530,9 +534,13 @@ void CPvBoiler::MqttPublishConfig()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_UP_TIME, "", "", "", true);
+}
 
-  // Publish our f/w version
-  m_network.GetMqttClient().PublishMessage(MQTT_FW_VERSION, MY_VERSION, true);
+
+void CPvBoiler::MqttOnConnect()
+{
+  MqttPublishDiscovery();
+  MqttUpdateDsmrSubscription();
 }
 
 
@@ -730,7 +738,7 @@ void CPvBoiler::SetDsmrPowerBudget(const bool bEnable)
 
     if (m_network.IsMqttConnected())
     {
-      MqttSubscribeDsmr();
+      MqttUpdateDsmrSubscription();
     }
   }
 }

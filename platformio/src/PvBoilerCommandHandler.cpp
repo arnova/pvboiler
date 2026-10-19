@@ -934,9 +934,6 @@ result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
-  // Mode changed so need to publish config
-  m_pvBoiler.MqttPublishConfig();
-
   return pack_result_code(ERR_CODE_OK);
 }
 
@@ -952,9 +949,6 @@ result_code_t CPvBoilerCommandHandler::CmdSetDimStyle(const char *strArgs)
     m_pvBoiler.SetDimStyle(CPvBoiler::DIM_STYLE_SSR);
   else
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
-
-  // Dim style changed so need to publish config
-  m_pvBoiler.MqttPublishConfig();
 
   return pack_result_code(ERR_CODE_OK);
 }
