@@ -392,7 +392,7 @@ bool CPvBoiler::MqttPublishValues()
       m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
       m_iLegionellaDisinfectionAgeHoursSetter = m_iLegionellaDisinfectionAgeHours;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectionAgeHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", strBuf);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", strBuf, true); // Retain: restored from broker after reboot
     }
 
     // Publish state?
@@ -409,7 +409,7 @@ bool CPvBoiler::MqttPublishValues()
       m_bPublishLegionellaInDangerZoneHoursSetter = false;
       m_iLegionellaInDangerZoneHoursSetter = m_iLegionellaInDangerZoneHours;
       snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaInDangerZoneHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", strBuf);
+      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", strBuf, true); // Retain: restored from broker after reboot
     }
 
     // Publish state?
