@@ -154,6 +154,13 @@ void CNetwork::InitWifi(const bool bReconnect)
     m_socketServer.stop();
 #endif
     WiFi.disconnect();
+
+    // Wait for the (asynchronous) disconnect to complete: WiFi.begin() won't (re)connect when it
+    // still sees us as connected with the same SSID/password
+    for (uint8_t it = 0; it < WIFI_DISCONNECT_TIMEOUT / 10 && WiFi.status() == WL_CONNECTED; it++)
+    {
+      delay(10);
+    }
   }
 
   if (strlen(m_strWifiSsid) == 0)
@@ -447,6 +454,17 @@ void CNetwork::Loop()
   }
   else
   {
+    if (m_bWifiConnected)
+    {
+      // Connection lost
+      m_bWifiConnected = false;
+
+#ifdef WIFI_DEBUG
+      TERM_SERIAL.println("");
+      TERM_SERIAL.println(PSTR("WiFi connection lost"));
+#endif
+    }
+
     if (m_wifiTimeoutTimer > WIFI_CONNECT_TIMEOUT)
     {
       InitWifi(true);

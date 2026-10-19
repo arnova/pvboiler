@@ -116,6 +116,9 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // Wifi connect timeout
 #define WIFI_CONNECT_TIMEOUT                    10000 // ms
 
+// Wifi disconnect timeout (max. wait for disconnect to complete when restarting WiFi)
+#define WIFI_DISCONNECT_TIMEOUT                 1000  // ms
+
 // MQTT connect timeout
 #define MQTT_CONNECT_TIMEOUT                    10000 // ms
 
