@@ -143,6 +143,9 @@ void CNetwork::InitWifi(const bool bReconnect)
   CTerminal::println(m_strWifiSsid);
 #endif
 
+  // NOTE: Must be set before WiFi.config()/WiFi.mode() as the hostname is applied when the STA interface starts
+  WiFi.setHostname(m_strHostName);
+
   // Check for dhcp ip
   if (IPAddress(m_ipAddr) != IPAddress(0, 0, 0, 0))
   {
@@ -156,7 +159,6 @@ void CNetwork::InitWifi(const bool bReconnect)
   }
 
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname(m_strHostName);
   if (strlen(m_strWifiPassword) != 0)
   {
     WiFi.begin(m_strWifiSsid, m_strWifiPassword);
