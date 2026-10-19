@@ -270,7 +270,7 @@ void CApp::HandleDisplay()
   if (m_displayTimer > 5000)
   {
     m_displayTimer = 0;
-    char strLine[22]; // Maximum amount of characters on a single line with this font is 21
+    char strLine[24]; // Must fit the bar string: "[" + 20 spaces + "]" + NUL
 
     switch (m_displayCount)
     {
