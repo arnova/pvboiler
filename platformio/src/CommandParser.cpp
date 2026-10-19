@@ -390,8 +390,16 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
       break;
 
     case ERR_CODE_TOO_MANY_ARGS:
-      strcat(strResult, resultCode.strArgNum);
-      STRCAT_PSTR(strResult, " arguments required");
+      if (STREQUALS(resultCode.strArgNum, "0"))
+      {
+        STRCAT_PSTR(strResult, "No arguments allowed");
+      }
+      else
+      {
+        STRCAT_PSTR(strResult, "Too many arguments (max. ");
+        strcat(strResult, resultCode.strArgNum);
+        STRCAT_PSTR(strResult, ")");
+      }
       break;
 
     case ERR_CODE_ARG_MISSING:
