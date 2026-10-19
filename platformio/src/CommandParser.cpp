@@ -291,7 +291,8 @@ result_code_t get_double_from_string(const char *str, double *dblValue, const do
  */
 result_code_t get_ipv4_from_string(const char* str, uint8_t* ipv4, const uint8_t iArgNum)
 {
-  for (uint8_t pos = 0, pos_last = 0, count = 0; pos <= strlen(str); pos++)
+  uint8_t count = 0;
+  for (uint8_t pos = 0, pos_last = 0; pos <= strlen(str); pos++)
   {
     if (str[pos] == '.' || str[pos] == '\0')
     {
@@ -313,6 +314,10 @@ result_code_t get_ipv4_from_string(const char* str, uint8_t* ipv4, const uint8_t
       pos_last = pos + 1;
     }
   }
+
+  // Require all 4 octets
+  if (count != 4)
+    return pack_result_code(ERR_CODE_INVALID_IPV4, iArgNum);
 
   return pack_result_code(ERR_CODE_OK);
 }
