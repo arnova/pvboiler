@@ -64,6 +64,8 @@ class CNetwork
 
     CMqttClient& GetMqttClient() { return m_mqttClient; };
 
+    static bool IsValidHostName(const char* str);
+
   private:
     static bool IsValidAlpha(const char* str);
     void MqttPublishValues();

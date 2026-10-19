@@ -123,6 +123,9 @@ result_code_t CPvBoilerCommandHandler::CmdSetHostName(const char *strArgs)
     return store_arg1_int32(resultCode, 1);
   }
 
+  if (!CNetwork::IsValidHostName(strArgs))
+    return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
+
   m_network.SetHostName(strArgs);
 
   return pack_result_code(ERR_CODE_OK_AFTER_RESTART);

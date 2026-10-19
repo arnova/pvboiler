@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : elapsedMillis MqttClient Terminal util
   Initial date     : July 11, 2026
-  Last modified    : July 30, 2026
+  Last modified    : October 19, 2026
 */
 
 #include <Arduino.h>
@@ -16,6 +16,7 @@
 #endif
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
+#include <ctype.h>
 
 #include "Network.h"
 #include "Terminal.h"
@@ -59,11 +60,32 @@ bool CNetwork::IsValidAlpha(const char* str)
 }
 
 
+bool CNetwork::IsValidHostName(const char* str)
+{
+  // Hostname is also used for mDNS & MQTT topics: only allow letters, digits & '-' (not at start/end)
+  const size_t iLen = strlen(str);
+  if (iLen == 0 || str[0] == '-' || str[iLen - 1] == '-')
+  {
+    return false;
+  }
+
+  for (; *str; ++str)
+  {
+    if (!isalnum((unsigned char) *str) && *str != '-')
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
 void CNetwork::LoadSettings()
 {
   EEPROM.get(EEPROM_HOST_NAME, m_strHostName);
   m_strHostName[HOST_NAME_MAX_SIZE] = '\0'; // Always null terminate
-  if (!IsValidAlpha(m_strHostName))
+  if (!IsValidHostName(m_strHostName))
   {
     strcpy(m_strHostName, DEFAULT_HOST_NAME);
   }
