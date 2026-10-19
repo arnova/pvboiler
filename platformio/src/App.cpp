@@ -306,82 +306,86 @@ void CApp::HandleDisplay()
 
       case 2:
       {
-        if (!m_pvBoiler.GetPowerGood())
-        {
-          m_display.WriteDisplayStr("Power error", 0, true);
-        }
-        else
-        {
-          snprintf(strLine, sizeof(strLine), "%uW", m_pvBoiler.GetCurrentPower());
-          m_display.WriteDisplayStr(strLine, 0, true);
-        }
-
         const uint8_t iPercent = lroundf(m_pvBoiler.GetCurrentPercentage());
 
         switch (m_pvBoiler.GetMode())
         {
           case CPvBoiler::MODE_BOOST:
           {
-            strcpy(strLine, "Boost - 100%");
+            m_display.WriteDisplayStr("Boost", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_BUDGET:
           {
-            snprintf(strLine, sizeof(strLine), "Budget - %u%%", iPercent);
+            m_display.WriteDisplayStr("Budget", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_PERCENT:
           {
-            snprintf(strLine, sizeof(strLine), "%u%%", iPercent);
+            m_display.WriteDisplayStr("Percentage", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_SETPOINT:
           {
-            snprintf(strLine, sizeof(strLine), "Setpoint - %u%%", iPercent);
+            m_display.WriteDisplayStr("Setpoint", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_BUDGET_SETPOINT:
           {
-            snprintf(strLine, sizeof(strLine), "Budget<=SP - %u%%", iPercent);
+            m_display.WriteDisplayStr("Budget<=SP", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_PERCENT_SETPOINT:
           {
-            snprintf(strLine, sizeof(strLine), "Perc<=SP - %u%%", iPercent);
+            m_display.WriteDisplayStr("Perc<=SP", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_SETPOINT_BUDGET:
           {
-            snprintf(strLine, sizeof(strLine), "SP>Budget - %u%%", iPercent);
+            m_display.WriteDisplayStr("SP>Budget", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET:
           {
-            snprintf(strLine, sizeof(strLine), "P>SP>Bdgt - %u%%", iPercent);
+            m_display.WriteDisplayStr("Perc>SP>Budget", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_STANDBY:
           {
-            snprintf(strLine, sizeof(strLine), "Standby - %u%%", iPercent);
+            m_display.WriteDisplayStr("Standby", 0, true);
           }
           break;
 
           case CPvBoiler::MODE_OFF:
           {
-            snprintf(strLine, sizeof(strLine), "Off - %u%%", iPercent);
+            m_display.WriteDisplayStr("Off", 0, true);
+          }
+          break;
+
+          default:
+          {
+            m_display.WriteDisplayStr("Unknown mode", 0, true);
           }
           break;
         }
 
-        m_display.WriteDisplayStr(strLine, 1, false);
+        if (!m_pvBoiler.GetPowerGood())
+        {
+          m_display.WriteDisplayStr("Power error", 1, false);
+        }
+        else
+        {
+          snprintf(strLine, sizeof(strLine), "%uW - %u%%", m_pvBoiler.GetCurrentPower(), iPercent);
+          m_display.WriteDisplayStr(strLine, 1, false);
+        }
 
         // Chars are not monospace so need to compensate for smaller spaces with the logic below
         strcpy(strLine, "[");
