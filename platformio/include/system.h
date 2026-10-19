@@ -10,6 +10,18 @@
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
 
+// Triac gate pulse width
+#define GATE_PULSE_WIDTH                        50    // uS
+
+// Triac phase margin we keep to prevent misfires
+#define TRIAC_PHASE_ANGLE_MARGIN_US             500   // us
+
+// Maximum amount of net period & zero cross window measurement outliers
+#define MAX_CONSECUTIVE_OUTLIERS                8
+
+// Maximum time elapsed before we flag an actual power error
+#define POWER_GOOD_TIME_MAX                     1000  // ms
+
 // Boiler power rating
 #define BOILER_POWER_RATING_DEFAULT             2500  // Watt
 #define BOILER_POWER_RATING_MAX                 10000 // Watt
@@ -57,14 +69,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define NET_PERIOD_MAX_US                       11000 // us
 #define NET_PERIOD_INVALID                      65535 // us
 
-// Maximum amount of net period & zero cross window measurement outliers
-#define MAX_CONSECUTIVE_OUTLIERS                8
-
-// Triac phase margin we keep to prevent misfires
-#define TRIAC_PHASE_ANGLE_MARGIN_US             500   // us
-
-// Triac gate pulse width
-#define GATE_PULSE_WIDTH                        50    // uS
 
 // Temperature related
 #define TEMPERATURE_MAX_RETRIES                 255
@@ -101,6 +105,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define NETWORK_WATCHDOG_RECOVERY_DEFAULT       60    // Seconds = 1 minute
 #define NETWORK_WATCHDOG_RECOVERY_MAX           65000
 
+#define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
+#define MQTT_UPDATE_TIME_MIN                    1      // Seconds
+#define MQTT_UPDATE_TIME_MAX                    254    // Seconds
+
 // Enable below for additional wifi / mqtt debug messages
 #define WIFI_DEBUG
 //#define MQTT_DEBUG
@@ -111,15 +119,16 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // MQTT connect timeout
 #define MQTT_CONNECT_TIMEOUT                    10000 // ms
 
+// Time to wait after MQTT (re)subscribing before publishing setter values (allow retained values to arrive first)
+// Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
+// and HA discover new entities (before we publish their values)
+#define MQTT_SETTLE_TIME_MS                     5000  // ms
+
 // MQTT settings
 #define MQTT_PORT                               1883
 #define MQTT_MAX_MESSAGE_SIZE                   1024
 #define MQTT_MAX_TOPIC_ITEM_SIZE                64
 #define MQTT_MAX_CONFIG_TOPIC_SIZE              128
-
-#define MQTT_UPDATE_TIME_DEFAULT                10     // Seconds
-#define MQTT_UPDATE_TIME_MIN                    1      // Seconds
-#define MQTT_UPDATE_TIME_MAX                    254    // Seconds
 
 // Control topic items
 #define MQTT_SET_MODE                           "mode"
@@ -190,14 +199,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define DEVICE_NAME                             "PV-Boiler"
 #define DEVICE_MODEL                            "PV-Boiler Controller"
 #define MANUFACTURER                            "Arnova"
-
-/********************
- * GPIO pin numbers *
- ********************/
-#define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)
-#define ONE_WIRE 12         // One-wire temperature sensor (GPIO12 / D6 on NodeMCUv2)
-#define TRIAC_OUTPUT 13     // Output to optocoupler + triac (GPIO13 / D7 on NodeMCUv2)
-#define ZERO_CROSS_INPUT 14 // Input for zero-cross detection (GPIO14 / D5 on NodeMCUv2)
 
 // UART/socket settings
 #define BAUD_RATE                     115200
@@ -271,18 +272,10 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define EEPROM_DISINFECTION_TEMP EEPROM_DISINFECTION_DURATION + DISINFECTION_DURATION_SIZE // 380
                                                                                   // end 381
 
-// Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
-// Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
-#define ESP8266_TICKS_PER_US  80
-
-#define CONTROL_LOOP_TIME_MS  1000  // ms
-
-// Time to wait after MQTT (re)subscribing before publishing setter values (allow retained values to arrive first)
-// Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
-// and HA discover new entities (before we publish their values)
-#define MQTT_SETTLE_TIME_MS           5000  // ms
-
-// Maximum time elapsed before we flag an actual power error
-#define POWER_GOOD_TIME_MAX   1000  // ms
+// GPIO pin numbers
+#define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)
+#define ONE_WIRE 12         // One-wire temperature sensor (GPIO12 / D6 on NodeMCUv2)
+#define TRIAC_OUTPUT 13     // Output to optocoupler + triac (GPIO13 / D7 on NodeMCUv2)
+#define ZERO_CROSS_INPUT 14 // Input for zero-cross detection (GPIO14 / D5 on NodeMCUv2)
 
 #endif // SYSTEM_H

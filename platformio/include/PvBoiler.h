@@ -15,6 +15,8 @@
 #include "Legionella.h"
 #include "Terminal.h"
 
+#define CONTROL_LOOP_TIME_MS  1000  // ms
+
 // Triac phase control firing delay lookup table
 // Index = power percentage (0-100)
 // Value = firing delay as fraction of half-period (0.0 = start, 1.0 = end)

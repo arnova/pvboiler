@@ -2,6 +2,10 @@
 #include "util.h"
 #include "App.h"
 
+// Timer1 at DIV1 (80 MHz clock) -> 80 ticks per µs on esp8266
+// Maximum ~104 ms at this prescaler; no need for DIV256 in our range.
+#define ESP8266_TICKS_PER_US                    80
+
 CApp::CApp() : m_pvBoiler(m_network), m_commandHandler(m_pvBoiler, m_network), m_terminal(m_network),
                m_period(NET_PERIOD_MIN_US, NET_PERIOD_MAX_US, MAX_CONSECUTIVE_OUTLIERS),
                m_zeroCrossWindow(ZERO_CROSS_WINDOW_MIN_US, ZERO_CROSS_WINDOW_MAX_US, MAX_CONSECUTIVE_OUTLIERS)

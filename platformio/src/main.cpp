@@ -223,7 +223,7 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
 
-    // Allow the hardware to sort itself out
+  // Allow the hardware to sort itself out
   delay(1500);
 
   // Have the terminal start with a newline
