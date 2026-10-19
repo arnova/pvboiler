@@ -6,7 +6,7 @@
   Target compiler  : (Generic)
   Dependencies     : (none)
   Initial date     : August 27, 2019
-  Last modified    : July 23, 2025
+  Last modified    : October 19, 2026
 */
 
 #include "util.h"
@@ -137,8 +137,8 @@ char *strtrimleft(char *str, const char *chrstr)
   while (*startptr && strchr(chrstr, *startptr))
     startptr++;
 
-  // Move string
-  strcpy(str, startptr);
+  // Move string (incl. \0). NOTE: Buffers overlap so strcpy() can't be used
+  memmove(str, startptr, strlen(startptr) + 1);
 
   return str;
 }
