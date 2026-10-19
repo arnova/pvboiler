@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <limits.h>
+#include <ctype.h>
 
 /*
  * Pack error_code_t into result_code_t (overload)
@@ -299,14 +300,17 @@ result_code_t get_ipv4_from_string(const char* str, uint8_t* ipv4, const uint8_t
       if (pos == 0 || (pos == pos_last) || (pos - pos_last > 3) || count >= 4)
         return pack_result_code(ERR_CODE_INVALID_IPV4, iArgNum);
 
-      char strNum[4];
-      strncpy0(strNum, str + pos_last, pos - pos_last);
+      // Parse octet as plain decimal digits (strtol() base 0 would treat eg. "010" as octal)
+      uint16_t iNum = 0;
+      for (uint8_t it = pos_last; it < pos; it++)
+      {
+        if (!isdigit((unsigned char) str[it]))
+          return pack_result_code(ERR_CODE_INVALID_IPV4, iArgNum);
 
-      int32_t iNum;
-      if (!decstr_to_int32(strNum, &iNum))
-        return pack_result_code(ERR_CODE_INVALID_IPV4, iArgNum);
+        iNum = iNum * 10 + (str[it] - '0');
+      }
 
-      if (iNum < 0 || iNum > 255)
+      if (iNum > 255)
         return pack_result_code(ERR_CODE_INVALID_IPV4, iArgNum);
 
       ipv4[count++] = (uint8_t) iNum;
