@@ -408,21 +408,22 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
 
     case ERR_CODE_ARG_FORMAT_MIN_NUMBER:
     case ERR_CODE_ARG_FORMAT_MAX_NUMBER:
-      STRCAT_PSTR(strResult, "Numeric part of ");
-      // fall through
     case ERR_CODE_ARG_VAL_MIN:
-      // fall through
     case ERR_CODE_ARG_VAL_MAX:
-      STRCAT_PSTR(strResult, "argument ");
+      if (resultCode.code == ERR_CODE_ARG_FORMAT_MIN_NUMBER || resultCode.code == ERR_CODE_ARG_FORMAT_MAX_NUMBER)
+        STRCAT_PSTR(strResult, "Numeric part of argument ");
+      else
+        STRCAT_PSTR(strResult, "Argument ");
+
       strcat(strResult, resultCode.strArgNum);
 
       if (resultCode.code == ERR_CODE_ARG_VAL_MIN || resultCode.code == ERR_CODE_ARG_FORMAT_MIN_NUMBER)
-        STRCAT_PSTR(strResult, " min. value (");
+        STRCAT_PSTR(strResult, " below min. value (");
       else
-        STRCAT_PSTR(strResult, " max. value (");
+        STRCAT_PSTR(strResult, " above max. value (");
 
       strcat(strResult, resultCode.strArg1);
-      STRCAT_PSTR(strResult, ") exceeded");
+      STRCAT_PSTR(strResult, ")");
       break;
 
     case ERR_CODE_ARG_FORMAT:
