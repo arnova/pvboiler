@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : October 9, 2026
+  Last modified    : October 19, 2026
 */
 
 #include <Arduino.h>

@@ -4,9 +4,6 @@
 
 #include "CommandParser.h"
 
-// Maximum byte size for arguments stored in m_bufArg1
-#define ARG_BUF_BYTE_SIZE 6
-
 class CCommandHandler
 {
   public:
