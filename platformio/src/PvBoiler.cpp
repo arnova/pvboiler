@@ -446,8 +446,15 @@ bool CPvBoiler::MqttPublishValues()
         m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, "None");
       }
 
-      snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
-      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
+      if (m_iZeroCrossWindow != 0 && m_iZeroCrossWindow != ZERO_CROSS_WINDOW_INVALID)
+      {
+        snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
+      }
+      else
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, "None"); // Home Assistant: state "unknown"
+      }
     }
 
     // Publish uptime. Note: Always published since it changes every interval
