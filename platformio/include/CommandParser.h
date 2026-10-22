@@ -36,6 +36,7 @@ enum error_code_e
   ERR_CODE_ARG_FORMAT,
   ERR_CODE_INVALID_IPV4,
   ERR_CODE_INVALID_PORT,
+  ERR_CODE_INVALID_MAC,
   ERR_CODE_ARG_STR_MIN,
   ERR_CODE_ARG_STR_MAX,
   ERR_CODE_ARG_BIN_MAX,
@@ -55,6 +56,8 @@ enum arg_int32_e
 };
 
 #define MAX_ARG_SIZE 12 // String buffer that can store max. int32 or double with 11 characters
+
+#define ALL_CHANNELS 0xFF
 
 struct result_code_s
 {
@@ -79,11 +82,15 @@ result_code_t get_byte_from_hex(const char *str, uint8_t *dataByte, const uint8_
 result_code_t get_byte_from_bin(const char *str, uint8_t *dataByte, const uint8_t iArgNum);
 result_code_t get_bytes_from_bin_or_hex_string(const char *str, uint8_t *buf, const uint8_t iMaxBitSize, const size_t iBufSize, const uint8_t iArgNum);
 result_code_t get_ipv4_from_string(const char* str, uint8_t* ipv4, const uint8_t iArgNum);
+result_code_t get_mac_from_string(const char* str, uint8_t* MAC, const uint8_t iArgNum);
+result_code_t get_channel_or_all_from_string(const char *str, uint8_t *pChannel, const uint8_t channel_max);
 
 void get_error_string(const result_code_t& resultCode, char *strResult, const bool bAppend = false);
 
 result_code_t parse_decimal_arg(const char* strArgs, const int32_t iMinIntSize, const int32_t iMaxIntSize, int32_t* iVal32);
 result_code_t parse_hex_or_bin_arg(const char* strArgs, const uint8_t iMaxBitSize, uint8_t* pBuf, size_t iBufSize);
 result_code_t parse_ipv4_arg(const char* strArgs, uint8_t* pIPAddress);
+result_code_t parse_mac_arg(const char* strArgs, uint8_t* pMACAddress);
+result_code_t format_ipv4(uint8_t *data, char *strResult);
 
 #endif // COMMAND_PARSER_H

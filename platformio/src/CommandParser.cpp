@@ -1,3 +1,12 @@
+/*
+  Command Parser Library
+
+  Written by       : Arno van Amersfoort
+  Dependencies     : util
+  Initial date     : August 22, 2019
+  Last modified    : October 22, 2026
+*/
+
 #include "CommandParser.h"
 #include "util.h"
 #include "system.h"
@@ -327,6 +336,70 @@ result_code_t get_ipv4_from_string(const char* str, uint8_t* ipv4, const uint8_t
 }
 
 
+result_code_t get_mac_from_string(const char* str, uint8_t* MAC, const uint8_t iArgNum)
+{
+  for (uint8_t pos = 0, pos_last = 0, count = 0; pos <= strlen(str); pos++)
+  {
+    if (str[pos] == ':' || str[pos] == '\0')
+    {
+      if (pos == 0 || (pos == pos_last) || (pos - pos_last != 2) || count >= 6)
+        return pack_result_code(ERR_CODE_INVALID_MAC, iArgNum);
+
+      char strHex[3];
+      strncpy0(strHex, str + pos_last, 2);
+
+      uint8_t iNum;
+      if (!hexstr_to_uint8(strHex, &iNum))
+        return pack_result_code(ERR_CODE_INVALID_MAC, iArgNum);
+
+      if (iNum > 255)
+        return pack_result_code(ERR_CODE_INVALID_MAC, iArgNum);
+
+      MAC[count++] = iNum;
+
+      pos_last = pos + 1;
+    }
+  }
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
+// Helper function to obtain channel from a string (argument)
+result_code_t get_channel_or_all_from_string(const char *args, uint8_t *pChannel, const uint8_t channel_max)
+{
+  if (strcount(args, " ,=") > 1)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NUM1);
+
+  if (STRIEQUALS_PSTR(args, "all") || STRIEQUALS_PSTR(args, "*"))
+  {
+    *pChannel = ALL_CHANNELS;
+  }
+  else
+  {
+    int32_t ch;
+    if (!decstr_to_int32(args, &ch))
+      return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
+
+    if (ch < 0)
+    {
+      result_code_t resultCode = pack_result_code(ERR_CODE_ARG_VAL_MIN, ARG_INT32_NUM1);
+      return store_arg1_int32(resultCode, 0);
+    }
+
+    if (ch >= channel_max)
+    {
+      result_code_t resultCode = pack_result_code(ERR_CODE_ARG_VAL_MAX, ARG_INT32_NUM1);
+      return store_arg1_int32(resultCode, channel_max - 1);
+    }
+
+    *pChannel = ch;
+  }
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 /*
  * For provided result_code_t argument get error string
  * Arguments : resultCode = Result code (result_code_t)
@@ -446,7 +519,11 @@ void get_error_string(const result_code_t& resultCode, char *strResult, const bo
 
     case ERR_CODE_INVALID_PORT:
       STRCAT_PSTR(strResult, "Invalid port number");
-    break;
+      break;
+
+    case ERR_CODE_INVALID_MAC:
+      STRCAT_PSTR(strResult, "Invalid MAC address");
+      break;
 
     case ERR_CODE_ARG_STR_MIN:
       STRCAT_PSTR(strResult, "Minimum of ");
@@ -526,4 +603,30 @@ result_code_t parse_ipv4_arg(const char* strArgs, uint8_t* pIPAddress)
     return resultCode;
 
   return get_ipv4_from_string(strArgs, pIPAddress, ARG_INT32_NUM1);
+}
+
+
+result_code_t parse_mac_arg(const char* strArgs, uint8_t* pMACAddress)
+{
+  result_code_t resultCode = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (resultCode.code != ERR_CODE_OK)
+    return resultCode;
+
+  return get_mac_from_string(strArgs, pMACAddress, ARG_INT32_NUM1);
+}
+
+
+result_code_t format_ipv4(uint8_t *data, char *strResult)
+{
+  strResult[0] = '\0';
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    char strDec[4];
+    strcat(strResult, uint32_to_decstr((uint32_t)data[i], strDec, sizeof(strDec)));
+    if (i < 3)
+      strcat(strResult, ".");
+  }
+  strcat(strResult, "\n\r");
+
+  return pack_result_code(ERR_CODE_OK);
 }
