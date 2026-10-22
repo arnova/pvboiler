@@ -217,7 +217,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define HOST_NAME_MAX_SIZE      32
 #define MQTT_USER_MAX_SIZE      32
 #define MQTT_PASSWORD_MAX_SIZE  64
-#define HOST_NAME_MAX_SIZE      32
 #define IP_BYTE_SIZE            4
 #define BP_RATING_SIZE          2
 #define CTRL_MODE_SIZE          1
