@@ -118,12 +118,6 @@ result_code_t CPvBoilerCommandHandler::CmdSetHostName(const char *strArgs)
     return store_arg1_int32(resultCode, HOST_NAME_MAX_SIZE);
   }
 
-  if (strlen(strArgs) == 0)
-  {
-    result_code_t resultCode = pack_result_code(ERR_CODE_ARG_STR_MIN, ARG_INT32_NUM1);
-    return store_arg1_int32(resultCode, 1);
-  }
-
   if (!CNetwork::IsValidHostName(strArgs))
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
 
