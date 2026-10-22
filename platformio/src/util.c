@@ -455,7 +455,7 @@ char *dbl_to_dblstr(const double dblNum, char *strDbl, const int8_t iDecimals, c
     {
       if (strDbl[it - iDecimals - 1] == '.')
       {
-        strDbl[it] = '\0'; // Truncate number of decimals
+        strDbl[(iDecimals == 0) ? it - 1 : it] = '\0'; // Truncate number of decimals (and dot when no decimals)
         break;
       }
     }
