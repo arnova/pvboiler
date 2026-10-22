@@ -865,7 +865,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strAr
     return result;
 
   int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, 1, BOILER_POWER_RATING_MAX, ARG_INT32_NUM1);
+  result = get_int32_from_string(strArgs, &iPower, BOILER_POWER_RATING_MIN, BOILER_POWER_RATING_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 

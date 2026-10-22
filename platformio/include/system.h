@@ -24,6 +24,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 
 // Boiler power rating
 #define BOILER_POWER_RATING_DEFAULT             2500  // Watt
+#define BOILER_POWER_RATING_MIN                 100   // Watt
 #define BOILER_POWER_RATING_MAX                 10000 // Watt
 
 // The dead zone value represents the window where a change in power budget is ignored

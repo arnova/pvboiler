@@ -551,7 +551,7 @@ void CPvBoiler::LoadSettings()
   float fVal = 0.0f;
 
   EEPROM.get(EEPROM_BP_RATING, iVal16);
-  if (iVal16 < 100 || iVal16 > BOILER_POWER_RATING_MAX)
+  if (iVal16 < BOILER_POWER_RATING_MIN || iVal16 > BOILER_POWER_RATING_MAX)
   {
     iVal16 = BOILER_POWER_RATING_DEFAULT;
   }
