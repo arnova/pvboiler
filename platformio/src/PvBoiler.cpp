@@ -1238,7 +1238,8 @@ void CPvBoiler::Update()
   else
   {
     // Calculate error step (percentage)
-    float fErrorStep = (100.0f * (m_iPowerBudget - m_iBudgetMargin)) / m_iBoilerPowerRating;
+    const int32_t iPowerError = m_iPowerBudget - m_iBudgetMargin;
+    float fErrorStep = (100.0f * iPowerError) / m_iBoilerPowerRating;
     fErrorStep *= (fErrorStep > 0.0f) ? m_fErrorGainPos : m_fErrorGainNeg;
 
     // Clamp error (step) value
@@ -1252,7 +1253,7 @@ void CPvBoiler::Update()
     }
 
     // Only change value when outside deadzone
-    if (m_iPowerBudget > m_iDeadZone || m_iPowerBudget < -m_iDeadZone)
+    if (iPowerError > m_iDeadZone || iPowerError < -m_iDeadZone)
     {
       fNewPercentage += fErrorStep;
     }
