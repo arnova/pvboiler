@@ -431,12 +431,20 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_bPublishMainsValues = false;
 
-      // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
-      snprintf(strBuf, sizeof(strBuf), "%u", (m_iPeriodTime == NET_PERIOD_INVALID) ? 0 : m_iPeriodTime * 2);
-      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
+      if (m_iPeriodTime != 0 && m_iPeriodTime != NET_PERIOD_INVALID)
+      {
+        // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
+        snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
-      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
+        snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
+      }
+      else
+      {
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, "None"); // Home Assistant: state "unknown"
+        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, "None");
+      }
 
       snprintf(strBuf, sizeof(strBuf), "%u", (m_iZeroCrossWindow == ZERO_CROSS_WINDOW_INVALID) ? 0 : m_iZeroCrossWindow);
       m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
