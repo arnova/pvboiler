@@ -68,7 +68,7 @@ bool check_bit_size(const uint8_t *buf, const size_t iBufSize, const uint8_t iMa
     }
   }
 
-  return true; // Fits}
+  return true; // Fits
 }
 
 
@@ -806,7 +806,7 @@ char* bytes_to_ipstr(const uint8_t *bufIP, char* strIP)
 }
 
 
-// Helper function to format IP Address
+// Helper function to format MAC Address
 char* bytes_to_macstr(const uint8_t *bufMAC, char* strMAC)
 {
   strMAC[0] = '\0';
@@ -814,10 +814,6 @@ char* bytes_to_macstr(const uint8_t *bufMAC, char* strMAC)
   {
     char strDec[3];
     strcat(strMAC, bytes_to_hexstr(bufMAC + i, strDec, 1));
-
-    // Pad zeros
-    if (strlen(strDec) == 1)
-      strcat(strMAC, "0");
 
     if (i < 5)
       strcat(strMAC, ":");
