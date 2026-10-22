@@ -528,8 +528,8 @@ void CPvBoiler::MqttPublishDiscovery()
   m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, "min", "duration", "", true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DISINFECTION_AGE, 1.0f, 0.0f, 10000000.0f, "h");
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_IN_DANGER_ZONE, 1.0f, 0.0f, 10000000.0f, "h");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DISINFECTION_AGE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
+  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_IN_DANGER_ZONE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_THERMOSTAT_HYSTERESIS, "°C", "temperature", "", true);
   m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, "°C", "temperature", "", true);

@@ -4,6 +4,9 @@
 
 #include "system.h"
 
+// Maximum hours that fit in our (uint32_t) seconds counters
+#define LEGIONELLA_HOURS_MAX (UINT32_MAX / 3600)
+
 class CLegionella
 {
   public:
@@ -19,8 +22,8 @@ class CLegionella
     bool DisinfectionRequired() const { return m_bDisinfectionRequired; };
 
     void UpdateTemperature(const float fTemperature) { m_fTemperature = fTemperature; };
-    void SetDisinfectionAgeHours(const uint32_t iHours) { m_iDisinfectionAgeSeconds = iHours * 3600; };
-    void SetInDangerZoneHours(const uint32_t iHours) { m_iInDangerZoneSeconds = iHours * 3600; };
+    void SetDisinfectionAgeHours(const uint32_t iHours) { m_iDisinfectionAgeSeconds = ((iHours > LEGIONELLA_HOURS_MAX) ? LEGIONELLA_HOURS_MAX : iHours) * 3600; };
+    void SetInDangerZoneHours(const uint32_t iHours) { m_iInDangerZoneSeconds = ((iHours > LEGIONELLA_HOURS_MAX) ? LEGIONELLA_HOURS_MAX : iHours) * 3600; };
 
     void SetDangerZoneLowTemperature(const uint8_t iTemperature) { m_iDangerZoneLowTemperature = iTemperature; };
     void SetDangerZoneHighTemperature(const uint8_t iTemperature) { m_iDangerZoneHighTemperature = iTemperature; };
