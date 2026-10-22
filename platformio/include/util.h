@@ -57,7 +57,7 @@ char *strtrimleft(char *str, const char *chrstr);
 char *strtrimright(char *str, const char *chrstr);
 char *strtrim(char *str, const char *chrstr);
 int strfind(const char *str, const char *substr);
-int strcmpat(const char *str, const uint8_t start, const char *substr);
+int strncmpat(const char *str, const uint8_t start, const char *substr);
 char *strncpy0(char *dest, const char *source, const uint8_t n);
 char *int32_to_decstr(int32_t iNum, char *strDec, const size_t iBufSize);
 char *uint32_to_decstr(uint32_t iNum, char *strDec, const size_t iBufSize);

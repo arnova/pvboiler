@@ -7,7 +7,7 @@
   Target compiler  : Generic
   Dependencies     : (none)
   Initial date     : March 23, 2018
-  Last modified    : September 21, 2026
+  Last modified    : October 22, 2026
 */
 
 #include "RollingAverage.h"
@@ -19,12 +19,11 @@ void CRollingAverage::SetAvgCount(uint32_t iCount)
     iCount = 1;
   }
 
-  // Preserve current average in case new count is lower than previous one
-  if (iCount < m_iAvgCountSet)
+  // Preserve current average in case new count is lower than the current amount of values
+  if (m_iAccCount > iCount)
   {
-    float fAvgVal = m_fAccVal / m_iAccCount;
+    m_fAccVal = (m_fAccVal / m_iAccCount) * iCount;
     m_iAccCount = iCount;
-    m_fAccVal = fAvgVal * m_iAccCount;
   }
 
   m_iAvgCountSet = iCount;

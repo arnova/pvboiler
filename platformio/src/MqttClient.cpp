@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : October 19, 2026
+  Last modified    : October 22, 2026
 */
 
 #include <Arduino.h>
@@ -90,13 +90,15 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   char strMessage[MQTT_MAX_MESSAGE_SIZE];
   serializeJson(root, strMessage);
 
-#ifdef MQTT_DEBUG
-  CTerminal::println(strMessage); //Prints it out on one line
-#endif
-
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
   snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
   publish(strTopic, strMessage, true);
+
+#ifdef MQTT_DEBUG
+  CTerminal::print(strTopic);
+  CTerminal::print(": ");
+  CTerminal::println(strMessage);
+#endif
 }
 
 
@@ -129,13 +131,14 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 
 void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
-#ifdef MQTT_DEBUG
-  CTerminal::println(message); //Prints it out on one line
-#endif
-
   char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
   snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
   publish(strTopic, "", true);
+
+#ifdef MQTT_DEBUG
+  CTerminal::print(strTopic);
+  CTerminal::println(": \"\"");
+#endif
 
   if (bSetter)
   {
@@ -143,6 +146,11 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
     char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
     snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
     unsubscribe(strBuf);
+
+#ifdef MQTT_DEBUG
+    CTerminal::print("Unsubscribe: ");
+    CTerminal::println(strBuf);
+#endif
   }
 }
 

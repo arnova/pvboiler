@@ -6,7 +6,7 @@
   Target compiler  : (Generic)
   Dependencies     : (none)
   Initial date     : August 27, 2019
-  Last modified    : October 19, 2026
+  Last modified    : October 22, 2026
 */
 
 #include "util.h"
@@ -188,7 +188,7 @@ int strfind(const char *str, const char *substr)
   if (p == NULL)
     return -1;
 
-  return str - p; // Return offset from input string at 0
+  return p - str; // Return offset from input string at 0
 }
 
 
