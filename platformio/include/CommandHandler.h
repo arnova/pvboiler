@@ -4,6 +4,7 @@
 
 #include "CommandParser.h"
 
+
 class CCommandHandler
 {
   public:
@@ -12,9 +13,18 @@ class CCommandHandler
 
     static result_code_t FormatIP(uint8_t *data, char *strResult);
 
+    bool GetDebugEnabled(void) const { return m_bDebug; };
+
   protected:
+    static void PrintItemValue(const char* strItem, const char* strValue);
+    static void PrintItemValue(const char* strItem, const bool bValue);
+    static void PrintItemIp(const char* strItem, const uint8_t* ipAddr);
+
     result_code_t CmdEchoOnOff(const char *strArgs);
-    result_code_t CmdReboot(const char *strArgs);
+    result_code_t CmdDebugOnOff(const char *strArgs);
+
+  protected:
+    bool m_bDebug = false;
 };
 
 #endif // COMMAND_HANDLER_H

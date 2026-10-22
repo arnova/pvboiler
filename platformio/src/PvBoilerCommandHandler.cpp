@@ -647,6 +647,23 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 }
 
 
+result_code_t CPvBoilerCommandHandler::CmdReboot(const char *strArgs)
+{
+  if (strArgs != NULL && *strArgs)
+    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+
+  CTerminal::println("OK");
+
+  delay(3000); // Delay to make sure network socket processing is done
+
+  ESP.restart();
+
+  // In principle anything from here on is not executed
+
+  return pack_result_code(ERR_CODE_OK);
+}
+
+
 result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
 {
   if (strArgs != NULL && *strArgs)
