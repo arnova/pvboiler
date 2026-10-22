@@ -39,14 +39,14 @@ extern "C"{
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 // Get the integer size of n-bits
-#define BIT_INT_SIZE(n) ((1 << n) - 1)
+#define BIT_INT_SIZE(n) ((1 << (n)) - 1)
 
 // Divide and round up
-#define DIV_CEIL(x,y) ((x / y) + (x % y == 0 ? 0 : 1))
+#define DIV_CEIL(x,y) (((x) / (y)) + ((x) % (y) == 0 ? 0 : 1))
 
 /* Macros for getting (sub)bytes from e.g. bigger numbers */
-#define LOBYTE(x)     (x & 0xFF)
-#define HIBYTE(x)     ((x >> 8) & 0xFF)
+#define LOBYTE(x)     ((x) & 0xFF)
+#define HIBYTE(x)     (((x) >> 8) & 0xFF)
 #define SUBBYTE(x, n) ((char*)(&x))[n]
 
 uint32_t x_to_y(const uint32_t iX, const uint32_t iY);
