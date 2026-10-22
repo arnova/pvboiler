@@ -999,7 +999,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetErrorGainNeg(const char *strArgs)
     return result;
 
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_NEG_MIN, ERROR_GAIN_NEG_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -1033,7 +1033,7 @@ result_code_t CPvBoilerCommandHandler::CmdSetStepClampNeg(const char *strArgs)
     return result;
 
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, ARG_INT32_NUM1);
+  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_NEG_MIN, STEP_CLAMP_NEG_MAX, ARG_INT32_NUM1);
   if (result.code != ERR_CODE_OK)
     return result;
 
