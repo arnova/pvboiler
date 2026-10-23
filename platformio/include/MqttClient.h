@@ -37,6 +37,11 @@ class CMqttClient : public PubSubClient
     const char* GetHostName() const { return m_strHostName; };
 
   private:
+    const char* GetItemTopic(const char* strItem, char* strBuf, const size_t iBufSize) const;
+    const char* GetSetterTopic(const char* strItem, char* strBuf, const size_t iBufSize) const;
+    const char* GetStatusTopic(char* strBuf, const size_t iBufSize) const;
+    const char* GetConfigTopic(const char* strItem, const char* strTopicType, char* strBuf, const size_t iBufSize) const;
+
     void ConstructConfigMessage(JsonDocument& root, const char* strItem);
     void PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType);
     void PublishSetterConfig(JsonDocument& root, const char* strItem, const char* strTopicType, const bool bRetain = true);

@@ -15,6 +15,12 @@
 #include "Terminal.h"
 #include "util.h"
 
+// Topic buffer sizes (including null char)
+#define MQTT_ITEM_TOPIC_SIZE    (HOST_NAME_MAX_SIZE + MQTT_MAX_TOPIC_ITEM_SIZE + 2) // "<host>/<item>"
+#define MQTT_SETTER_TOPIC_SIZE  (MQTT_ITEM_TOPIC_SIZE + 4)                          // "<host>/<item>/set"
+#define MQTT_STATUS_TOPIC_SIZE  (HOST_NAME_MAX_SIZE + 8)                            // "<host>/status"
+#define MQTT_CONFIG_TOPIC_SIZE  (MQTT_MAX_CONFIG_TOPIC_SIZE + 1)                    // "homeassistant/<type>/<host>/<item>/config"
+
 
 void CMqttClient::PrintDataError(void)
 {
@@ -53,6 +59,34 @@ void CMqttClient::GetFriendlyName(const char* strName, char* strFriendly, const 
 }
 
 
+const char* CMqttClient::GetItemTopic(const char* strItem, char* strBuf, const size_t iBufSize) const
+{
+  snprintf(strBuf, iBufSize, "%s/%s", m_strHostName, strItem);
+  return strBuf;
+}
+
+
+const char* CMqttClient::GetSetterTopic(const char* strItem, char* strBuf, const size_t iBufSize) const
+{
+  snprintf(strBuf, iBufSize, "%s/%s/set", m_strHostName, strItem);
+  return strBuf;
+}
+
+
+const char* CMqttClient::GetStatusTopic(char* strBuf, const size_t iBufSize) const
+{
+  snprintf(strBuf, iBufSize, "%s/status", m_strHostName);
+  return strBuf;
+}
+
+
+const char* CMqttClient::GetConfigTopic(const char* strItem, const char* strTopicType, char* strBuf, const size_t iBufSize) const
+{
+  snprintf(strBuf, iBufSize, "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
+  return strBuf;
+}
+
+
 void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem)
 {
   char strFriendlyItem[MQTT_MAX_TOPIC_ITEM_SIZE + 1];
@@ -60,17 +94,15 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
 
   root["name"] = strFriendlyItem;
 
-  char strStateTopic[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
-  snprintf(strStateTopic, sizeof(strStateTopic), "%s/%s", m_strHostName, strItem);
-  root["state_topic"] = strStateTopic;
+  char strStateTopic[MQTT_ITEM_TOPIC_SIZE];
+  root["state_topic"] = GetItemTopic(strItem, strStateTopic, sizeof(strStateTopic));
 
-  char strUniqueId[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
+  char strUniqueId[MQTT_ITEM_TOPIC_SIZE];
   snprintf(strUniqueId, sizeof(strUniqueId), "%s_%s", m_strHostName, strItem);
   root["unique_id"] = strUniqueId;
 
-  char strAvail[HOST_NAME_MAX_SIZE + 8];
-  snprintf(strAvail, sizeof(strAvail), "%s/status", m_strHostName);
-  root["availability_topic"] = strAvail;
+  char strAvail[MQTT_STATUS_TOPIC_SIZE];
+  root["availability_topic"] = GetStatusTopic(strAvail, sizeof(strAvail));
   root["payload_available"] = "online";
   root["payload_not_available"] = "offline";
 
@@ -91,9 +123,8 @@ void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const c
   char strMessage[MQTT_MAX_MESSAGE_SIZE];
   serializeJson(root, strMessage);
 
-  char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
-  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
-  publish(strTopic, strMessage, true);
+  char strTopic[MQTT_CONFIG_TOPIC_SIZE];
+  publish(GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic)), strMessage, true);
 
 #ifdef MQTT_DEBUG
   CTerminal::print(strTopic);
@@ -107,15 +138,16 @@ void CMqttClient::PublishSetterConfig(JsonDocument& root, const char* strItem, c
 {
   ConstructConfigMessage(root, strItem);
 
+  char strSetterTopic[MQTT_SETTER_TOPIC_SIZE];
+  root["command_topic"] = GetSetterTopic(strItem, strSetterTopic, sizeof(strSetterTopic));
+
   // Whether HA publishes commands (/set) retained
   root["retain"] = bRetain;
 
   PublishConfig(root, strItem, strTopicType);
 
   // Subscribe to /set messages
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
-  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
-  subscribe(strBuf, 1);
+  subscribe(strSetterTopic, 1);
 }
 
 
@@ -132,9 +164,8 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 
 void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
-  char strTopic[MQTT_MAX_CONFIG_TOPIC_SIZE + 1];
-  snprintf(strTopic, sizeof(strTopic), "homeassistant/%s/%s/%s/config", strTopicType, m_strHostName, strItem);
-  publish(strTopic, "", true);
+  char strTopic[MQTT_CONFIG_TOPIC_SIZE];
+  publish(GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic)), "", true);
 
 #ifdef MQTT_DEBUG
   CTerminal::print(strTopic);
@@ -144,9 +175,8 @@ void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType,
   if (bSetter)
   {
     // Unsubscribe setter
-    char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
-    snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
-    unsubscribe(strBuf);
+    char strBuf[MQTT_SETTER_TOPIC_SIZE];
+    unsubscribe(GetSetterTopic(strItem, strBuf, sizeof(strBuf)));
 
 #ifdef MQTT_DEBUG
     CTerminal::print("Unsubscribe: ");
@@ -184,10 +214,6 @@ void CMqttClient::PublishSwitchConfig(const char* strItem, const bool bRetain /*
 {
   JsonDocument root;
 
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
-  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
-  root["command_topic"] = strBuf;
-
   root["payload_on"] = "1";
   root["payload_off"] = "0";
   root["state_on"] = "1";
@@ -201,10 +227,6 @@ void CMqttClient::PublishSwitchConfig(const char* strItem, const bool bRetain /*
 void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* = 1.0f */, const float fMin /* = 0.0f */, const float fMax /* = 100.0f */, const char* strUnit /* = "" */, const char* strDeviceClass /* = "" */, const bool bBox /* = true */, const bool bRetain /* = true */)
 {
   JsonDocument root;
-
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
-  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
-  root["command_topic"] = strBuf;
 
   root["min"] = fMin;
   root["max"] = fMax;
@@ -225,10 +247,6 @@ void CMqttClient::PublishNumberConfig(const char* strItem, const float fStep /* 
 void CMqttClient::PublishSelectConfig(const char* strItem, const char* const* strValues, const uint8_t iCount, const bool bRetain /* = true */)
 {
   JsonDocument root;
-
-  char strBuf[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 6];
-  snprintf(strBuf, sizeof(strBuf), "%s/%s/set", m_strHostName, strItem);
-  root["command_topic"] = strBuf;
 
   for (uint8_t it = 0; it < iCount; it++)
   {
@@ -269,9 +287,8 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /
 
 bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetain /* = false */)
 {
-  char strTopic[MQTT_MAX_TOPIC_ITEM_SIZE + HOST_NAME_MAX_SIZE + 2];
-  snprintf(strTopic, sizeof(strTopic), "%s/%s", m_strHostName, strItem);
-  return publish(strTopic, strPayload, bRetain);
+  char strTopic[MQTT_ITEM_TOPIC_SIZE];
+  return publish(GetItemTopic(strItem, strTopic, sizeof(strTopic)), strPayload, bRetain);
 }
 
 
@@ -352,8 +369,8 @@ bool CMqttClient::ServerConnect()
     strPassword = m_strPassword;
   }
 
-  char strWillTopic[HOST_NAME_MAX_SIZE + 8];
-  snprintf(strWillTopic, sizeof(strWillTopic), "%s/status", m_strHostName);
+  char strWillTopic[MQTT_STATUS_TOPIC_SIZE];
+  GetStatusTopic(strWillTopic, sizeof(strWillTopic));
 
   // Attempt to connect
   if (!connect(strclientId, strUser, strPassword, strWillTopic, 1, true, "offline"))
@@ -383,9 +400,8 @@ void CMqttClient::ServerDisconnect()
   if (connected())
   {
     // Clean disconnect: will isn't sent by the broker, so explicitly report offline
-    char strWillTopic[HOST_NAME_MAX_SIZE + 8];
-    snprintf(strWillTopic, sizeof(strWillTopic), "%s/status", m_strHostName);
-    publish(strWillTopic, "offline", true);
+    char strWillTopic[MQTT_STATUS_TOPIC_SIZE];
+    publish(GetStatusTopic(strWillTopic, sizeof(strWillTopic)), "offline", true);
 
     disconnect();
   }
