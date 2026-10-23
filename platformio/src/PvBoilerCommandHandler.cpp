@@ -279,132 +279,83 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTerminal::print("host_name=");
-  CTerminal::print(m_network.GetHostName());
+  PrintItemValue("host_name", m_network.GetHostName());
+  PrintItemValue(" wifi_ssid", m_network.GetWifiSsid());
 
-  CTerminal::print(" wifi_ssid=");
-  CTerminal::print(m_network.GetWifiSsid());
-
-  CTerminal::print(" wifi_pass=");
   const char* strWifiPass = m_network.GetWifiPassword();
-  CTerminal::print((strlen(strWifiPass) == 0) ? "(empty)" : strWifiPass);
+  PrintItemValue(" wifi_pass", (strlen(strWifiPass) == 0) ? "(empty)" : strWifiPass);
 
-  CTerminal::print(" ip=");
-  CTerminal::print(m_network.GetIpAddr()[0]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetIpAddr()[1]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetIpAddr()[2]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetIpAddr()[3]);
+  PrintItemIp(" ip", m_network.GetIpAddr());
+  PrintItemIp(" netmask", m_network.GetNetMask());
+  PrintItemIp(" mqtt_server", m_network.GetMqttIpAddr());
 
-  CTerminal::print(" netmask=");
-  CTerminal::print(m_network.GetNetMask()[0]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetNetMask()[1]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetNetMask()[2]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetNetMask()[3]);
-
-  CTerminal::print(" mqtt_server=");
-  CTerminal::print(m_network.GetMqttIpAddr()[0]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetMqttIpAddr()[1]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetMqttIpAddr()[2]);
-  CTerminal::print(".");
-  CTerminal::print(m_network.GetMqttIpAddr()[3]);
-
-  CTerminal::print(" mqtt_user=");
   const char* strMqttUser = m_network.GetMqttUser();
-  CTerminal::print((strlen(strMqttUser) == 0) ? "(empty)" : strMqttUser);
+  PrintItemValue(" mqtt_user", (strlen(strMqttUser) == 0) ? "(empty)" : strMqttUser);
 
-  CTerminal::print(" mqtt_password=");
   const char* strMqttPass = m_network.GetMqttPassword();
-  CTerminal::print((strlen(strMqttPass) == 0) ? "(empty)" : strMqttPass);
+  PrintItemValue(" mqtt_password", (strlen(strMqttPass) == 0) ? "(empty)" : strMqttPass);
 
   CTerminal::println("");
 
-  CTerminal::print("boiler_rating=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBoilerPowerRating());
-  CTerminal::print(strBuf);
+  PrintItemValue("boiler_rating", strBuf);
+  PrintItemValue(" dim_style", m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
 
-  CTerminal::print(" dim_style=");
-  CTerminal::print(m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
-
-  CTerminal::print(" ssr_period_count=");
   snprintf(strBuf, sizeof(strBuf), "%u", m_pvBoiler.GetSsrPeriodCount());
-  CTerminal::print(strBuf);
+  PrintItemValue(" ssr_period_count", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("budget_src=");
-  CTerminal::print(m_pvBoiler.GetDsmrPowerBudget() ? "dsmr-reader" : "direct");
+  PrintItemValue("budget_src", m_pvBoiler.GetDsmrPowerBudget() ? "dsmr-reader" : "direct");
 
-  CTerminal::print(" error_gain_pos=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainPos());
-  CTerminal::print(strBuf);
+  PrintItemValue(" error_gain_pos", strBuf);
 
-  CTerminal::print(" error_gain_neg=");
   snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainNeg());
-  CTerminal::print(strBuf);
+  PrintItemValue(" error_gain_neg", strBuf);
 
-  CTerminal::print(" step_clamp_pos=");
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampPos());
-  CTerminal::print(strBuf);
+  PrintItemValue(" step_clamp_pos", strBuf);
 
-  CTerminal::print(" step_clamp_neg=");
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampNeg());
-  CTerminal::print(strBuf);
+  PrintItemValue(" step_clamp_neg", strBuf);
 
-  CTerminal::print(" dead_zone=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetDeadZone());
-  CTerminal::print(strBuf);
+  PrintItemValue(" dead_zone", strBuf);
 
-  CTerminal::print(" budget_margin=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBudgetMargin());
-  CTerminal::print(strBuf);
+  PrintItemValue(" budget_margin", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("thermostat_hysteresis=");
   snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetThermostatHysteresis());
-  CTerminal::print(strBuf);
+  PrintItemValue("thermostat_hysteresis", strBuf);
 
-  CTerminal::print(" danger_zone_low=");
   snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneLowTemperature());
-  CTerminal::print(strBuf);
+  PrintItemValue(" danger_zone_low", strBuf);
 
-  CTerminal::print(" danger_zone_high=");
   snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneHighTemperature());
-  CTerminal::print(strBuf);
+  PrintItemValue(" danger_zone_high", strBuf);
 
-  CTerminal::print(" disinfect_interval=");
   snprintf(strBuf, sizeof(strBuf), "%ud", m_pvBoiler.GetDisinfectionIntervalDays());
-  CTerminal::print(strBuf);
+  PrintItemValue(" disinfect_interval", strBuf);
 
-  CTerminal::print(" disinfect_duration=");
   snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetDisinfectionDurationMinutes());
-  CTerminal::print(strBuf);
+  PrintItemValue(" disinfect_duration", strBuf);
 
-  CTerminal::print(" disinfect_temp=");
   snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDisinfectionTemperature());
-  CTerminal::print(strBuf);
+  PrintItemValue(" disinfect_temp", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("mqtt_update_interval=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetMqttUpdateInterval());
-  CTerminal::print(strBuf);
+  PrintItemValue("mqtt_update_interval", strBuf);
 
-  CTerminal::print(" net_wd_timeout=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
-  CTerminal::print(strBuf);
+  PrintItemValue(" net_wd_timeout", strBuf);
 
-  CTerminal::print(" net_wd_recovery=");
   snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogRecovery());
-  CTerminal::print(strBuf);
+  PrintItemValue(" net_wd_recovery", strBuf);
 
   CTerminal::println("");
   CTerminal::println("");
@@ -419,138 +370,102 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  CTerminal::print("wifi_conn=");
-  CTerminal::print(m_network.IsConnected() ? "1" : "0");
-
-  CTerminal::print(" mqtt_conn=");
-  CTerminal::print(m_network.IsMqttConnected() ? "1" : "0");
-
   char strBuf[20]; // Enough room for float with 3 decimals
 
-  CTerminal::print(" wifi_ip=");
-  CTerminal::print(CNetwork::FormatIp(WiFi.localIP(), strBuf, sizeof(strBuf)));
+  PrintItemValue("wifi_conn", m_network.IsConnected());
+  PrintItemValue(" mqtt_conn", m_network.IsMqttConnected());
+  PrintItemValue(" wifi_ip", CNetwork::FormatIp(WiFi.localIP(), strBuf, sizeof(strBuf)));
 
   CTerminal::println("");
 
-  CTerminal::print("mode=");
-  CTerminal::print(CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
+  PrintItemValue("mode", CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
 
-  CTerminal::print(" perc_set=");
   snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
-  CTerminal::print(strBuf);
+  PrintItemValue(" perc_set", strBuf);
 
-  CTerminal::print(" budget_set=");
   snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
-  CTerminal::print(strBuf);
+  PrintItemValue(" budget_set", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("power_out=");
   snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetCurrentPower());
-  CTerminal::print(strBuf);
+  PrintItemValue("power_out", strBuf);
 
-  CTerminal::print(" perc_out=");
   snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
-  CTerminal::print(strBuf);
+  PrintItemValue(" perc_out", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("boiler_t=");
   if (m_pvBoiler.GetBoilerTemperature() > 0.0f)
   {
     snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
-    CTerminal::print(strBuf);
   }
   else
   {
-    CTerminal::print("n/a");
+    strcpy(strBuf, "n/a");
   }
+  PrintItemValue("boiler_t", strBuf);
 
-  CTerminal::print(" over_heated=");
-  CTerminal::print(m_pvBoiler.IsBoilerOverheated() ? "1" : "0");
+  PrintItemValue(" over_heated", m_pvBoiler.IsBoilerOverheated());
 
-  CTerminal::print(" thermostat_set=");
-  snprintf(strBuf, sizeof(strBuf), "%iC", m_pvBoiler.GetThermostatSetpoint());
-  CTerminal::print(strBuf);
-  if (!m_pvBoiler.IsThermostatMode())
-  {
-    CTerminal::print("(off)");
-  }
+  snprintf(strBuf, sizeof(strBuf), "%iC%s", m_pvBoiler.GetThermostatSetpoint(), m_pvBoiler.IsThermostatMode() ? "" : "(off)");
+  PrintItemValue(" thermostat_set", strBuf);
 
-  CTerminal::print(" thermostat_allows_heating=");
-  CTerminal::print(m_pvBoiler.GetThermostatAllowsHeating() ? "1" : "0");
+  PrintItemValue(" thermostat_allows_heating", m_pvBoiler.GetThermostatAllowsHeating());
 
   CTerminal::println("");
 
-  CTerminal::print("disinfection_en=");
-  CTerminal::print(m_pvBoiler.GetDisinfectionEnabled() ? "on" : "off");
+  PrintItemValue("disinfection_en", m_pvBoiler.GetDisinfectionEnabled() ? "on" : "off");
+  PrintItemValue(" disinfection_required", m_pvBoiler.GetLegionellaDisinfectionRequired());
 
-  CTerminal::print(" disinfection_required=");
-  CTerminal::print(m_pvBoiler.GetLegionellaDisinfectionRequired() ? "1" : "0");
-
-  CTerminal::print(" in_danger_zone=");
   snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaInDangerZoneHours());
-  CTerminal::print(strBuf);
+  PrintItemValue(" in_danger_zone", strBuf);
 
-  CTerminal::print(" disinfection_age=");
   snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDisinfectionAgeHours());
-  CTerminal::print(strBuf);
+  PrintItemValue(" disinfection_age", strBuf);
 
-  CTerminal::print(" disinfecting_elapsed=");
   snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetLegionellaDisinfectingElapsedMinutes());
-  CTerminal::print(strBuf);
+  PrintItemValue(" disinfecting_elapsed", strBuf);
 
   CTerminal::println("");
 
-  CTerminal::print("mains_period=");
   const uint16_t iPeriod = m_pvBoiler.GetMainsPeriod();
   if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
   {
-    CTerminal::print("?ms");
+    PrintItemValue("mains_period", "?ms");
+    PrintItemValue(" mains_freq", "?Hz");
   }
   else
   {
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iPeriod) / 500.0f);
-    CTerminal::print(strBuf);
-  }
+    PrintItemValue("mains_period", strBuf);
 
-  CTerminal::print(" mains_freq=");
-  if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
-  {
-    CTerminal::print("?Hz");
-  }
-  else
-  {
     snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(iPeriod));
-    CTerminal::print(strBuf);
+    PrintItemValue(" mains_freq", strBuf);
   }
 
-  CTerminal::print(" mains_zero_cross_window=");
   const uint16_t iWindow = m_pvBoiler.GetMainsZeroCrossWindow();
   if (iWindow == 0 || iWindow == ZERO_CROSS_WINDOW_INVALID)
   {
-    CTerminal::print("?ms");
+    PrintItemValue(" mains_zero_cross_window", "?ms");
   }
   else
   {
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iWindow) / 1000.0f);
-    CTerminal::print(strBuf);
+    PrintItemValue(" mains_zero_cross_window", strBuf);
   }
 
-  CTerminal::print(" mains_error=");
-  CTerminal::print(m_pvBoiler.GetPowerGoodFlag() ? "0" : "1");
+  PrintItemValue(" mains_error", !m_pvBoiler.GetPowerGoodFlag());
 
   CTerminal::println("");
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    CTerminal::print("triac_phase_angle=");
     snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
-    CTerminal::print(strBuf);
+    PrintItemValue("triac_phase_angle", strBuf);
 
-    CTerminal::print(" triac_angle_factor=");
     snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
-    CTerminal::print(strBuf);
+    PrintItemValue(" triac_angle_factor", strBuf);
 
     CTerminal::println("");
   }
