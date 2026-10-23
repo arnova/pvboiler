@@ -18,6 +18,7 @@ const char HELP_STR_P[] PROGMEM = "\r\n"
                                   "info                   : Show device info\r\n"
                                   "status                 : Show device status\r\n"
                                   "uptime                 : Show device uptime\r\n"
+                                  "echo [e]               : Set terminal local echo to [e] (\"on\" or \"off\")\r\n"
                                   "budget [p]             : For budget mode set available budget to [p] Watt\r\n"
                                   "percent [p]            : For percent mode set percentage to [p] percent\r\n"
                                   "budgetsrc [s]          : Set power budget source to [s] (\"direct\" or \"dsmr-reader\")\r\n"
@@ -1160,6 +1161,10 @@ result_code_t CPvBoilerCommandHandler::ProcessCommand(char *strCommand)
   else if (STRIEQUALS(strCommand, "uptime"))
   {
     result = CmdUpTime(strArgs);
+  }
+  else if (STRIEQUALS(strCommand, "echo"))
+  {
+    result = CmdEchoOnOff(strArgs);
   }
   else if (STRIEQUALS(strCommand, "budget"))
   {
