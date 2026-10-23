@@ -16,9 +16,9 @@ class CLegionella
     void Reset() { m_iDisinfectionAgeSeconds = 0; m_iDisinfectingElapsedSeconds = 0; m_iInDangerZoneSeconds = 0; m_bDisinfectionRequired = false; };
     void Loop();
 
-    const uint32_t GetDisinfectionAgeHours() const { return m_iDisinfectionAgeSeconds / 3600; };
-    const uint32_t GetDisinfectingElapsedMinutes() const { return (m_iDisinfectingElapsedSeconds + 59) / 60; }; // Round up so non-zero means disinfecting
-    const uint32_t GetInDangerZoneHours() const { return m_iInDangerZoneSeconds / 3600; };
+    uint32_t GetDisinfectionAgeHours() const { return m_iDisinfectionAgeSeconds / 3600; };
+    uint32_t GetDisinfectingElapsedMinutes() const { return (m_iDisinfectingElapsedSeconds + 59) / 60; }; // Round up so non-zero means disinfecting
+    uint32_t GetInDangerZoneHours() const { return m_iInDangerZoneSeconds / 3600; };
     bool DisinfectionRequired() const { return m_bDisinfectionRequired; };
 
     void UpdateTemperature(const float fTemperature) { m_fTemperature = fTemperature; };

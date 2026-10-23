@@ -123,7 +123,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // MQTT connect timeout
 #define MQTT_CONNECT_TIMEOUT                    10000 // ms
 
-// Time to wait after MQTT (re)subscribing before publishing setter values (allow retained values to arrive first)
 // Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
 // and HA discover new entities (before we publish their values)
 #define MQTT_SETTLE_TIME_MS                     5000  // ms

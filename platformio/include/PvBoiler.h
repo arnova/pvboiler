@@ -257,7 +257,7 @@ class CPvBoiler
     // Keep track of up-time
     CUptime m_upTime;
 
-    // Enable this to use SSR style mode instead of triac phase cut mode. This will blank/pass-through full periods like an SSR does
+    // Dim style: triac phase angle, or SSR style which blanks/passes through full (mains) periods
     CPvBoiler::dim_style_t m_dimStyle = CPvBoiler::DIM_STYLE_NONE;
 
     // Amount of full (mains) periods when ssr style mode is used

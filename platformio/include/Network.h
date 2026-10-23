@@ -54,8 +54,8 @@ class CNetwork
     const char* GetMqttUser() { return m_strMqttUser; };
     const char* GetMqttPassword() { return m_strMqttPassword; };
 
-    const bool IsConnected() { return m_bWifiConnected; };
-    const bool IsMqttConnected() { return m_bWifiConnected && m_mqttClient.connected(); };
+    bool IsConnected() { return m_bWifiConnected; };
+    bool IsMqttConnected() { return m_bWifiConnected && m_mqttClient.connected(); };
     bool HandleMqttClient();
 
 #ifdef SOCKET_SERVER_PORT
