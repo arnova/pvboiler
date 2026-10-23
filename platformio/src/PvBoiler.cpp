@@ -220,72 +220,37 @@ bool CPvBoiler::MqttPublishValues()
   if (!m_network.IsMqttConnected())
     return false;
 
-  char strBuf[24]; // Enough room for signed/unsigned 32 bit number or our floats with 4 digit precision
+  CMqttClient& mqttClient = m_network.GetMqttClient();
 
   // Publish our f/w version. Note: Static so only published on request
   if (m_bMqttRepublish)
   {
-    m_network.GetMqttClient().PublishMessage(MQTT_FW_VERSION, MY_VERSION);
+    mqttClient.PublishMessage(MQTT_FW_VERSION, MY_VERSION);
   }
 
   if (m_bPublishSettings || m_bMqttRepublish)
   {
     m_bPublishSettings = false;
 
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
-    m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
-
-    m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, m_modeNames[m_mode].strMqtt);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
-    m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iBudgetMargin);
-    m_network.GetMqttClient().PublishMessage(MQTT_BUDGET_MARGIN, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainPos);
-    m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_POS, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.3f", m_fErrorGainNeg);
-    m_network.GetMqttClient().PublishMessage(MQTT_ERROR_GAIN_NEG, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampPos);
-    m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_POS, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.2f", m_fStepClampNeg);
-    m_network.GetMqttClient().PublishMessage(MQTT_STEP_CLAMP_NEG, strBuf);
-
-    m_network.GetMqttClient().PublishMessage(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_SSR) ? "SSR" : "Phase-angle");
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iSsrPeriodCount);
-    m_network.GetMqttClient().PublishMessage(MQTT_SSR_PERIOD_COUNT, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iMqttUpdateInterval);
-    m_network.GetMqttClient().PublishMessage(MQTT_UPDATE_INTERVAL, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogTimeout);
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_TIMEOUT, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iNetWatchDogRecovery);
-    m_network.GetMqttClient().PublishMessage(MQTT_NET_WD_RECOVERY, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iThermostatHysteresis);
-    m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_HYSTERESIS, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDangerZoneLowTemperature);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDangerZoneHighTemperature);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionIntervalDays);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionDurationMinutes);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_DURATION, strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%u", m_iDisinfectionTemperature);
-    m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, strBuf);
+    mqttClient.PublishUInt(MQTT_BOILER_POWER_RATING, m_iBoilerPowerRating);
+    mqttClient.PublishMessage(MQTT_SET_MODE, m_modeNames[m_mode].strMqtt);
+    mqttClient.PublishUInt(MQTT_DEAD_ZONE, m_iDeadZone);
+    mqttClient.PublishUInt(MQTT_BUDGET_MARGIN, m_iBudgetMargin);
+    mqttClient.PublishFloat(MQTT_ERROR_GAIN_POS, m_fErrorGainPos, 3);
+    mqttClient.PublishFloat(MQTT_ERROR_GAIN_NEG, m_fErrorGainNeg, 3);
+    mqttClient.PublishFloat(MQTT_STEP_CLAMP_POS, m_fStepClampPos, 2);
+    mqttClient.PublishFloat(MQTT_STEP_CLAMP_NEG, m_fStepClampNeg, 2);
+    mqttClient.PublishMessage(MQTT_DIM_STYLE, (m_dimStyle == DIM_STYLE_SSR) ? "SSR" : "Phase-angle");
+    mqttClient.PublishUInt(MQTT_SSR_PERIOD_COUNT, m_iSsrPeriodCount);
+    mqttClient.PublishUInt(MQTT_UPDATE_INTERVAL, m_iMqttUpdateInterval);
+    mqttClient.PublishUInt(MQTT_NET_WD_TIMEOUT, m_iNetWatchDogTimeout);
+    mqttClient.PublishUInt(MQTT_NET_WD_RECOVERY, m_iNetWatchDogRecovery);
+    mqttClient.PublishUInt(MQTT_THERMOSTAT_HYSTERESIS, m_iThermostatHysteresis);
+    mqttClient.PublishUInt(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, m_iDangerZoneLowTemperature);
+    mqttClient.PublishUInt(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, m_iDangerZoneHighTemperature);
+    mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, m_iDisinfectionIntervalDays);
+    mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_DURATION, m_iDisinfectionDurationMinutes);
+    mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, m_iDisinfectionTemperature);
   }
 
   // Publish these MQTT values (if any) when timer expires (and connected)
@@ -297,43 +262,34 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_bPublishPowerBudget = false;
 
-      snprintf(strBuf, sizeof(strBuf), "%d", m_iPowerBudget);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_BUDGET, strBuf);
+      mqttClient.PublishInt(MQTT_SET_POWER_BUDGET, m_iPowerBudget);
     }
 
     if (m_bPublishPowerPercentage || m_bMqttRepublish)
     {
       m_bPublishPowerPercentage = false;
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iPowerPercentage);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_POWER_PERCENTAGE, strBuf);
+      mqttClient.PublishUInt(MQTT_SET_POWER_PERCENTAGE, m_iPowerPercentage);
     }
 
     if (m_bPublishThermostatSetpoint || m_bMqttRepublish)
     {
       m_bPublishThermostatSetpoint = false;
 
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iThermostatSetpoint);
-      m_network.GetMqttClient().PublishMessage(MQTT_SET_THERMOSTAT_SETPOINT, strBuf);
+      mqttClient.PublishUInt(MQTT_SET_THERMOSTAT_SETPOINT, m_iThermostatSetpoint);
     }
 
     if (m_bPublishOutputPercentage || m_bMqttRepublish)
     {
       m_bPublishOutputPercentage = false;
 
-      snprintf(strBuf, sizeof(strBuf), "%.2f", m_fCurrentPercentage);
-      m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_PERCENTAGE, strBuf);
-
-      snprintf(strBuf, sizeof(strBuf), "%u", GetCurrentPower());
-      m_network.GetMqttClient().PublishMessage(MQTT_OUTPUT_POWER, strBuf);
-
-      snprintf(strBuf, sizeof(strBuf), "%u", GetTriacPhaseAngle());
-      m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_PHASE_ANGLE, strBuf);
+      mqttClient.PublishFloat(MQTT_OUTPUT_PERCENTAGE, m_fCurrentPercentage, 2);
+      mqttClient.PublishUInt(MQTT_OUTPUT_POWER, GetCurrentPower());
+      mqttClient.PublishUInt(MQTT_TRIAC_PHASE_ANGLE, GetTriacPhaseAngle());
 
       if (m_dimStyle == DIM_STYLE_PHASE_ANGLE)
       {
-        snprintf(strBuf, sizeof(strBuf), "%.4f", GetTriacAngleFactor());
-        m_network.GetMqttClient().PublishMessage(MQTT_TRIAC_ANGLE_FACTOR, strBuf);
+        mqttClient.PublishFloat(MQTT_TRIAC_ANGLE_FACTOR, GetTriacAngleFactor(), 4);
       }
     }
 
@@ -342,44 +298,42 @@ bool CPvBoiler::MqttPublishValues()
       m_bPublishBoilerTemperature = false;
       if (m_fBoilerTemperature > 0.0f)
       {
-        snprintf(strBuf, sizeof(strBuf), "%.1f", m_fBoilerTemperature);
-        m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, strBuf);
+        mqttClient.PublishFloat(MQTT_BOILER_TEMPERATURE, m_fBoilerTemperature, 1);
       }
       else
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_BOILER_TEMPERATURE, "None"); // Home Assistant: state "unknown"
+        mqttClient.PublishMessage(MQTT_BOILER_TEMPERATURE, "None"); // Home Assistant: state "unknown"
       }
     }
 
     if (m_bPublishBoilerOverHeated || m_bMqttRepublish)
     {
       m_bPublishBoilerOverHeated = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated ? "1" : "0");
+      mqttClient.PublishBool(MQTT_BOILER_OVERHEATED, m_bBoilerOverHeated);
     }
 
     if (m_bPublishThermostatAllowsHeating || m_bMqttRepublish)
     {
       m_bPublishThermostatAllowsHeating = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating ? "1" : "0");
+      mqttClient.PublishBool(MQTT_THERMOSTAT_ALLOWS_HEATING, m_bThermostatAllowsHeating);
     }
 
     if (m_bPublishDisinfectionEnabled || m_bMqttRepublish)
     {
       m_bPublishDisinfectionEnabled = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_ENABLED, m_bDisinfectionEnabled ? "1" : "0");
+      mqttClient.PublishBool(MQTT_LEGIONELLA_DISINFECTION_ENABLED, m_bDisinfectionEnabled);
     }
 
     if (m_bPublishLegionellaDisinfectionRequired || m_bMqttRepublish)
     {
       m_bPublishLegionellaDisinfectionRequired = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_REQUIRED, m_bLegionellaDisinfectionRequired ? "1" : "0");
+      mqttClient.PublishBool(MQTT_LEGIONELLA_DISINFECTION_REQUIRED, m_bLegionellaDisinfectionRequired);
     }
 
     if (m_bPublishLegionellaDisinfectingElapsedMinutes || m_bMqttRepublish)
     {
       m_bPublishLegionellaDisinfectingElapsedMinutes = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectingElapsedMinutes);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, strBuf);
+      mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, m_iLegionellaDisinfectingElapsedMinutes);
     }
 
     // Hold off publishing setters directly after subscribing so the (retained) broker values are
@@ -391,16 +345,14 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
       m_iLegionellaDisinfectionAgeHoursSetter = m_iLegionellaDisinfectionAgeHours;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectionAgeHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", strBuf, true); // Retain: restored from broker after reboot
+      mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", m_iLegionellaDisinfectionAgeHours, true); // Retain: restored from broker after reboot
     }
 
     // Publish state?
     if (m_bPublishLegionellaDisinfectionAgeHours || m_bMqttRepublish)
     {
       m_bPublishLegionellaDisinfectionAgeHours = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaDisinfectionAgeHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_DISINFECTION_AGE, strBuf);
+      mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_AGE, m_iLegionellaDisinfectionAgeHours);
     }
 
     // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
@@ -408,23 +360,21 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_bPublishLegionellaInDangerZoneHoursSetter = false;
       m_iLegionellaInDangerZoneHoursSetter = m_iLegionellaInDangerZoneHours;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaInDangerZoneHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", strBuf, true); // Retain: restored from broker after reboot
+      mqttClient.PublishUInt(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", m_iLegionellaInDangerZoneHours, true); // Retain: restored from broker after reboot
     }
 
     // Publish state?
     if (m_bPublishLegionellaInDangerZoneHours || m_bMqttRepublish)
     {
       m_bPublishLegionellaInDangerZoneHours = false;
-      snprintf(strBuf, sizeof(strBuf), "%u", m_iLegionellaInDangerZoneHours);
-      m_network.GetMqttClient().PublishMessage(MQTT_LEGIONELLA_IN_DANGER_ZONE, strBuf);
+      mqttClient.PublishUInt(MQTT_LEGIONELLA_IN_DANGER_ZONE, m_iLegionellaInDangerZoneHours);
     }
 
     if (m_bPublishPowerGoodFlag || m_bMqttRepublish)
     {
       // Note: Clear before GetPowerGoodFlag() since it may set it again when the flag is restored
       m_bPublishPowerGoodFlag = false;
-      m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ERROR, GetPowerGoodFlag() ? "0" : "1");
+      mqttClient.PublishBool(MQTT_MAINS_ERROR, !GetPowerGoodFlag());
     }
 
     if (m_bPublishMainsValues || m_bMqttRepublish)
@@ -434,33 +384,30 @@ bool CPvBoiler::MqttPublishValues()
       if (m_iPeriodTime != 0 && m_iPeriodTime != NET_PERIOD_INVALID)
       {
         // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
-        snprintf(strBuf, sizeof(strBuf), "%u", m_iPeriodTime * 2);
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, strBuf);
-
-        snprintf(strBuf, sizeof(strBuf), "%.2f", (500.0f * 1000.0f) / m_iPeriodTime);
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, strBuf);
+        mqttClient.PublishUInt(MQTT_MAINS_PERIOD, m_iPeriodTime * 2);
+        mqttClient.PublishFloat(MQTT_MAINS_FREQUENCY, (500.0f * 1000.0f) / m_iPeriodTime, 2);
       }
       else
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_PERIOD, "None"); // Home Assistant: state "unknown"
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_FREQUENCY, "None");
+        mqttClient.PublishMessage(MQTT_MAINS_PERIOD, "None"); // Home Assistant: state "unknown"
+        mqttClient.PublishMessage(MQTT_MAINS_FREQUENCY, "None");
       }
 
       if (m_iZeroCrossWindow != 0 && m_iZeroCrossWindow != ZERO_CROSS_WINDOW_INVALID)
       {
-        snprintf(strBuf, sizeof(strBuf), "%u", m_iZeroCrossWindow);
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, strBuf);
+        mqttClient.PublishUInt(MQTT_MAINS_ZERO_CROSS_WINDOW, m_iZeroCrossWindow);
       }
       else
       {
-        m_network.GetMqttClient().PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, "None"); // Home Assistant: state "unknown"
+        mqttClient.PublishMessage(MQTT_MAINS_ZERO_CROSS_WINDOW, "None"); // Home Assistant: state "unknown"
       }
     }
 
     // Publish uptime. Note: Always published since it changes every interval
     const CUptime::uptime_t upTime = GetUpTime();
+    char strBuf[24]; // Enough room for "65535d 23:59:59"
     snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
-    m_network.GetMqttClient().PublishMessage(MQTT_UP_TIME, strBuf);
+    mqttClient.PublishMessage(MQTT_UP_TIME, strBuf);
   }
 
   m_bMqttRepublish = false;
@@ -471,89 +418,93 @@ bool CPvBoiler::MqttPublishValues()
 
 void CPvBoiler::MqttUpdateDsmrSubscription()
 {
+  CMqttClient& mqttClient = m_network.GetMqttClient();
+
   // Get current grid power from DSMR-reader (used as power budget). Note: Only subscribe when used,
   // else its messages would keep feeding the network watchdog
   if (m_bDsmrPowerBudget)
   {
-    m_network.GetMqttClient().subscribe(MQTT_DSMR_ELECTRICITY_DELIVERED, 1);
-    m_network.GetMqttClient().subscribe(MQTT_DSMR_ELECTRICITY_RETURNED, 1);
+    mqttClient.subscribe(MQTT_DSMR_ELECTRICITY_DELIVERED, 1);
+    mqttClient.subscribe(MQTT_DSMR_ELECTRICITY_RETURNED, 1);
   }
   else
   {
-    m_network.GetMqttClient().unsubscribe(MQTT_DSMR_ELECTRICITY_DELIVERED);
-    m_network.GetMqttClient().unsubscribe(MQTT_DSMR_ELECTRICITY_RETURNED);
+    mqttClient.unsubscribe(MQTT_DSMR_ELECTRICITY_DELIVERED);
+    mqttClient.unsubscribe(MQTT_DSMR_ELECTRICITY_RETURNED);
   }
 }
 
 
 void CPvBoiler::MqttPublishDiscovery()
 {
+  CMqttClient& mqttClient = m_network.GetMqttClient();
+
   // (Re)subscribing makes the broker resend retained setter values: hold off publishing our own
   m_mqttSetterHoldOffTimer = 0;
 
   // Publish HA discovery config and subscribe to control (setter) topics
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
+  mqttClient.PublishBinarySensorConfig(MQTT_MAINS_ERROR, true);
 
   // Note: Don't retain power budget: a stale (retained) budget would be applied after (re)connect and also feed the network watchdog
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power", true, false);
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
+  mqttClient.PublishNumberConfig(MQTT_SET_POWER_BUDGET, 1.0f, -100000.0f, 100000.0f, "W", "power", true, false);
+  mqttClient.PublishNumberConfig(MQTT_SET_POWER_PERCENTAGE, 1.0f, 0.0f, 100.0f, "%", "", false);
+  mqttClient.PublishNumberConfig(MQTT_SET_THERMOSTAT_SETPOINT, 1.0f, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, "°C", "temperature", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP_POS, "%", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_STEP_CLAMP_NEG, "%", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
+  mqttClient.PublishSensorConfig(MQTT_ERROR_GAIN_POS, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_ERROR_GAIN_NEG, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_STEP_CLAMP_POS, "%", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_STEP_CLAMP_NEG, "%", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_DEAD_ZONE, "W", "power", "", true);
+  mqttClient.PublishSensorConfig(MQTT_BUDGET_MARGIN, "W", "power", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
+  mqttClient.PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
+  mqttClient.PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
   const char* strModes[MODE_COUNT];
   for (uint8_t it = 0; it < MODE_COUNT; it++)
   {
     strModes[it] = m_modeNames[it].strMqtt;
   }
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strModes, MODE_COUNT);
+  mqttClient.PublishSelectConfig(MQTT_SET_MODE, strModes, MODE_COUNT);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
+  mqttClient.PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_DIM_STYLE, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_SSR_PERIOD_COUNT, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_DIM_STYLE, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_SSR_PERIOD_COUNT, "", "", "", true);
 
   // Diagnostic
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_WIFI_SSID, "", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
-//  m_network.GetMqttClient().PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_WIFI_SSID, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
+//  mqttClient.PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
+  mqttClient.PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_PERIOD, "us", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_FREQUENCY, "Hz", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_MAINS_PERIOD, "us", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_MAINS_FREQUENCY, "Hz", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_MAINS_ZERO_CROSS_WINDOW, "us", "", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_THERMOSTAT_ALLOWS_HEATING, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_ENABLED, true);
-  m_network.GetMqttClient().PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, "min", "duration", "", true);
+  mqttClient.PublishSensorConfig(MQTT_BOILER_TEMPERATURE, "°C", "temperature", "");
+  mqttClient.PublishBinarySensorConfig(MQTT_BOILER_OVERHEATED, true);
+  mqttClient.PublishBinarySensorConfig(MQTT_THERMOSTAT_ALLOWS_HEATING, true);
+  mqttClient.PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_ENABLED, true);
+  mqttClient.PublishBinarySensorConfig(MQTT_LEGIONELLA_DISINFECTION_REQUIRED);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTING_ELAPSED, "min", "duration", "", true);
 
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_DISINFECTION_AGE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
-  m_network.GetMqttClient().PublishNumberConfig(MQTT_LEGIONELLA_IN_DANGER_ZONE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
+  mqttClient.PublishNumberConfig(MQTT_LEGIONELLA_DISINFECTION_AGE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
+  mqttClient.PublishNumberConfig(MQTT_LEGIONELLA_IN_DANGER_ZONE, 1.0f, 0.0f, LEGIONELLA_HOURS_MAX, "h");
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_THERMOSTAT_HYSTERESIS, "°C", "temperature", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, "°C", "temperature", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, "°C", "temperature", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, "d", "duration", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_DURATION, "min", "duration", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, "°C", "temperature", "", true);
+  mqttClient.PublishSensorConfig(MQTT_THERMOSTAT_HYSTERESIS, "°C", "temperature", "", true);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_LOW_TEMP, "°C", "temperature", "", true);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DANGER_ZONE_HIGH_TEMP, "°C", "temperature", "", true);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_INTERVAL, "d", "duration", "", true);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_DURATION, "min", "duration", "", true);
+  mqttClient.PublishSensorConfig(MQTT_LEGIONELLA_DISINFECTION_TEMPERATURE, "°C", "temperature", "", true);
 
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
-  m_network.GetMqttClient().PublishSensorConfig(MQTT_UP_TIME, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_UPDATE_INTERVAL, "s", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_NET_WD_TIMEOUT, "s", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_NET_WD_RECOVERY, "s", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_UP_TIME, "", "", "", true);
 }
 
 

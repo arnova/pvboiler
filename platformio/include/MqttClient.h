@@ -25,6 +25,10 @@ class CMqttClient : public PubSubClient
     void UnpublishSensorConfig(const char* strItem);
 
     bool PublishMessage(const char* strItem, const char* strPayload, const bool bRetain = false);
+    bool PublishUInt(const char* strItem, const uint32_t iValue, const bool bRetain = false);
+    bool PublishInt(const char* strItem, const int32_t iValue, const bool bRetain = false);
+    bool PublishFloat(const char* strItem, const float fValue, const uint8_t iDecimals);
+    bool PublishBool(const char* strItem, const bool bValue);
 
     void Init(const uint8_t* serverIp, const char* strHostName, const char* strUser, const char* strPassword);
     bool ServerConnect();

@@ -274,6 +274,36 @@ bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, co
 }
 
 
+bool CMqttClient::PublishUInt(const char* strItem, const uint32_t iValue, const bool bRetain /* = false */)
+{
+  char strBuf[12]; // Enough room for an unsigned 32 bit number
+  snprintf(strBuf, sizeof(strBuf), "%u", iValue);
+  return PublishMessage(strItem, strBuf, bRetain);
+}
+
+
+bool CMqttClient::PublishInt(const char* strItem, const int32_t iValue, const bool bRetain /* = false */)
+{
+  char strBuf[12]; // Enough room for a signed 32 bit number
+  snprintf(strBuf, sizeof(strBuf), "%d", iValue);
+  return PublishMessage(strItem, strBuf, bRetain);
+}
+
+
+bool CMqttClient::PublishFloat(const char* strItem, const float fValue, const uint8_t iDecimals)
+{
+  char strBuf[24]; // Enough room for our floats with 4 digit precision
+  snprintf(strBuf, sizeof(strBuf), "%.*f", iDecimals, fValue);
+  return PublishMessage(strItem, strBuf);
+}
+
+
+bool CMqttClient::PublishBool(const char* strItem, const bool bValue)
+{
+  return PublishMessage(strItem, bValue ? "1" : "0");
+}
+
+
 void CMqttClient::Init(const uint8_t* serverIp, const char* strHostName, const char* strUser, const char* strPassword)
 {
   memcpy(m_serverIp, serverIp, 4);
