@@ -198,6 +198,11 @@ class CPvBoiler
     void Update();
     void CheckNetworkWatchDog();
 
+    // Load setting from EEPROM, use default when out of range
+    static void LoadSetting(const int iAddr, uint8_t& iSetting, const uint8_t iMin, const uint8_t iMax, const uint8_t iDefault);
+    static void LoadSetting(const int iAddr, uint16_t& iSetting, const uint16_t iMin, const uint16_t iMax, const uint16_t iDefault);
+    static void LoadSetting(const int iAddr, float& fSetting, const float fMin, const float fMax, const float fDefault);
+
     // Store setting in EEPROM (only when changed). Returns true when changed
     static bool StoreSetting(const int iAddr, uint8_t& iSetting, const uint8_t iVal);
     static bool StoreSetting(const int iAddr, uint16_t& iSetting, const uint16_t iVal);

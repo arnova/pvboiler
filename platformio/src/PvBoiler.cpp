@@ -559,32 +559,43 @@ void CPvBoiler::MqttOnConnect()
 }
 
 
+void CPvBoiler::LoadSetting(const int iAddr, uint8_t& iSetting, const uint8_t iMin, const uint8_t iMax, const uint8_t iDefault)
+{
+  EEPROM.get(iAddr, iSetting);
+  if (iSetting < iMin || iSetting > iMax)
+  {
+    iSetting = iDefault;
+  }
+}
+
+
+void CPvBoiler::LoadSetting(const int iAddr, uint16_t& iSetting, const uint16_t iMin, const uint16_t iMax, const uint16_t iDefault)
+{
+  EEPROM.get(iAddr, iSetting);
+  if (iSetting < iMin || iSetting > iMax)
+  {
+    iSetting = iDefault;
+  }
+}
+
+
+void CPvBoiler::LoadSetting(const int iAddr, float& fSetting, const float fMin, const float fMax, const float fDefault)
+{
+  EEPROM.get(iAddr, fSetting);
+  if (fSetting < fMin || fSetting > fMax || isnan(fSetting))
+  {
+    fSetting = fDefault;
+  }
+}
+
+
 void CPvBoiler::LoadSettings()
 {
   uint8_t iVal8 = 0;
-  uint16_t iVal16 = 0;
-  float fVal = 0.0f;
 
-  EEPROM.get(EEPROM_BP_RATING, iVal16);
-  if (iVal16 < BOILER_POWER_RATING_MIN || iVal16 > BOILER_POWER_RATING_MAX)
-  {
-    iVal16 = BOILER_POWER_RATING_DEFAULT;
-  }
-  m_iBoilerPowerRating = iVal16;
-
-  EEPROM.get(EEPROM_DEAD_ZONE, iVal8);
-  if (iVal8 < DEAD_ZONE_MIN || iVal8 > DEAD_ZONE_MAX)
-  {
-    iVal8 = DEAD_ZONE_DEFAULT;
-  }
-  m_iDeadZone = iVal8;
-
-  EEPROM.get(EEPROM_BUDGET_MARGIN, iVal16);
-  if (iVal16 < BUDGET_MARGIN_MIN || iVal16 > BUDGET_MARGIN_MAX)
-  {
-    iVal16 = BUDGET_MARGIN_DEFAULT;
-  }
-  m_iBudgetMargin = iVal16;
+  LoadSetting(EEPROM_BP_RATING, m_iBoilerPowerRating, BOILER_POWER_RATING_MIN, BOILER_POWER_RATING_MAX, BOILER_POWER_RATING_DEFAULT);
+  LoadSetting(EEPROM_DEAD_ZONE, m_iDeadZone, DEAD_ZONE_MIN, DEAD_ZONE_MAX, DEAD_ZONE_DEFAULT);
+  LoadSetting(EEPROM_BUDGET_MARGIN, m_iBudgetMargin, BUDGET_MARGIN_MIN, BUDGET_MARGIN_MAX, BUDGET_MARGIN_DEFAULT);
 
   // Note: MODE_BOOST is never stored
   EEPROM.get(EEPROM_CTRL_MODE, iVal8);
@@ -593,67 +604,18 @@ void CPvBoiler::LoadSettings()
   EEPROM.get(EEPROM_DIM_STYLE, iVal8);
   m_dimStyle = (iVal8 == 0x01) ? CPvBoiler::DIM_STYLE_SSR : CPvBoiler::DIM_STYLE_PHASE_ANGLE;
 
-  EEPROM.get(EEPROM_SSR_PERIOD, iVal8);
-  if (iVal8 < SSR_PERIOD_COUNT_MIN || iVal8 > SSR_PERIOD_COUNT_MAX)
-  {
-    iVal8 = SSR_PERIOD_COUNT_DEFAULT;
-  }
-  m_iSsrPeriodCount = iVal8;
+  LoadSetting(EEPROM_SSR_PERIOD, m_iSsrPeriodCount, SSR_PERIOD_COUNT_MIN, SSR_PERIOD_COUNT_MAX, SSR_PERIOD_COUNT_DEFAULT);
 
-  EEPROM.get(EEPROM_ERROR_GAIN_POS, fVal);
-  if (fVal < ERROR_GAIN_POS_MIN || fVal > ERROR_GAIN_POS_MAX || isnan(fVal))
-  {
-    fVal = ERROR_GAIN_POS_DEFAULT;
-  }
-  m_fErrorGainPos = fVal;
+  LoadSetting(EEPROM_ERROR_GAIN_POS, m_fErrorGainPos, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, ERROR_GAIN_POS_DEFAULT);
+  LoadSetting(EEPROM_ERROR_GAIN_NEG, m_fErrorGainNeg, ERROR_GAIN_NEG_MIN, ERROR_GAIN_NEG_MAX, ERROR_GAIN_NEG_DEFAULT);
+  LoadSetting(EEPROM_STEP_CLAMP_POS, m_fStepClampPos, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, STEP_CLAMP_POS_DEFAULT);
+  LoadSetting(EEPROM_STEP_CLAMP_NEG, m_fStepClampNeg, STEP_CLAMP_NEG_MIN, STEP_CLAMP_NEG_MAX, STEP_CLAMP_NEG_DEFAULT);
 
-  EEPROM.get(EEPROM_ERROR_GAIN_NEG, fVal);
-  if (fVal < ERROR_GAIN_NEG_MIN || fVal > ERROR_GAIN_NEG_MAX || isnan(fVal))
-  {
-    fVal = ERROR_GAIN_NEG_DEFAULT;
-  }
-  m_fErrorGainNeg = fVal;
+  LoadSetting(EEPROM_NET_WD_TIMEOUT, m_iNetWatchDogTimeout, 0, NETWORK_WATCHDOG_TIMEOUT_MAX, NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
+  LoadSetting(EEPROM_NET_WD_RECOVER, m_iNetWatchDogRecovery, 0, NETWORK_WATCHDOG_RECOVERY_MAX, NETWORK_WATCHDOG_RECOVERY_DEFAULT);
+  LoadSetting(EEPROM_MQTT_INTERVAL, m_iMqttUpdateInterval, MQTT_UPDATE_TIME_MIN, MQTT_UPDATE_TIME_MAX, MQTT_UPDATE_TIME_DEFAULT);
 
-  EEPROM.get(EEPROM_STEP_CLAMP_POS, fVal);
-  if (fVal < STEP_CLAMP_POS_MIN || fVal > STEP_CLAMP_POS_MAX || isnan(fVal))
-  {
-    fVal = STEP_CLAMP_POS_DEFAULT;
-  }
-  m_fStepClampPos = fVal;
-
-  EEPROM.get(EEPROM_STEP_CLAMP_NEG, fVal);
-  if (fVal < STEP_CLAMP_NEG_MIN || fVal > STEP_CLAMP_NEG_MAX || isnan(fVal))
-  {
-    fVal = STEP_CLAMP_NEG_DEFAULT;
-  }
-  m_fStepClampNeg = fVal;
-
-  EEPROM.get(EEPROM_NET_WD_TIMEOUT, iVal16);
-  if (iVal16 > NETWORK_WATCHDOG_TIMEOUT_MAX)
-  {
-    iVal16 = NETWORK_WATCHDOG_TIMEOUT_DEFAULT;
-  }
-  m_iNetWatchDogTimeout = iVal16;
-
-  EEPROM.get(EEPROM_NET_WD_RECOVER, iVal16);
-  if (iVal16 > NETWORK_WATCHDOG_RECOVERY_MAX)
-  {
-    iVal16 = NETWORK_WATCHDOG_RECOVERY_DEFAULT;
-  }
-  m_iNetWatchDogRecovery = iVal16;
-
-  EEPROM.get(EEPROM_MQTT_INTERVAL, m_iMqttUpdateInterval);
-  if (m_iMqttUpdateInterval < MQTT_UPDATE_TIME_MIN || m_iMqttUpdateInterval > MQTT_UPDATE_TIME_MAX)
-  {
-    m_iMqttUpdateInterval = MQTT_UPDATE_TIME_DEFAULT;
-  }
-
-  EEPROM.get(EEPROM_THERMOSTAT_SP, iVal8);
-  if (iVal8 < THERMOSTAT_SETPOINT_MIN || iVal8 > THERMOSTAT_SETPOINT_MAX)
-  {
-    iVal8 = THERMOSTAT_SETPOINT_DEFAULT;
-  }
-  m_iThermostatSetpoint = iVal8;
+  LoadSetting(EEPROM_THERMOSTAT_SP, m_iThermostatSetpoint, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, THERMOSTAT_SETPOINT_DEFAULT);
   m_bPublishThermostatSetpoint = true;
 
   // Note: Anything other than 0x00 (eg. erased EEPROM) means enabled
@@ -665,12 +627,7 @@ void CPvBoiler::LoadSettings()
   EEPROM.get(EEPROM_BUDGET_SRC, iVal8);
   m_bDsmrPowerBudget = (iVal8 == 0x01);
 
-  EEPROM.get(EEPROM_THERMOSTAT_HYST, iVal8);
-  if (iVal8 < THERMOSTAT_HYSTERESIS_MIN || iVal8 > THERMOSTAT_HYSTERESIS_MAX)
-  {
-    iVal8 = THERMOSTAT_HYSTERESIS_DEFAULT;
-  }
-  m_iThermostatHysteresis = iVal8;
+  LoadSetting(EEPROM_THERMOSTAT_HYST, m_iThermostatHysteresis, THERMOSTAT_HYSTERESIS_MIN, THERMOSTAT_HYSTERESIS_MAX, THERMOSTAT_HYSTERESIS_DEFAULT);
 
   uint8_t iLowTemp = 0;
   uint8_t iHighTemp = 0;
@@ -686,29 +643,14 @@ void CPvBoiler::LoadSettings()
   m_iDangerZoneHighTemperature = iHighTemp;
   m_legionella.SetDangerZoneHighTemperature(iHighTemp);
 
-  EEPROM.get(EEPROM_DISINFECTION_INTERVAL, iVal8);
-  if (iVal8 < DISINFECTION_INTERVAL_DAYS_MIN || iVal8 > DISINFECTION_INTERVAL_DAYS_MAX)
-  {
-    iVal8 = DISINFECTION_INTERVAL_DAYS_DEFAULT;
-  }
-  m_iDisinfectionIntervalDays = iVal8;
-  m_legionella.SetDisinfectionIntervalDays(iVal8);
+  LoadSetting(EEPROM_DISINFECTION_INTERVAL, m_iDisinfectionIntervalDays, DISINFECTION_INTERVAL_DAYS_MIN, DISINFECTION_INTERVAL_DAYS_MAX, DISINFECTION_INTERVAL_DAYS_DEFAULT);
+  m_legionella.SetDisinfectionIntervalDays(m_iDisinfectionIntervalDays);
 
-  EEPROM.get(EEPROM_DISINFECTION_DURATION, iVal8);
-  if (iVal8 < DISINFECTION_DURATION_MINUTES_MIN || iVal8 > DISINFECTION_DURATION_MINUTES_MAX)
-  {
-    iVal8 = DISINFECTION_DURATION_MINUTES_DEFAULT;
-  }
-  m_iDisinfectionDurationMinutes = iVal8;
-  m_legionella.SetDisinfectionDurationMinutes(iVal8);
+  LoadSetting(EEPROM_DISINFECTION_DURATION, m_iDisinfectionDurationMinutes, DISINFECTION_DURATION_MINUTES_MIN, DISINFECTION_DURATION_MINUTES_MAX, DISINFECTION_DURATION_MINUTES_DEFAULT);
+  m_legionella.SetDisinfectionDurationMinutes(m_iDisinfectionDurationMinutes);
 
-  EEPROM.get(EEPROM_DISINFECTION_TEMP, iVal8);
-  if (iVal8 < DISINFECTION_TEMPERATURE_MIN || iVal8 > DISINFECTION_TEMPERATURE_MAX)
-  {
-    iVal8 = DISINFECTION_TEMPERATURE_DEFAULT;
-  }
-  m_iDisinfectionTemperature = iVal8;
-  m_legionella.SetDisinfectionTemperature(iVal8);
+  LoadSetting(EEPROM_DISINFECTION_TEMP, m_iDisinfectionTemperature, DISINFECTION_TEMPERATURE_MIN, DISINFECTION_TEMPERATURE_MAX, DISINFECTION_TEMPERATURE_DEFAULT);
+  m_legionella.SetDisinfectionTemperature(m_iDisinfectionTemperature);
 
   m_bPublishSettings = true;
 }
