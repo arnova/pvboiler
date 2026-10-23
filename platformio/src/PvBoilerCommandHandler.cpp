@@ -430,7 +430,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   const uint16_t iPeriod = m_pvBoiler.GetMainsPeriod();
-  if (iPeriod == 0 || iPeriod == NET_PERIOD_INVALID)
+  if (!m_pvBoiler.IsMainsPeriodValid())
   {
     PrintItemValue("mains_period", "?ms");
     PrintItemValue(" mains_freq", "?Hz");
@@ -445,7 +445,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   }
 
   const uint16_t iWindow = m_pvBoiler.GetMainsZeroCrossWindow();
-  if (iWindow == 0 || iWindow == ZERO_CROSS_WINDOW_INVALID)
+  if (!m_pvBoiler.IsMainsZeroCrossWindowValid())
   {
     PrintItemValue(" mains_zero_cross_window", "?ms");
   }

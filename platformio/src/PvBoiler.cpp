@@ -381,7 +381,7 @@ bool CPvBoiler::MqttPublishValues()
     {
       m_bPublishMainsValues = false;
 
-      if (m_iPeriodTime != 0 && m_iPeriodTime != NET_PERIOD_INVALID)
+      if (IsMainsPeriodValid())
       {
         // NOTE: Actual period is *2 since what we detect is rectified 50 Hz
         mqttClient.PublishUInt(MQTT_MAINS_PERIOD, m_iPeriodTime * 2);
@@ -393,7 +393,7 @@ bool CPvBoiler::MqttPublishValues()
         mqttClient.PublishMessage(MQTT_MAINS_FREQUENCY, "None");
       }
 
-      if (m_iZeroCrossWindow != 0 && m_iZeroCrossWindow != ZERO_CROSS_WINDOW_INVALID)
+      if (IsMainsZeroCrossWindowValid())
       {
         mqttClient.PublishUInt(MQTT_MAINS_ZERO_CROSS_WINDOW, m_iZeroCrossWindow);
       }

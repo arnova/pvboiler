@@ -173,6 +173,8 @@ class CPvBoiler
     float GetStepClampNeg() const { return m_fStepClampNeg; };
     uint16_t GetMainsPeriod() const { return m_iPeriodTime; };
     uint16_t GetMainsZeroCrossWindow() const { return m_iZeroCrossWindow; };
+    bool IsMainsPeriodValid() const { return m_iPeriodTime != 0 && m_iPeriodTime != NET_PERIOD_INVALID; };
+    bool IsMainsZeroCrossWindowValid() const { return m_iZeroCrossWindow != 0 && m_iZeroCrossWindow != ZERO_CROSS_WINDOW_INVALID; };
     uint16_t GetNetWatchDogTimeout() const { return m_iNetWatchDogTimeout; };
     uint16_t GetNetWatchDogRecovery() const { return m_iNetWatchDogRecovery; };
     uint8_t GetMqttUpdateInterval() const { return m_iMqttUpdateInterval; };
