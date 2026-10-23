@@ -38,6 +38,8 @@ class CApp
     bool IRAM_ATTR ScheduleTriac(const uint32_t iFireTime);
     void IRAM_ATTR ArmTriacTimer(const uint32_t iDelayUs);
 
+    static const char* FormatBar(char* strLine, const float fValue);
+
 #ifdef ESP32
     hw_timer_t *m_hTriacTimer = nullptr;
 #endif

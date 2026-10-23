@@ -265,6 +265,30 @@ void CApp::HandleNetwork()
 }
 
 
+// Format value (0-100) as bar string. Note: strLine must fit "[" + 20 spaces + "]" + NUL
+const char* CApp::FormatBar(char* strLine, const float fValue)
+{
+  // Chars are not monospace so need to compensate for smaller spaces with the logic below
+  strcpy(strLine, "[");
+  for (uint8_t iCount = 0; iCount < 100;)
+  {
+    if (iCount < fValue)
+    {
+      strcat(strLine, "=");
+      iCount += 10;
+    }
+    else
+    {
+      strcat(strLine, " ");
+      iCount += 5; // Spaces are smaller
+    }
+  }
+  strcat(strLine, "]");
+
+  return strLine;
+}
+
+
 void CApp::HandleDisplay()
 {
   if (m_displayTimer > 5000)
@@ -319,23 +343,7 @@ void CApp::HandleDisplay()
           m_display.WriteDisplayStr(strLine, 1, false);
         }
 
-        // Chars are not monospace so need to compensate for smaller spaces with the logic below
-        strcpy(strLine, "[");
-        for (uint8_t iCount = 0; iCount < 100;)
-        {
-          if (iCount < iPercent)
-          {
-            strcat(strLine, "=");
-            iCount += 10;
-          }
-          else
-          {
-            strcat(strLine, " ");
-            iCount += 5; // Spaces are smaller
-          }
-        }
-        strcat(strLine, "]");
-        m_display.WriteDisplayStr(strLine, 2, false);
+        m_display.WriteDisplayStr(FormatBar(strLine, iPercent), 2, false);
       }
       break;
 
@@ -352,23 +360,7 @@ void CApp::HandleDisplay()
           m_display.WriteDisplayStr(strLine, 1, true);
         }
 
-        // Chars are not monospace so need to compensate for smaller spaces with the logic below
-        strcpy(strLine, "[");
-        for (uint8_t iCount = 0; iCount < 100;)
-        {
-          if (iCount < fTemperature) // Range 0C - 100C
-          {
-            strcat(strLine, "=");
-            iCount += 10;
-          }
-          else
-          {
-            strcat(strLine, " ");
-            iCount += 5; // Spaces are smaller
-          }
-        }
-        strcat(strLine, "]");
-        m_display.WriteDisplayStr(strLine, 2, false);
+        m_display.WriteDisplayStr(FormatBar(strLine, fTemperature), 2, false); // Range 0C - 100C
       }
       break;
 
