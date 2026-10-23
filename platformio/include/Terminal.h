@@ -10,19 +10,6 @@
 
 #include <Arduino.h>
 
-#ifdef SOCKET_SERVER_PORT
-#ifdef ESP8266
-  #include <ESP8266WiFi.h>
-  using NetClient = WiFiClient;
-#elif defined(ESP32)
-  #include <WiFi.h>
-  using NetClient = WiFiClient;
-#elif defined(ARDUINO_TEENSY41)
-  #include <NativeEthernet.h>
-  using NetClient = EthernetClient;
-#endif
-#endif
-
 #ifndef TERM_SERIAL
 #define TERM_SERIAL Serial
 #endif
