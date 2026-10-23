@@ -286,8 +286,7 @@ void CApp::HandleDisplay()
       {
         m_display.WriteDisplayStr(m_network.GetHostName(), 0, true);
 
-        snprintf(strLine, sizeof(strLine), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-        m_display.WriteDisplayStr(strLine, 1, false);
+        m_display.WriteDisplayStr(CNetwork::FormatIp(WiFi.localIP(), strLine, sizeof(strLine)), 1, false);
 
         if (!m_network.IsConnected())
         {

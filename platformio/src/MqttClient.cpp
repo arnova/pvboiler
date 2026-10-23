@@ -11,6 +11,7 @@
 #include <Arduino.h>
 
 #include "MqttClient.h"
+#include "Network.h"
 #include "Terminal.h"
 #include "util.h"
 
@@ -331,8 +332,7 @@ bool CMqttClient::ServerConnect()
   CTerminal::print("Connecting to MQTT server: ");
 
   char strBuf[16]; // Enough for an IPv4 address + null char
-  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", m_serverIp[0], m_serverIp[1], m_serverIp[2], m_serverIp[3]);
-  CTerminal::print(strBuf);
+  CTerminal::print(CNetwork::FormatIp(IPAddress(m_serverIp), strBuf, sizeof(strBuf)));
 
   CTerminal::print(":" STRINGIZE(MQTT_PORT) "...");
 #endif

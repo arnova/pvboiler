@@ -428,8 +428,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   char strBuf[20]; // Enough room for float with 3 decimals
 
   CTerminal::print(" wifi_ip=");
-  snprintf(strBuf, sizeof(strBuf), "%u.%u.%u.%u", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-  CTerminal::print(strBuf);
+  CTerminal::print(CNetwork::FormatIp(WiFi.localIP(), strBuf, sizeof(strBuf)));
 
   CTerminal::println("");
 

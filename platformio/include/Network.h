@@ -66,6 +66,9 @@ class CNetwork
 
     static bool IsValidHostName(const char* str);
 
+    // Format IPv4 address as dotted string. Note: strBuf must be at least 16 bytes
+    static const char* FormatIp(const IPAddress& ip, char* strBuf, const size_t iBufSize);
+
   private:
     static bool IsValidAlpha(const char* str);
     void MqttPublishValues();
