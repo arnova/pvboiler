@@ -70,13 +70,6 @@ class CNetwork
     static const char* FormatIp(const IPAddress& ip, char* strBuf, const size_t iBufSize);
 
   private:
-    static bool IsValidAlpha(const char* str);
-
-    // Load/store settings from/to EEPROM. Store functions only write when changed and return true when changed
-    static void LoadString(const int iAddr, char* strSetting, const size_t iMaxSize);
-    static bool StoreString(const int iAddr, char* strSetting, const size_t iMaxSize, const char* strVal);
-    static void LoadIp(const int iAddr, uint8_t* ipSetting);
-    static bool StoreIp(const int iAddr, uint8_t* ipSetting, const uint8_t* ipVal);
     void MqttPublishValues();
 
     char m_strHostName[HOST_NAME_MAX_SIZE + 1] = { 0 };
