@@ -199,12 +199,7 @@ void CPvBoiler::SetLegionellaDisinfectionAgeHours(const uint32_t iVal)
 
 void CPvBoiler::SetLegionellaInDangerZoneHours(const uint32_t iVal)
 {
-  // May be set from both the mqtt broker (retained message) or
-  // from ourselves when the value changes in the CLegionella-class
-  // We know that when value differs from what we last published it was not set by ourselves
-  // and it's the retained message from the broker (or set by the user).
-  // NOTE: Do not compare with the current value as our own echo may arrive after it changed
-  // (eg. directly after (re)connect), which would reset the restored value
+  // See SetLegionellaDisinfectionAgeHours()
   if (iVal != m_iLegionellaInDangerZoneHoursSetter)
   {
     // Be pessemistic(+1) about the retained value from the broker due to rounding (down) errors
@@ -340,35 +335,10 @@ bool CPvBoiler::MqttPublishValues()
     // received first. Else we'd overwrite them with our own (reset) values
     const bool bSetterHoldOff = (m_mqttSetterHoldOffTimer < MQTT_SETTLE_TIME_MS);
 
-    // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaDisinfectionAgeHoursSetter && !bSetterHoldOff)
-    {
-      m_bPublishLegionellaDisinfectionAgeHoursSetter = false;
-      m_iLegionellaDisinfectionAgeHoursSetter = m_iLegionellaDisinfectionAgeHours;
-      mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_AGE "/set", m_iLegionellaDisinfectionAgeHours, true); // Retain: restored from broker after reboot
-    }
-
-    // Publish state?
-    if (m_bPublishLegionellaDisinfectionAgeHours || m_bMqttRepublish)
-    {
-      m_bPublishLegionellaDisinfectionAgeHours = false;
-      mqttClient.PublishUInt(MQTT_LEGIONELLA_DISINFECTION_AGE, m_iLegionellaDisinfectionAgeHours);
-    }
-
-    // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
-    if (m_bPublishLegionellaInDangerZoneHoursSetter && !bSetterHoldOff)
-    {
-      m_bPublishLegionellaInDangerZoneHoursSetter = false;
-      m_iLegionellaInDangerZoneHoursSetter = m_iLegionellaInDangerZoneHours;
-      mqttClient.PublishUInt(MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", m_iLegionellaInDangerZoneHours, true); // Retain: restored from broker after reboot
-    }
-
-    // Publish state?
-    if (m_bPublishLegionellaInDangerZoneHours || m_bMqttRepublish)
-    {
-      m_bPublishLegionellaInDangerZoneHours = false;
-      mqttClient.PublishUInt(MQTT_LEGIONELLA_IN_DANGER_ZONE, m_iLegionellaInDangerZoneHours);
-    }
+    MqttPublishRetainedHours(mqttClient, MQTT_LEGIONELLA_DISINFECTION_AGE, MQTT_LEGIONELLA_DISINFECTION_AGE "/set", m_iLegionellaDisinfectionAgeHours,
+                             m_bPublishLegionellaDisinfectionAgeHours, m_bPublishLegionellaDisinfectionAgeHoursSetter, m_iLegionellaDisinfectionAgeHoursSetter, bSetterHoldOff);
+    MqttPublishRetainedHours(mqttClient, MQTT_LEGIONELLA_IN_DANGER_ZONE, MQTT_LEGIONELLA_IN_DANGER_ZONE "/set", m_iLegionellaInDangerZoneHours,
+                             m_bPublishLegionellaInDangerZoneHours, m_bPublishLegionellaInDangerZoneHoursSetter, m_iLegionellaInDangerZoneHoursSetter, bSetterHoldOff);
 
     if (m_bPublishPowerGoodFlag || m_bMqttRepublish)
     {
@@ -413,6 +383,27 @@ bool CPvBoiler::MqttPublishValues()
   m_bMqttRepublish = false;
 
   return true;
+}
+
+
+// Publish hours value that is restored from its retained setter topic after a reboot
+void CPvBoiler::MqttPublishRetainedHours(CMqttClient& mqttClient, const char* strItem, const char* strSetterItem, const uint32_t iHours,
+                                         bool& bPublish, bool& bPublishSetter, uint32_t& iSetterHours, const bool bSetterHoldOff)
+{
+  // Publish setter? Note: Only when changed else we'll loop on setting it over and over again via broker
+  if (bPublishSetter && !bSetterHoldOff)
+  {
+    bPublishSetter = false;
+    iSetterHours = iHours;
+    mqttClient.PublishUInt(strSetterItem, iHours, true); // Retain: restored from broker after reboot
+  }
+
+  // Publish state?
+  if (bPublish || m_bMqttRepublish)
+  {
+    bPublish = false;
+    mqttClient.PublishUInt(strItem, iHours);
+  }
 }
 
 

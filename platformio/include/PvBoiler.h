@@ -204,6 +204,8 @@ class CPvBoiler
   private:
     void MqttPublishDiscovery();
     bool MqttPublishValues();
+    void MqttPublishRetainedHours(CMqttClient& mqttClient, const char* strItem, const char* strSetterItem, const uint32_t iHours,
+                                  bool& bPublish, bool& bPublishSetter, uint32_t& iSetterHours, const bool bSetterHoldOff);
     void UpdateDsmrPowerBudget() { if (m_bDsmrPowerBudget) { m_iPowerBudget = m_iPowerReturned - m_iPowerDelivered; m_bPublishPowerBudget = true; } };
     void MqttUpdateDsmrSubscription();
 
