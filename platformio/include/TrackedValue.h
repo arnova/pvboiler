@@ -1,4 +1,6 @@
 #pragma once
+#ifndef TRACKED_VALUE_H
+#define TRACKED_VALUE_H
 
 #include <Arduino.h>
 
@@ -46,3 +48,4 @@ private:
   volatile uint32_t m_iLowest = UINT32_MAX;
   volatile uint32_t m_iHighest = 0;
 };
+#endif // TRACKED_VALUE_H

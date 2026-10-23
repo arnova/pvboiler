@@ -1,3 +1,4 @@
+#pragma once
 #ifndef ROLLING_AVERAGE_H
 #define ROLLING_AVERAGE_H
 
