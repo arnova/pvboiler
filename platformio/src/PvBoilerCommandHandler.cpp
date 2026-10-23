@@ -434,68 +434,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   CTerminal::print("mode=");
-  switch(m_pvBoiler.GetMode())
-  {
-    case CPvBoiler::MODE_PERCENT:
-    {
-      CTerminal::print("percent");
-    }
-    break;
-
-    case CPvBoiler::MODE_BUDGET:
-    {
-      CTerminal::print("budget");
-    }
-    break;
-
-    case CPvBoiler::MODE_BOOST:
-    {
-      CTerminal::print("boost");
-    }
-    break;
-
-    case CPvBoiler::MODE_SETPOINT:
-    {
-      CTerminal::print("setpoint");
-    }
-    break;
-
-    case CPvBoiler::MODE_STANDBY:
-    {
-      CTerminal::print("standby");
-    }
-    break;
-
-    case CPvBoiler::MODE_OFF:
-    {
-      CTerminal::print("off");
-    }
-    break;
-
-    case CPvBoiler::MODE_BUDGET_SETPOINT:
-    {
-      CTerminal::print("budget_sp");
-    }
-    break;
-
-    case CPvBoiler::MODE_PERCENT_SETPOINT:
-    {
-      CTerminal::print("percent_sp");
-    }
-    break;
-
-    case CPvBoiler::MODE_SETPOINT_BUDGET:
-    {
-      CTerminal::print("sp_budget");
-    }
-    break;
-
-    case CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET:
-    {
-      CTerminal::print("percent_sp_budget");
-    }
-    break;
-  }
+  CTerminal::print(CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
 
   CTerminal::print(" perc_set=");
   snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
@@ -888,28 +827,11 @@ result_code_t CPvBoilerCommandHandler::CmdSetMode(const char *strArgs)
   if (strArgs == NULL || !*strArgs)
     return pack_result_code(ERR_CODE_ARG_MISSING, ARG_INT32_NUM1);
 
-  if (STRIEQUALS(strArgs, "percent") || STRIEQUALS(strArgs, "percentage") || STRIEQUALS(strArgs, "p"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT);
-  else if (STRIEQUALS(strArgs, "budget") || STRIEQUALS(strArgs, "b"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET);
-  else if (STRIEQUALS(strArgs, "percent_sp") || STRIEQUALS(strArgs, "psp"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT_SETPOINT);
-  else if (STRIEQUALS(strArgs, "budget_sp") || STRIEQUALS(strArgs, "bsp"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_BUDGET_SETPOINT);
-  else if (STRIEQUALS(strArgs, "sp_budget") || STRIEQUALS(strArgs, "spb"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_SETPOINT_BUDGET);
-  else if (STRIEQUALS(strArgs, "percent_sp_budget") || STRIEQUALS(strArgs, "pspb"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET);
-  else if (STRIEQUALS(strArgs, "standby") || STRIEQUALS(strArgs, "s"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_STANDBY);
-  else if (STRIEQUALS(strArgs, "off") || STRIEQUALS(strArgs, "0"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_OFF);
-  else if (STRIEQUALS(strArgs, "setpoint") || STRIEQUALS(strArgs, "sp"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_SETPOINT);
-  else if (STRIEQUALS(strArgs, "boost"))
-    m_pvBoiler.SetMode(CPvBoiler::MODE_BOOST);
-  else
+  CPvBoiler::mode_t mode;
+  if (!CPvBoiler::GetModeFromCliName(strArgs, mode))
     return pack_result_code(ERR_CODE_ARG_VAL, ARG_INT32_NUM1);
+
+  m_pvBoiler.SetMode(mode);
 
   return pack_result_code(ERR_CODE_OK);
 }

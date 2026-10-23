@@ -78,21 +78,30 @@ class CPvBoiler
     typedef enum mode_e mode_t;
     static constexpr uint8_t MODE_COUNT = MODE_LAST + 1;
 
-    // Mode names (eg. for MQTT), indexed by mode_t. Note: Must match order of mode_e
-    static constexpr const char* m_strModeNames[] =
+    // Mode names, indexed by mode_t. Note: Must match order of mode_e
+    struct mode_name_s
     {
-      "Off",                        // MODE_OFF
-      "Standby",                    // MODE_STANDBY
-      "Boost",                      // MODE_BOOST
-      "Budget",                     // MODE_BUDGET
-      "Percentage",                 // MODE_PERCENT
-      "Setpoint",                   // MODE_SETPOINT
-      "Budget up to Setpoint",      // MODE_BUDGET_SETPOINT
-      "Percentage up to Setpoint",  // MODE_PERCENT_SETPOINT
-      "Setpoint, then Budget",      // MODE_SETPOINT_BUDGET
-      "Percentage to Setpoint, then Budget" // MODE_PERCENT_SETPOINT_BUDGET
+      const char* strMqtt;    // MQTT/Home Assistant select option
+      const char* strCli;     // Terminal command argument & status output
+      const char* strCliAlt;  // Terminal short alias
+      const char* strDisplay; // OLED display (short)
     };
-    static_assert(sizeof(m_strModeNames) / sizeof(m_strModeNames[0]) == MODE_COUNT, "m_strModeNames does not match mode_e");
+    typedef struct mode_name_s mode_name_t;
+
+    static constexpr mode_name_t m_modeNames[] =
+    {
+      { "Off",                                 "off",               "0",     "Off"            }, // MODE_OFF
+      { "Standby",                             "standby",           "s",     "Standby"        }, // MODE_STANDBY
+      { "Boost",                               "boost",             "boost", "Boost"          }, // MODE_BOOST
+      { "Budget",                              "budget",            "b",     "Budget"         }, // MODE_BUDGET
+      { "Percentage",                          "percent",           "p",     "Percentage"     }, // MODE_PERCENT
+      { "Setpoint",                            "setpoint",          "sp",    "Setpoint"       }, // MODE_SETPOINT
+      { "Budget up to Setpoint",               "budget_sp",         "bsp",   "Budget<=SP"     }, // MODE_BUDGET_SETPOINT
+      { "Percentage up to Setpoint",           "percent_sp",        "psp",   "Perc<=SP"       }, // MODE_PERCENT_SETPOINT
+      { "Setpoint, then Budget",               "sp_budget",         "spb",   "SP>Budget"      }, // MODE_SETPOINT_BUDGET
+      { "Percentage to Setpoint, then Budget", "percent_sp_budget", "pspb",  "Perc>SP>Budget" }  // MODE_PERCENT_SETPOINT_BUDGET
+    };
+    static_assert(sizeof(m_modeNames) / sizeof(m_modeNames[0]) == MODE_COUNT, "m_modeNames does not match mode_e");
 
     void Loop();
     void Reset();
@@ -153,7 +162,8 @@ class CPvBoiler
     uint8_t GetDeadZone() const { return m_iDeadZone; };
     uint16_t GetBudgetMargin() const { return m_iBudgetMargin; };
     mode_t GetMode() const { return m_mode; };
-    static bool GetModeFromName(const char* strName, mode_t& mode);
+    static bool GetModeFromName(const char* strName, mode_t& mode); // MQTT name
+    static bool GetModeFromCliName(const char* strName, mode_t& mode); // CLI name, alias or MQTT name
     bool IsThermostatMode() const { return m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT || m_mode == MODE_SETPOINT_BUDGET || m_mode == MODE_PERCENT_SETPOINT_BUDGET; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };

@@ -308,74 +308,7 @@ void CApp::HandleDisplay()
       {
         const uint8_t iPercent = lroundf(m_pvBoiler.GetCurrentPercentage());
 
-        switch (m_pvBoiler.GetMode())
-        {
-          case CPvBoiler::MODE_BOOST:
-          {
-            m_display.WriteDisplayStr("Boost", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_BUDGET:
-          {
-            m_display.WriteDisplayStr("Budget", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_PERCENT:
-          {
-            m_display.WriteDisplayStr("Percentage", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_SETPOINT:
-          {
-            m_display.WriteDisplayStr("Setpoint", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_BUDGET_SETPOINT:
-          {
-            m_display.WriteDisplayStr("Budget<=SP", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_PERCENT_SETPOINT:
-          {
-            m_display.WriteDisplayStr("Perc<=SP", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_SETPOINT_BUDGET:
-          {
-            m_display.WriteDisplayStr("SP>Budget", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_PERCENT_SETPOINT_BUDGET:
-          {
-            m_display.WriteDisplayStr("Perc>SP>Budget", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_STANDBY:
-          {
-            m_display.WriteDisplayStr("Standby", 0, true);
-          }
-          break;
-
-          case CPvBoiler::MODE_OFF:
-          {
-            m_display.WriteDisplayStr("Off", 0, true);
-          }
-          break;
-
-          default:
-          {
-            m_display.WriteDisplayStr("Unknown mode", 0, true);
-          }
-          break;
-        }
+        m_display.WriteDisplayStr(CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strDisplay, 0, true);
 
         if (!m_pvBoiler.GetPowerGood())
         {

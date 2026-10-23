@@ -4,7 +4,7 @@
 #include <EEPROM.h>
 
 // Out-of-class definition required pre-C++17 (ESP32 core builds with gnu++11), redundant but harmless with C++17
-constexpr const char* CPvBoiler::m_strModeNames[];
+constexpr CPvBoiler::mode_name_t CPvBoiler::m_modeNames[];
 
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
@@ -235,7 +235,7 @@ bool CPvBoiler::MqttPublishValues()
     snprintf(strBuf, sizeof(strBuf), "%u", m_iBoilerPowerRating);
     m_network.GetMqttClient().PublishMessage(MQTT_BOILER_POWER_RATING, strBuf);
 
-    m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, m_strModeNames[m_mode]);
+    m_network.GetMqttClient().PublishMessage(MQTT_SET_MODE, m_modeNames[m_mode].strMqtt);
 
     snprintf(strBuf, sizeof(strBuf), "%u", m_iDeadZone);
     m_network.GetMqttClient().PublishMessage(MQTT_DEAD_ZONE, strBuf);
@@ -509,7 +509,12 @@ void CPvBoiler::MqttPublishDiscovery()
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_POWER, "W", "power");
   m_network.GetMqttClient().PublishSensorConfig(MQTT_OUTPUT_PERCENTAGE, "%", "");
 
-  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, m_strModeNames, MODE_COUNT);
+  const char* strModes[MODE_COUNT];
+  for (uint8_t it = 0; it < MODE_COUNT; it++)
+  {
+    strModes[it] = m_modeNames[it].strMqtt;
+  }
+  m_network.GetMqttClient().PublishSelectConfig(MQTT_SET_MODE, strModes, MODE_COUNT);
 
   m_network.GetMqttClient().PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -832,7 +837,7 @@ bool CPvBoiler::GetModeFromName(const char* strName, CPvBoiler::mode_t& mode)
 {
   for (uint8_t it = 0; it < MODE_COUNT; it++)
   {
-    if (strcasecmp(strName, m_strModeNames[it]) == 0)
+    if (strcasecmp(strName, m_modeNames[it].strMqtt) == 0)
     {
       mode = static_cast<CPvBoiler::mode_t>(it);
       return true;
@@ -840,6 +845,21 @@ bool CPvBoiler::GetModeFromName(const char* strName, CPvBoiler::mode_t& mode)
   }
 
   return false;
+}
+
+
+bool CPvBoiler::GetModeFromCliName(const char* strName, CPvBoiler::mode_t& mode)
+{
+  for (uint8_t it = 0; it < MODE_COUNT; it++)
+  {
+    if (strcasecmp(strName, m_modeNames[it].strCli) == 0 || strcasecmp(strName, m_modeNames[it].strCliAlt) == 0)
+    {
+      mode = static_cast<CPvBoiler::mode_t>(it);
+      return true;
+    }
+  }
+
+  return GetModeFromName(strName, mode);
 }
 
 
