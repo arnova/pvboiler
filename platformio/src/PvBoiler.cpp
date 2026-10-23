@@ -714,15 +714,65 @@ void CPvBoiler::LoadSettings()
 }
 
 
+bool CPvBoiler::StoreSetting(const int iAddr, uint8_t& iSetting, const uint8_t iVal)
+{
+  if (iVal == iSetting)
+    return false;
+
+  EEPROM.put(iAddr, iVal);
+  EEPROM.commit();
+
+  iSetting = iVal;
+
+  return true;
+}
+
+
+bool CPvBoiler::StoreSetting(const int iAddr, uint16_t& iSetting, const uint16_t iVal)
+{
+  if (iVal == iSetting)
+    return false;
+
+  EEPROM.put(iAddr, iVal);
+  EEPROM.commit();
+
+  iSetting = iVal;
+
+  return true;
+}
+
+
+bool CPvBoiler::StoreSetting(const int iAddr, float& fSetting, const float fVal)
+{
+  if (fVal == fSetting)
+    return false;
+
+  EEPROM.put(iAddr, fVal);
+  EEPROM.commit();
+
+  fSetting = fVal;
+
+  return true;
+}
+
+
+bool CPvBoiler::StoreSetting(const int iAddr, bool& bSetting, const bool bVal)
+{
+  if (bVal == bSetting)
+    return false;
+
+  EEPROM.put(iAddr, static_cast<uint8_t>(bVal ? 0x01 : 0x00));
+  EEPROM.commit();
+
+  bSetting = bVal;
+
+  return true;
+}
+
+
 void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iThermostatSetpoint)
-  {
-    EEPROM.put(EEPROM_THERMOSTAT_SP, iTemperature);
-    EEPROM.commit();
-
-    m_iThermostatSetpoint = iTemperature;
-  }
+  StoreSetting(EEPROM_THERMOSTAT_SP, m_iThermostatSetpoint, iTemperature);
 
   m_bPublishThermostatSetpoint = true;
 }
@@ -730,13 +780,7 @@ void CPvBoiler::SetThermostatSetpoint(const uint8_t iTemperature)
 
 void CPvBoiler::SetDisinfectionEnabled(const bool bEnable)
 {
-  if (bEnable != m_bDisinfectionEnabled)
-  {
-    EEPROM.put(EEPROM_DISINFECTION_EN, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
-    EEPROM.commit();
-
-    m_bDisinfectionEnabled = bEnable;
-  }
+  StoreSetting(EEPROM_DISINFECTION_EN, m_bDisinfectionEnabled, bEnable);
 
   m_bPublishDisinfectionEnabled = true;
 }
@@ -744,30 +788,17 @@ void CPvBoiler::SetDisinfectionEnabled(const bool bEnable)
 
 void CPvBoiler::SetDsmrPowerBudget(const bool bEnable)
 {
-  if (bEnable != m_bDsmrPowerBudget)
+  if (StoreSetting(EEPROM_BUDGET_SRC, m_bDsmrPowerBudget, bEnable) && m_network.IsMqttConnected())
   {
-    EEPROM.put(EEPROM_BUDGET_SRC, static_cast<uint8_t>(bEnable ? 0x01 : 0x00));
-    EEPROM.commit();
-
-    m_bDsmrPowerBudget = bEnable;
-
-    if (m_network.IsMqttConnected())
-    {
-      MqttUpdateDsmrSubscription();
-    }
+    MqttUpdateDsmrSubscription();
   }
 }
 
 
 void CPvBoiler::SetThermostatHysteresis(const uint8_t iHysteresis)
 {
-  if (iHysteresis != m_iThermostatHysteresis)
+  if (StoreSetting(EEPROM_THERMOSTAT_HYST, m_iThermostatHysteresis, iHysteresis))
   {
-    EEPROM.put(EEPROM_THERMOSTAT_HYST, iHysteresis);
-    EEPROM.commit();
-
-    m_iThermostatHysteresis = iHysteresis;
-
     m_bPublishSettings = true;
   }
 }
@@ -775,12 +806,8 @@ void CPvBoiler::SetThermostatHysteresis(const uint8_t iHysteresis)
 
 void CPvBoiler::SetDangerZoneLowTemperature(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iDangerZoneLowTemperature)
+  if (StoreSetting(EEPROM_DZ_LOW_TEMP, m_iDangerZoneLowTemperature, iTemperature))
   {
-    EEPROM.put(EEPROM_DZ_LOW_TEMP, iTemperature);
-    EEPROM.commit();
-
-    m_iDangerZoneLowTemperature = iTemperature;
     m_legionella.SetDangerZoneLowTemperature(iTemperature);
 
     m_bPublishSettings = true;
@@ -790,12 +817,8 @@ void CPvBoiler::SetDangerZoneLowTemperature(const uint8_t iTemperature)
 
 void CPvBoiler::SetDangerZoneHighTemperature(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iDangerZoneHighTemperature)
+  if (StoreSetting(EEPROM_DZ_HIGH_TEMP, m_iDangerZoneHighTemperature, iTemperature))
   {
-    EEPROM.put(EEPROM_DZ_HIGH_TEMP, iTemperature);
-    EEPROM.commit();
-
-    m_iDangerZoneHighTemperature = iTemperature;
     m_legionella.SetDangerZoneHighTemperature(iTemperature);
 
     m_bPublishSettings = true;
@@ -805,12 +828,8 @@ void CPvBoiler::SetDangerZoneHighTemperature(const uint8_t iTemperature)
 
 void CPvBoiler::SetDisinfectionIntervalDays(const uint8_t iDays)
 {
-  if (iDays != m_iDisinfectionIntervalDays)
+  if (StoreSetting(EEPROM_DISINFECTION_INTERVAL, m_iDisinfectionIntervalDays, iDays))
   {
-    EEPROM.put(EEPROM_DISINFECTION_INTERVAL, iDays);
-    EEPROM.commit();
-
-    m_iDisinfectionIntervalDays = iDays;
     m_legionella.SetDisinfectionIntervalDays(iDays);
 
     m_bPublishSettings = true;
@@ -820,12 +839,8 @@ void CPvBoiler::SetDisinfectionIntervalDays(const uint8_t iDays)
 
 void CPvBoiler::SetDisinfectionDurationMinutes(const uint8_t iMinutes)
 {
-  if (iMinutes != m_iDisinfectionDurationMinutes)
+  if (StoreSetting(EEPROM_DISINFECTION_DURATION, m_iDisinfectionDurationMinutes, iMinutes))
   {
-    EEPROM.put(EEPROM_DISINFECTION_DURATION, iMinutes);
-    EEPROM.commit();
-
-    m_iDisinfectionDurationMinutes = iMinutes;
     m_legionella.SetDisinfectionDurationMinutes(iMinutes);
 
     m_bPublishSettings = true;
@@ -835,12 +850,8 @@ void CPvBoiler::SetDisinfectionDurationMinutes(const uint8_t iMinutes)
 
 void CPvBoiler::SetDisinfectionTemperature(const uint8_t iTemperature)
 {
-  if (iTemperature != m_iDisinfectionTemperature)
+  if (StoreSetting(EEPROM_DISINFECTION_TEMP, m_iDisinfectionTemperature, iTemperature))
   {
-    EEPROM.put(EEPROM_DISINFECTION_TEMP, iTemperature);
-    EEPROM.commit();
-
-    m_iDisinfectionTemperature = iTemperature;
     m_legionella.SetDisinfectionTemperature(iTemperature);
 
     m_bPublishSettings = true;
@@ -850,13 +861,8 @@ void CPvBoiler::SetDisinfectionTemperature(const uint8_t iTemperature)
 
 void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 {
-  if (iPower != m_iBoilerPowerRating)
+  if (StoreSetting(EEPROM_BP_RATING, m_iBoilerPowerRating, iPower))
   {
-    EEPROM.put(EEPROM_BP_RATING, iPower);
-    EEPROM.commit();
-
-    m_iBoilerPowerRating = iPower;
-
     m_bPublishSettings = true;
   }
 }
@@ -864,13 +870,8 @@ void CPvBoiler::SetBoilerPowerRating(const uint16_t iPower)
 
 void CPvBoiler::SetDeadZone(const uint8_t iDeadZone)
 {
-  if (iDeadZone != m_iDeadZone)
+  if (StoreSetting(EEPROM_DEAD_ZONE, m_iDeadZone, iDeadZone))
   {
-    EEPROM.put(EEPROM_DEAD_ZONE, iDeadZone);
-    EEPROM.commit();
-
-    m_iDeadZone = iDeadZone;
-
     m_bPublishSettings = true;
   }
 }
@@ -878,13 +879,8 @@ void CPvBoiler::SetDeadZone(const uint8_t iDeadZone)
 
 void CPvBoiler::SetBudgetMargin(const uint16_t iMargin)
 {
-  if (iMargin != m_iBudgetMargin)
+  if (StoreSetting(EEPROM_BUDGET_MARGIN, m_iBudgetMargin, iMargin))
   {
-    EEPROM.put(EEPROM_BUDGET_MARGIN, iMargin);
-    EEPROM.commit();
-
-    m_iBudgetMargin = iMargin;
-
     m_bPublishSettings = true;
   }
 }
@@ -938,13 +934,8 @@ void CPvBoiler::SetDimStyle(const CPvBoiler::dim_style_t dimStyle)
 
 void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 {
-  if (iCount != m_iSsrPeriodCount)
+  if (StoreSetting(EEPROM_SSR_PERIOD, m_iSsrPeriodCount, iCount))
   {
-    EEPROM.put(EEPROM_SSR_PERIOD, iCount);
-    EEPROM.commit();
-
-    m_iSsrPeriodCount = iCount;
-
     m_bPublishSettings = true;
   }
 }
@@ -952,13 +943,8 @@ void CPvBoiler::SetSsrPeriodCount(const uint8_t iCount)
 
 void CPvBoiler::SetErrorGainPos(const float fGain)
 {
-  if (fGain != m_fErrorGainPos)
+  if (StoreSetting(EEPROM_ERROR_GAIN_POS, m_fErrorGainPos, fGain))
   {
-    EEPROM.put(EEPROM_ERROR_GAIN_POS, fGain);
-    EEPROM.commit();
-
-    m_fErrorGainPos = fGain;
-
     m_bPublishSettings = true;
   }
 }
@@ -966,13 +952,8 @@ void CPvBoiler::SetErrorGainPos(const float fGain)
 
 void CPvBoiler::SetErrorGainNeg(const float fGain)
 {
-  if (fGain != m_fErrorGainNeg)
+  if (StoreSetting(EEPROM_ERROR_GAIN_NEG, m_fErrorGainNeg, fGain))
   {
-    EEPROM.put(EEPROM_ERROR_GAIN_NEG, fGain);
-    EEPROM.commit();
-
-    m_fErrorGainNeg = fGain;
-
     m_bPublishSettings = true;
   }
 }
@@ -980,13 +961,8 @@ void CPvBoiler::SetErrorGainNeg(const float fGain)
 
 void CPvBoiler::SetStepClampPos(const float fClamp)
 {
-  if (fClamp != m_fStepClampPos)
+  if (StoreSetting(EEPROM_STEP_CLAMP_POS, m_fStepClampPos, fClamp))
   {
-    EEPROM.put(EEPROM_STEP_CLAMP_POS, fClamp);
-    EEPROM.commit();
-
-    m_fStepClampPos = fClamp;
-
     m_bPublishSettings = true;
   }
 }
@@ -994,13 +970,8 @@ void CPvBoiler::SetStepClampPos(const float fClamp)
 
 void CPvBoiler::SetStepClampNeg(const float fClamp)
 {
-  if (fClamp != m_fStepClampNeg)
+  if (StoreSetting(EEPROM_STEP_CLAMP_NEG, m_fStepClampNeg, fClamp))
   {
-    EEPROM.put(EEPROM_STEP_CLAMP_NEG, fClamp);
-    EEPROM.commit();
-
-    m_fStepClampNeg = fClamp;
-
     m_bPublishSettings = true;
   }
 }
@@ -1008,13 +979,8 @@ void CPvBoiler::SetStepClampNeg(const float fClamp)
 
 void CPvBoiler::SetMqttUpdateInterval(const uint8_t iInterval)
 {
-  if (iInterval != m_iMqttUpdateInterval)
+  if (StoreSetting(EEPROM_MQTT_INTERVAL, m_iMqttUpdateInterval, iInterval))
   {
-    EEPROM.put(EEPROM_MQTT_INTERVAL, iInterval);
-    EEPROM.commit();
-
-    m_iMqttUpdateInterval = iInterval;
-  
     m_bPublishSettings = true;
   }
 }
@@ -1022,13 +988,8 @@ void CPvBoiler::SetMqttUpdateInterval(const uint8_t iInterval)
 
 void CPvBoiler::SetNetWatchDogTimeout(const uint16_t iTime)
 {
-  if (iTime != m_iNetWatchDogTimeout)
+  if (StoreSetting(EEPROM_NET_WD_TIMEOUT, m_iNetWatchDogTimeout, iTime))
   {
-    EEPROM.put(EEPROM_NET_WD_TIMEOUT, iTime);
-    EEPROM.commit();
-
-    m_iNetWatchDogTimeout = iTime;
-
     m_bPublishSettings = true;
   }
 }
@@ -1036,13 +997,8 @@ void CPvBoiler::SetNetWatchDogTimeout(const uint16_t iTime)
 
 void CPvBoiler::SetNetWatchDogRecovery(const uint16_t iTime)
 {
-  if (iTime != m_iNetWatchDogRecovery)
+  if (StoreSetting(EEPROM_NET_WD_RECOVER, m_iNetWatchDogRecovery, iTime))
   {
-    EEPROM.put(EEPROM_NET_WD_RECOVER, iTime);
-    EEPROM.commit();
-
-    m_iNetWatchDogRecovery = iTime;
-
     m_bPublishSettings = true;
   }
 }

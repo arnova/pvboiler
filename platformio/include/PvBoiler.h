@@ -198,6 +198,12 @@ class CPvBoiler
     void Update();
     void CheckNetworkWatchDog();
 
+    // Store setting in EEPROM (only when changed). Returns true when changed
+    static bool StoreSetting(const int iAddr, uint8_t& iSetting, const uint8_t iVal);
+    static bool StoreSetting(const int iAddr, uint16_t& iSetting, const uint16_t iVal);
+    static bool StoreSetting(const int iAddr, float& fSetting, const float fVal);
+    static bool StoreSetting(const int iAddr, bool& bSetting, const bool bVal);
+
     CNetwork& m_network;
 
     elapsedMillis m_loopTimer = 0;
