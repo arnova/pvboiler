@@ -586,6 +586,26 @@ result_code_t parse_decimal_arg(const char* strArgs, const int32_t iMinIntSize, 
 }
 
 
+result_code_t parse_double_arg(const char* strArgs, const double dblMinVal, const double dblMaxVal, double* dblValue)
+{
+  result_code_t resultCode = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (resultCode.code != ERR_CODE_OK)
+    return resultCode;
+
+  return get_double_from_string(strArgs, dblValue, dblMinVal, dblMaxVal, ARG_INT32_NUM1);
+}
+
+
+result_code_t parse_bool_arg(const char* strArgs, bool* bValue)
+{
+  result_code_t resultCode = check_arguments(strArgs, ARG_INT32_NUM1);
+  if (resultCode.code != ERR_CODE_OK)
+    return resultCode;
+
+  return get_bool_from_string(strArgs, bValue, ARG_INT32_NUM1);
+}
+
+
 result_code_t parse_hex_or_bin_arg(const char* strArgs, const uint8_t iMaxBitSize, uint8_t* pBuf, size_t iBufSize)
 {
   result_code_t resultCode = check_arguments(strArgs, ARG_INT32_NUM1);

@@ -88,6 +88,8 @@ result_code_t get_channel_or_all_from_string(const char *str, uint8_t *pChannel,
 void get_error_string(const result_code_t& resultCode, char *strResult, const bool bAppend = false);
 
 result_code_t parse_decimal_arg(const char* strArgs, const int32_t iMinIntSize, const int32_t iMaxIntSize, int32_t* iVal32);
+result_code_t parse_double_arg(const char* strArgs, const double dblMinVal, const double dblMaxVal, double* dblValue);
+result_code_t parse_bool_arg(const char* strArgs, bool* bValue);
 result_code_t parse_hex_or_bin_arg(const char* strArgs, const uint8_t iMaxBitSize, uint8_t* pBuf, size_t iBufSize);
 result_code_t parse_ipv4_arg(const char* strArgs, uint8_t* pIPAddress);
 result_code_t parse_mac_arg(const char* strArgs, uint8_t* pMACAddress);

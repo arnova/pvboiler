@@ -87,8 +87,9 @@ result_code_t CPvBoilerCommandHandler::CmdShowFWVersion(const char *strArgs)
 // Show help screen
 result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   CTerminal::println(FPSTR(HELP_STR_P));
 
@@ -99,8 +100,9 @@ result_code_t CPvBoilerCommandHandler::CmdShowHelp(const char *strArgs)
 // Show expert help screen
 result_code_t CPvBoilerCommandHandler::CmdShowExpertHelp(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   CTerminal::println(FPSTR(EX_HELP_STR_P));
 
@@ -182,12 +184,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetMqttIpAddress(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetMqttUpdateInterval(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iInterval;
-  result = get_int32_from_string(strArgs, &iInterval, MQTT_UPDATE_TIME_MIN, MQTT_UPDATE_TIME_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, MQTT_UPDATE_TIME_MIN, MQTT_UPDATE_TIME_MAX, &iInterval);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -258,8 +256,9 @@ result_code_t CPvBoilerCommandHandler::CmdSetMqttPassword(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   // Output result before restarting, else it's lost on a socket (terminal) connection
   CTerminal::println("OK");
@@ -274,8 +273,9 @@ result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   char strBuf[20]; // Enough room for float with 3 decimals
 
@@ -415,8 +415,9 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   CTerminal::print("wifi_conn=");
   CTerminal::print(m_network.IsConnected() ? "1" : "0");
@@ -624,8 +625,9 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   // Publish uptime
   const CUptime::uptime_t upTime = m_pvBoiler.GetUpTime();
@@ -639,8 +641,9 @@ result_code_t CPvBoilerCommandHandler::CmdUpTime(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   m_pvBoiler.Reset();
 
@@ -650,8 +653,9 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdReboot(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   // Clean disconnect so we report offline
   m_network.GetMqttClient().ServerDisconnect();
@@ -670,8 +674,9 @@ result_code_t CPvBoilerCommandHandler::CmdReboot(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
 {
-  if (strArgs != NULL && *strArgs)
-    return pack_result_code(ERR_CODE_TOO_MANY_ARGS, ARG_INT32_NONE);
+  const result_code_t result = check_arguments(strArgs, ARG_INT32_NONE);
+  if (result.code != ERR_CODE_OK)
+    return result;
 
   m_pvBoiler.FactoryReset();
 
@@ -681,12 +686,8 @@ result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetPowerBudget(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, INT32_MIN, INT32_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, INT32_MIN, INT32_MAX, &iPower);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -714,12 +715,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetBudgetSource(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iPerc;
-  result = get_int32_from_string(strArgs, &iPerc, 0, 100, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, 0, 100, &iPerc);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -731,12 +728,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetPowerPercentage(const char *strArgs
 
 result_code_t CPvBoilerCommandHandler::CmdSetThermostatSetpoint(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, THERMOSTAT_SETPOINT_MIN, THERMOSTAT_SETPOINT_MAX, &iTemperature);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -748,12 +741,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetThermostatSetpoint(const char *strA
 
 result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnabled(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   bool bEnable;
-  result = get_bool_from_string(strArgs, &bEnable, ARG_INT32_NUM1);
+  const result_code_t result = parse_bool_arg(strArgs, &bEnable);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -765,12 +754,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectionEnabled(const char *str
 
 result_code_t CPvBoilerCommandHandler::CmdSetThermostatHysteresis(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iHysteresis;
-  result = get_int32_from_string(strArgs, &iHysteresis, THERMOSTAT_HYSTERESIS_MIN, THERMOSTAT_HYSTERESIS_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, THERMOSTAT_HYSTERESIS_MIN, THERMOSTAT_HYSTERESIS_MAX, &iHysteresis);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -782,12 +767,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetThermostatHysteresis(const char *st
 
 result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneLowTemperature(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, &iTemperature);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -806,12 +787,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneLowTemperature(const char
 
 result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneHighTemperature(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DANGER_ZONE_TEMPERATURE_MIN, DANGER_ZONE_TEMPERATURE_MAX, &iTemperature);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -830,12 +807,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDangerZoneHighTemperature(const cha
 
 result_code_t CPvBoilerCommandHandler::CmdSetDisinfectInterval(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iDays;
-  result = get_int32_from_string(strArgs, &iDays, DISINFECTION_INTERVAL_DAYS_MIN, DISINFECTION_INTERVAL_DAYS_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DISINFECTION_INTERVAL_DAYS_MIN, DISINFECTION_INTERVAL_DAYS_MAX, &iDays);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -847,12 +820,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectInterval(const char *strAr
 
 result_code_t CPvBoilerCommandHandler::CmdSetDisinfectDuration(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iMinutes;
-  result = get_int32_from_string(strArgs, &iMinutes, DISINFECTION_DURATION_MINUTES_MIN, DISINFECTION_DURATION_MINUTES_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DISINFECTION_DURATION_MINUTES_MIN, DISINFECTION_DURATION_MINUTES_MAX, &iMinutes);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -864,12 +833,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectDuration(const char *strAr
 
 result_code_t CPvBoilerCommandHandler::CmdSetDisinfectTemperature(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iTemperature;
-  result = get_int32_from_string(strArgs, &iTemperature, DISINFECTION_TEMPERATURE_MIN, DISINFECTION_TEMPERATURE_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DISINFECTION_TEMPERATURE_MIN, DISINFECTION_TEMPERATURE_MAX, &iTemperature);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -881,12 +846,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDisinfectTemperature(const char *st
 
 result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iPower;
-  result = get_int32_from_string(strArgs, &iPower, BOILER_POWER_RATING_MIN, BOILER_POWER_RATING_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, BOILER_POWER_RATING_MIN, BOILER_POWER_RATING_MAX, &iPower);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -898,12 +859,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetBoilerPowerRating(const char *strAr
 
 result_code_t CPvBoilerCommandHandler::CmdSetDeadZone(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iDeadZone;
-  result = get_int32_from_string(strArgs, &iDeadZone, DEAD_ZONE_MIN, DEAD_ZONE_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, DEAD_ZONE_MIN, DEAD_ZONE_MAX, &iDeadZone);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -915,12 +872,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDeadZone(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetBudgetMargin(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iMargin;
-  result = get_int32_from_string(strArgs, &iMargin, BUDGET_MARGIN_MIN, BUDGET_MARGIN_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, BUDGET_MARGIN_MIN, BUDGET_MARGIN_MAX, &iMargin);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -980,12 +933,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetDimStyle(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iCount;
-  result = get_int32_from_string(strArgs, &iCount, SSR_PERIOD_COUNT_MIN, SSR_PERIOD_COUNT_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, SSR_PERIOD_COUNT_MIN, SSR_PERIOD_COUNT_MAX, &iCount);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -998,12 +947,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetSsrPeriodCount(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetErrorGainPos(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_double_arg(strArgs, ERROR_GAIN_POS_MIN, ERROR_GAIN_POS_MAX, &fGain);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -1015,12 +960,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetErrorGainPos(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetErrorGainNeg(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   double fGain;
-  result = get_double_from_string(strArgs, &fGain, ERROR_GAIN_NEG_MIN, ERROR_GAIN_NEG_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_double_arg(strArgs, ERROR_GAIN_NEG_MIN, ERROR_GAIN_NEG_MAX, &fGain);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -1032,12 +973,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetErrorGainNeg(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetStepClampPos(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_double_arg(strArgs, STEP_CLAMP_POS_MIN, STEP_CLAMP_POS_MAX, &fClamp);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -1049,12 +986,8 @@ result_code_t CPvBoilerCommandHandler::CmdSetStepClampPos(const char *strArgs)
 
 result_code_t CPvBoilerCommandHandler::CmdSetStepClampNeg(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   double fClamp;
-  result = get_double_from_string(strArgs, &fClamp, STEP_CLAMP_NEG_MIN, STEP_CLAMP_NEG_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_double_arg(strArgs, STEP_CLAMP_NEG_MIN, STEP_CLAMP_NEG_MAX, &fClamp);
   if (result.code != ERR_CODE_OK)
     return result;
 
@@ -1090,12 +1023,8 @@ result_code_t CPvBoilerCommandHandler::CmdNetWatchdogTimeout(const char *strArgs
 
 result_code_t CPvBoilerCommandHandler::CmdNetWatchdogRecovery(const char *strArgs)
 {
-  result_code_t result = check_arguments(strArgs, ARG_INT32_NUM1);
-  if (result.code != ERR_CODE_OK)
-    return result;
-
   int32_t iTime;
-  result = get_int32_from_string(strArgs, &iTime, 0, NETWORK_WATCHDOG_RECOVERY_MAX, ARG_INT32_NUM1);
+  const result_code_t result = parse_decimal_arg(strArgs, 0, NETWORK_WATCHDOG_RECOVERY_MAX, &iTime);
   if (result.code != ERR_CODE_OK)
     return result;
 
