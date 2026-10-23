@@ -44,7 +44,7 @@ void CPvBoiler::Loop()
           m_fBoilerTemperature = fTemperatureAveraged;
         }
 
-        // Over temperature protection. Use raw value as the averaged value lags behind
+        // Over temperature protection. Use averaged value so a single bad reading can't latch it
         if (fTemperatureAveraged >= TEMPERATURE_OVERHEATING_MAX && !m_bBoilerOverHeated)
         {
           m_bBoilerOverHeated = true;
