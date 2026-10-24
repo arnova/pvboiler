@@ -5,13 +5,22 @@
   Written by       : Arno van Amersfoort
   Dependencies     : EEPROM
   Initial date     : October 23, 2026
-  Last modified    : October 23, 2026
+  Last modified    : October 24, 2026
 */
 
 #include <EEPROM.h>
 #include <string.h>
 
 #include "EepromSettings.h"
+
+
+// Write EEPROM buffer to flash. Note: Only needed on ESP platforms where EEPROM is emulated in flash
+void CEepromSettings::Commit()
+{
+#if defined(ESP8266) || defined(ESP32)
+  EEPROM.commit();
+#endif
+}
 
 
 bool CEepromSettings::IsPrintable(const char* str)
@@ -99,7 +108,7 @@ bool CEepromSettings::Store(const int iAddr, uint8_t& iSetting, const uint8_t iV
     return false;
 
   EEPROM.put(iAddr, iVal);
-  EEPROM.commit();
+  Commit();
 
   iSetting = iVal;
 
@@ -113,7 +122,7 @@ bool CEepromSettings::Store(const int iAddr, uint16_t& iSetting, const uint16_t 
     return false;
 
   EEPROM.put(iAddr, iVal);
-  EEPROM.commit();
+  Commit();
 
   iSetting = iVal;
 
@@ -127,7 +136,7 @@ bool CEepromSettings::Store(const int iAddr, float& fSetting, const float fVal)
     return false;
 
   EEPROM.put(iAddr, fVal);
-  EEPROM.commit();
+  Commit();
 
   fSetting = fVal;
 
@@ -141,7 +150,7 @@ bool CEepromSettings::Store(const int iAddr, bool& bSetting, const bool bVal)
     return false;
 
   EEPROM.put(iAddr, static_cast<uint8_t>(bVal ? 0x01 : 0x00));
-  EEPROM.commit();
+  Commit();
 
   bSetting = bVal;
 
@@ -161,7 +170,7 @@ bool CEepromSettings::StoreString(const int iAddr, char* strSetting, const size_
   {
     EEPROM.write(iAddr + it, strSetting[it]);
   }
-  EEPROM.commit();
+  Commit();
 
   return true;
 }
@@ -178,7 +187,7 @@ bool CEepromSettings::StoreIp(const int iAddr, uint8_t* ipSetting, const uint8_t
   {
     EEPROM.write(iAddr + it, ipSetting[it]);
   }
-  EEPROM.commit();
+  Commit();
 
   return true;
 }

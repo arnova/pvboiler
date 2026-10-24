@@ -26,5 +26,8 @@ class CEepromSettings
     static bool StoreIp(const int iAddr, uint8_t* ipSetting, const uint8_t* ipVal);
 
     static bool IsPrintable(const char* str);
+
+  private:
+    static void Commit();
 };
 #endif // EEPROM_SETTINGS_H
