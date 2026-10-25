@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : EEPROM
   Initial date     : October 23, 2026
-  Last modified    : October 24, 2026
+  Last modified    : October 25, 2026
 */
 
 #include <EEPROM.h>
@@ -190,4 +190,14 @@ bool CEepromSettings::StoreIp(const int iAddr, uint8_t* ipSetting, const uint8_t
   Commit();
 
   return true;
+}
+
+
+void CEepromSettings::Erase(const int iAddr, const size_t iSize)
+{
+  for (size_t it = 0; it < iSize; it++)
+  {
+    EEPROM.write(iAddr + it, 0xFF);
+  }
+  Commit();
 }

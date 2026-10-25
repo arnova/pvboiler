@@ -241,6 +241,8 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define DISINFECTION_TEMP_SIZE  1
 
 // EEPROM locations
+// NOTE: Erased EEPROM (0xFF) must always be invalid for controller settings (EEPROM_BP_RATING and up),
+//       as CPvBoiler::FactoryReset() relies on LoadSettings() falling back to defaults for erased values
 #define EEPROM_CHECKSUM       0                                                   // 0
 #define EEPROM_WIFI_SSID      EEPROM_CHECKSUM + CHECKSUM_SIZE                     // 2
 #define EEPROM_WIFI_PASSWORD  EEPROM_WIFI_SSID + WIFI_SSID_MAX_SIZE + 1           // 35

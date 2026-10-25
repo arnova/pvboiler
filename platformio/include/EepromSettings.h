@@ -25,6 +25,9 @@ class CEepromSettings
     static bool StoreString(const int iAddr, char* strSetting, const size_t iMaxSize, const char* strVal);
     static bool StoreIp(const int iAddr, uint8_t* ipSetting, const uint8_t* ipVal);
 
+    // Erase range (fill with 0xFF)
+    static void Erase(const int iAddr, const size_t iSize);
+
     static bool IsPrintable(const char* str);
 
   private:

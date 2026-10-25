@@ -841,31 +841,18 @@ void CPvBoiler::SetNetWatchDogRecovery(const uint16_t iTime)
 
 void CPvBoiler::FactoryReset()
 {
-  SetBoilerPowerRating(BOILER_POWER_RATING_DEFAULT);
-  SetDeadZone(DEAD_ZONE_DEFAULT);
-  SetBudgetMargin(BUDGET_MARGIN_DEFAULT);
-  SetMode(MODE_BUDGET);
-  SetDimStyle(DIM_STYLE_PHASE_ANGLE);
-  SetSsrPeriodCount(SSR_PERIOD_COUNT_DEFAULT);
-  SetErrorGainPos(ERROR_GAIN_POS_DEFAULT);
-  SetErrorGainNeg(ERROR_GAIN_NEG_DEFAULT);
-  SetStepClampPos(STEP_CLAMP_POS_DEFAULT);
-  SetStepClampNeg(STEP_CLAMP_NEG_DEFAULT);
-  SetNetWatchDogTimeout(NETWORK_WATCHDOG_TIMEOUT_DEFAULT);
-  SetNetWatchDogRecovery(NETWORK_WATCHDOG_RECOVERY_DEFAULT);
-  SetMqttUpdateInterval(MQTT_UPDATE_TIME_DEFAULT);
-  SetThermostatSetpoint(THERMOSTAT_SETPOINT_DEFAULT);
-  SetDisinfectionEnabled(true);
-  SetDsmrPowerBudget(false);
-  SetThermostatHysteresis(THERMOSTAT_HYSTERESIS_DEFAULT);
-  SetDangerZoneLowTemperature(DANGER_ZONE_LOW_TEMPERATURE_DEFAULT);
-  SetDangerZoneHighTemperature(DANGER_ZONE_HIGH_TEMPERATURE_DEFAULT);
-  SetDisinfectionIntervalDays(DISINFECTION_INTERVAL_DAYS_DEFAULT);
-  SetDisinfectionDurationMinutes(DISINFECTION_DURATION_MINUTES_DEFAULT);
-  SetDisinfectionTemperature(DISINFECTION_TEMPERATURE_DEFAULT);
+  const bool bWasDsmrPowerBudget = m_bDsmrPowerBudget;
 
-  // Reset controller
+  // Erase all controller settings (network settings are stored before these). LoadSettings() then falls back to defaults
+  CEepromSettings::Erase(EEPROM_BP_RATING, EEPROM_DISINFECTION_TEMP + DISINFECTION_TEMP_SIZE - EEPROM_BP_RATING);
+
+  // Reset controller (also reloads settings)
   Reset();
+
+  if (bWasDsmrPowerBudget && m_network.IsMqttConnected())
+  {
+    MqttUpdateDsmrSubscription();
+  }
 }
 
 
