@@ -844,7 +844,7 @@ void CPvBoiler::FactoryReset()
   const bool bWasDsmrPowerBudget = m_bDsmrPowerBudget;
 
   // Erase all controller settings (network settings are stored before these). LoadSettings() then falls back to defaults
-  CEepromSettings::Erase(EEPROM_BP_RATING, EEPROM_DISINFECTION_TEMP + DISINFECTION_TEMP_SIZE - EEPROM_BP_RATING);
+  CEepromSettings::Erase(EEPROM_BP_RATING, EEPROM_MAX_SIZE - EEPROM_BP_RATING);
 
   // Reset controller (also reloads settings)
   Reset();

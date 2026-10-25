@@ -211,6 +211,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define SOCKET_CLIENT_TIMEOUT_MS      100 // ms
 
 // EEPROM byte sizes
+#define EEPROM_MAX_SIZE         512
 #define CHECKSUM_SIZE           2
 #define RESERVED_SIZE           100
 #define WIFI_SSID_MAX_SIZE      32
