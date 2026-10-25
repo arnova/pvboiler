@@ -103,6 +103,54 @@ class CPvBoiler
     };
     static_assert(sizeof(m_modeNames) / sizeof(m_modeNames[0]) == MODE_COUNT, "m_modeNames does not match mode_e");
 
+    // What the controller is actually doing (as opposed to the selected mode)
+    enum state_e
+    {
+      STATE_OFF = 0,                // Mode off
+      STATE_STANDBY,                // Mode standby (legionella protection remains active)
+      STATE_OVERHEATED,             // Overheat protection triggered
+      STATE_SENSOR_FAULT,           // Thermostat needs temperature but sensor reading is invalid
+      STATE_LEGIONELLA_HEATING,     // Legionella disinfection: heating up to disinfection temperature
+      STATE_LEGIONELLA_HOLDING,     // Legionella disinfection: holding disinfection temperature
+      STATE_NETWORK_TIMEOUT,        // Network watchdog triggered
+      STATE_BOOST,                  // Boost mode
+      STATE_HEATING_TO_SETPOINT,    // Heating up to (software) thermostat setpoint
+      STATE_SETPOINT_REACHED,       // (Software) thermostat setpoint reached
+      STATE_HEATING_ON_SURPLUS,     // Heating using available (surplus) power budget
+      STATE_WAITING_FOR_BUDGET,     // No (surplus) power budget available
+      STATE_FIXED_PERCENTAGE,       // Heating at fixed (manually set) power percentage
+      STATE_LAST = STATE_FIXED_PERCENTAGE // Note: Must refer to the last state
+    };
+    typedef enum state_e state_t;
+    static constexpr uint8_t STATE_COUNT = STATE_LAST + 1;
+
+    // State names, indexed by state_t. Note: Must match order of state_e
+    struct state_name_s
+    {
+      const char* strMqtt;    // MQTT/Home Assistant enum sensor option
+      const char* strCli;     // Terminal status output
+      const char* strDisplay; // OLED display (short)
+    };
+    typedef struct state_name_s state_name_t;
+
+    static constexpr state_name_t m_stateNames[] =
+    {
+      { "Off",                 "off",                 "Off"             }, // STATE_OFF
+      { "Standby",             "standby",             "Standby"         }, // STATE_STANDBY
+      { "Overheated",          "overheated",          "Overheated"      }, // STATE_OVERHEATED
+      { "Sensor fault",        "sensor_fault",        "Sensor fault"    }, // STATE_SENSOR_FAULT
+      { "Legionella heating",  "legionella_heating",  "Legio heating"   }, // STATE_LEGIONELLA_HEATING
+      { "Legionella holding",  "legionella_holding",  "Legio holding"   }, // STATE_LEGIONELLA_HOLDING
+      { "Network timeout",     "network_timeout",     "Net timeout"     }, // STATE_NETWORK_TIMEOUT
+      { "Boost",               "boost",               "Boost"           }, // STATE_BOOST
+      { "Heating to setpoint", "heating_to_setpoint", "Heating to SP"   }, // STATE_HEATING_TO_SETPOINT
+      { "Setpoint reached",    "setpoint_reached",    "SP reached"      }, // STATE_SETPOINT_REACHED
+      { "Heating on surplus",  "heating_on_surplus",  "Surplus heating" }, // STATE_HEATING_ON_SURPLUS
+      { "Waiting for budget",  "waiting_for_budget",  "Waiting budget"  }, // STATE_WAITING_FOR_BUDGET
+      { "Fixed percentage",    "fixed_percentage",    "Fixed percent"   }  // STATE_FIXED_PERCENTAGE
+    };
+    static_assert(sizeof(m_stateNames) / sizeof(m_stateNames[0]) == STATE_COUNT, "m_stateNames does not match state_e");
+
     void Loop();
     void Reset();
 
@@ -164,6 +212,7 @@ class CPvBoiler
     mode_t GetMode() const { return m_mode; };
     static bool GetModeFromName(const char* strName, mode_t& mode); // MQTT name
     static bool GetModeFromCliName(const char* strName, mode_t& mode); // CLI name, alias or MQTT name
+    state_t GetState() const { return m_state; };
     bool IsThermostatMode() const { return m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT || m_mode == MODE_SETPOINT_BUDGET || m_mode == MODE_PERCENT_SETPOINT_BUDGET; };
     dim_style_t GetDimStyle() const { return m_dimStyle; };
     uint8_t GetSsrPeriodCount() const { return m_iSsrPeriodCount; };
@@ -269,6 +318,9 @@ class CPvBoiler
     float m_fStepClampNeg = STEP_CLAMP_NEG_DEFAULT;
 
     mode_t m_mode = MODE_BUDGET; // Select if you want to control using setting power percentage or providing power budget
+
+    state_t m_state = STATE_OFF;
+    bool m_bPublishState = true;
 
     OneWire m_oneWire;
     DallasTemperature m_tempSensors;

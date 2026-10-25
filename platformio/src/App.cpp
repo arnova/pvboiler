@@ -300,14 +300,6 @@ void CApp::HandleDisplay()
     {
       case 0:
       {
-        m_display.WriteDisplayStr(DEVICE_NAME, 0, true);
-        m_display.WriteDisplayStr("v" MY_VERSION, 1, false);
-        m_display.WriteDisplayStr("(C) Arnova", 2, false);
-      } 
-      break;
-
-      case 1:
-      {
         m_display.WriteDisplayStr(m_network.GetHostName(), 0, true);
 
         m_display.WriteDisplayStr(CNetwork::FormatIp(WiFi.localIP(), strLine, sizeof(strLine)), 1, false);
@@ -327,7 +319,7 @@ void CApp::HandleDisplay()
       }
       break;
 
-      case 2:
+      case 1:
       {
         const uint8_t iPercent = lroundf(m_pvBoiler.GetCurrentPercentage());
 
@@ -347,31 +339,33 @@ void CApp::HandleDisplay()
       }
       break;
 
-      case 3:
+      case 2:
       {
+        m_display.WriteDisplayStr(CPvBoiler::m_stateNames[m_pvBoiler.GetState()].strDisplay, 0, true);
+
         const float fTemperature = m_pvBoiler.GetBoilerTemperature();
         if (fTemperature < 0.0f)
         {
-          m_display.WriteDisplayStr("Unknown temperature", 1, true);
+          m_display.WriteDisplayStr("Unknown temperature", 1, false);
         }
         else
         {
           snprintf(strLine, sizeof(strLine), "%.1fC", fTemperature);
-          m_display.WriteDisplayStr(strLine, 1, true);
+          m_display.WriteDisplayStr(strLine, 1, false);
         }
 
         m_display.WriteDisplayStr(FormatBar(strLine, fTemperature), 2, false); // Range 0C - 100C
       }
       break;
 
-      case 4:
+      case 3:
       {
         m_display.WriteDisplayStr("", 0, true); // Empty screen to preven burnin
       }
       break;
     }
 
-    if (++m_displayCount > 4)
+    if (++m_displayCount > 3)
     {
       m_displayCount = 0;
     }

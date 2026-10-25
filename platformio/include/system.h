@@ -143,6 +143,7 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_FW_VERSION                         "firmware_version"
 #define MQTT_OUTPUT_POWER                       "output_power"
 #define MQTT_OUTPUT_PERCENTAGE                  "output_percentage"
+#define MQTT_CONTROLLER_STATE                   "state"
 
 #define MQTT_BOILER_POWER_RATING                "boiler_power_rating"
 #define MQTT_DEAD_ZONE                          "dead_zone"

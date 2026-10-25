@@ -379,6 +379,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   CTerminal::println("");
 
   PrintItemValue("mode", CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
+  PrintItemValue(" state", CPvBoiler::m_stateNames[m_pvBoiler.GetState()].strCli);
 
   snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
   PrintItemValue(" perc_set", strBuf);

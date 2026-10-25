@@ -6,6 +6,7 @@
 
 // Out-of-class definition required pre-C++17 (ESP32 core builds with gnu++11), redundant but harmless with C++17
 constexpr CPvBoiler::mode_name_t CPvBoiler::m_modeNames[];
+constexpr CPvBoiler::state_name_t CPvBoiler::m_stateNames[];
 
 CPvBoiler::CPvBoiler(CNetwork& network) : m_network(network), m_oneWire(ONE_WIRE), m_tempSensors(&m_oneWire)
 {
@@ -133,6 +134,8 @@ void CPvBoiler::Reset()
 
   m_fCurrentPercentage = 0.0f;
   m_bPublishOutputPercentage = true;
+
+  m_bPublishState = true;
 
   m_bPublishSettings = true;
 
@@ -287,6 +290,12 @@ bool CPvBoiler::MqttPublishValues()
       {
         mqttClient.PublishFloat(MQTT_TRIAC_ANGLE_FACTOR, GetTriacAngleFactor(), 4);
       }
+    }
+
+    if (m_bPublishState || m_bMqttRepublish)
+    {
+      m_bPublishState = false;
+      mqttClient.PublishMessage(MQTT_CONTROLLER_STATE, m_stateNames[m_state].strMqtt);
     }
 
     if (m_bPublishBoilerTemperature || m_bMqttRepublish)
@@ -458,6 +467,13 @@ void CPvBoiler::MqttPublishDiscovery()
     strModes[it] = m_modeNames[it].strMqtt;
   }
   mqttClient.PublishSelectConfig(MQTT_SET_MODE, strModes, MODE_COUNT);
+
+  const char* strStates[STATE_COUNT];
+  for (uint8_t it = 0; it < STATE_COUNT; it++)
+  {
+    strStates[it] = m_stateNames[it].strMqtt;
+  }
+  mqttClient.PublishEnumSensorConfig(MQTT_CONTROLLER_STATE, strStates, STATE_COUNT);
 
   mqttClient.PublishSensorConfig(MQTT_BOILER_POWER_RATING, "W", "power", "", true);
 
@@ -980,28 +996,46 @@ void CPvBoiler::Update()
   }
 
   float fNewPercentage = m_fCurrentPercentage;
+  state_t state = STATE_OFF;
 
   if (m_bBoilerOverHeated)
   {
     fNewPercentage = 0.0f;
+    state = STATE_OVERHEATED;
   }
   else if (bLegionellaDisinfect)
   {
-    fNewPercentage = (IsThermostatMode() && !m_bThermostatAllowsHeating) ? 0.0f : 100.0f; // Thermostat only blocks on invalid sensor reading
+    if (IsThermostatMode() && !m_bThermostatAllowsHeating) // Thermostat only blocks on invalid sensor reading
+    {
+      fNewPercentage = 0.0f;
+      state = STATE_SENSOR_FAULT;
+    }
+    else
+    {
+      fNewPercentage = 100.0f;
+      state = (m_iLegionellaDisinfectingElapsedMinutes > 0) ? STATE_LEGIONELLA_HOLDING : STATE_LEGIONELLA_HEATING;
+    }
   }
   else if (m_mode == MODE_SETPOINT || (m_mode == MODE_SETPOINT_BUDGET && m_bThermostatAllowsHeating))
   {
     fNewPercentage = 100.0f; // Below setpoint: always heat, independent of (network) budget/watchdog
+    state = STATE_HEATING_TO_SETPOINT;
   }
   else if (m_mode == MODE_PERCENT_SETPOINT_BUDGET && m_bThermostatAllowsHeating)
   {
     fNewPercentage = m_iPowerPercentage; // Below setpoint: always heat at set percentage, independent of (network) budget/watchdog
+    state = STATE_HEATING_TO_SETPOINT;
   }
   else if (m_iNetworkWatchdogRecoveryCounter > 0 || m_mode == MODE_STANDBY || m_mode == MODE_OFF)
   {
     if (m_mode == MODE_STANDBY || m_mode == MODE_OFF)
     {
       m_iNetworkWatchdogRecoveryCounter = 0; // When off: quick recovery
+      state = (m_mode == MODE_OFF) ? STATE_OFF : STATE_STANDBY;
+    }
+    else
+    {
+      state = STATE_NETWORK_TIMEOUT;
     }
 
     if (m_fCurrentPercentage > 0)
@@ -1012,10 +1046,12 @@ void CPvBoiler::Update()
   else if (m_mode == MODE_BOOST)
   {
     fNewPercentage = 100.0f; // Immediately 100% power
+    state = STATE_BOOST;
   }
   else if (m_mode == MODE_PERCENT || m_mode == MODE_PERCENT_SETPOINT)
   {
     fNewPercentage = m_iPowerPercentage;
+    state = STATE_FIXED_PERCENTAGE;
   }
   else
   {
@@ -1039,6 +1075,8 @@ void CPvBoiler::Update()
     {
       fNewPercentage += fErrorStep;
     }
+
+    state = (fNewPercentage > 0.0f) ? STATE_HEATING_ON_SURPLUS : STATE_WAITING_FOR_BUDGET;
   }
 
   // Clamp to 0-100%
@@ -1055,12 +1093,24 @@ void CPvBoiler::Update()
   if (!m_bThermostatAllowsHeating && (m_mode == MODE_SETPOINT || m_mode == MODE_BUDGET_SETPOINT || m_mode == MODE_PERCENT_SETPOINT))
   {
     fNewPercentage = 0.0f;
+
+    if (state != STATE_OVERHEATED)
+    {
+      // Note: Thermostat also blocks when sensor is installed but has no valid reading
+      state = (m_fBoilerTemperature <= 0.0f) ? STATE_SENSOR_FAULT : STATE_SETPOINT_REACHED;
+    }
   }
 
   if (fNewPercentage != m_fCurrentPercentage)
   {
     m_fCurrentPercentage = fNewPercentage;
     m_bPublishOutputPercentage = true;
+  }
+
+  if (state != m_state)
+  {
+    m_state = state;
+    m_bPublishState = true;
   }
 }
 

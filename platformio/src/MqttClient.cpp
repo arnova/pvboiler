@@ -285,6 +285,21 @@ void CMqttClient::PublishSensorConfig(const char* strItem, const char* strUnit /
 }
 
 
+void CMqttClient::PublishEnumSensorConfig(const char* strItem, const char* const* strValues, const uint8_t iCount, const bool bDiag /* = false */)
+{
+  JsonDocument root;
+
+  root["device_class"] = "enum";
+
+  for (uint8_t it = 0; it < iCount; it++)
+  {
+    root["options"][it] = strValues[it];
+  }
+
+  PublishGetterConfig(root, strItem, "sensor", bDiag);
+}
+
+
 bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetain /* = false */)
 {
   char strTopic[MQTT_ITEM_TOPIC_SIZE];

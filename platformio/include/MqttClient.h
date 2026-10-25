@@ -18,6 +18,7 @@ class CMqttClient : public PubSubClient
     void PublishSelectConfig(const char* strItem, const char* const* strValues, const uint8_t iCount, const bool bRetain = true);
     void PublishBinarySensorConfig(const char* strItem, const bool bDiag = false);
     void PublishSensorConfig(const char* strItem, const char* strUnit = "", const char* strDeviceClass = "", const char* strStateClass = "", const bool bDiag = false);
+    void PublishEnumSensorConfig(const char* strItem, const char* const* strValues, const uint8_t iCount, const bool bDiag = false);
 
     void UnpublishSwitchConfig(const char* strItem);
     void UnpublishNumberConfig(const char* strItem);
