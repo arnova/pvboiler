@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : util
   Initial date     : July 30, 2026
-  Last modified    : July 30, 2026
+  Last modified    : October 26, 2026
 */
 
 #include "Terminal.h"
@@ -13,6 +13,13 @@
 
 #ifdef SOCKET_SERVER_PORT
 NetClient* CTerminal::g_socketServerClient = nullptr;   // out-of-class definition
+bool CTerminal::g_bSocketLoggedIn = true;               // Without TERMINAL_PASSWORD always logged in
+
+#ifdef TERMINAL_PASSWORD
+char CTerminal::g_strLoginBuf[TERMINAL_LOGIN_BUF_SIZE] = { 0 };
+size_t CTerminal::g_iLoginBufCount = 0;
+uint8_t CTerminal::g_iLoginAttempts = 0;
+#endif
 #endif
 
 volatile bool CTerminal::g_bEchoOnOff = true; // out-of-class definition
@@ -24,6 +31,74 @@ CTerminal::CTerminal()
 #endif
 {
 }
+
+
+#ifdef SOCKET_SERVER_PORT
+void CTerminal::SetSocketClient(NetClient& wifiClient)
+{
+  g_socketServerClient = &wifiClient;
+
+#ifdef TERMINAL_PASSWORD
+  // New client: require login
+  g_bSocketLoggedIn = false;
+  g_iLoginBufCount = 0;
+  g_iLoginAttempts = 0;
+
+  wifiClient.print("Password: ");
+#endif
+}
+#endif
+
+
+#if defined(SOCKET_SERVER_PORT) && defined(TERMINAL_PASSWORD)
+// Handle (non-echoed) password input of a socket client that isn't logged in yet
+void CTerminal::ProcessLogin(NetClient& client, const char rxChar)
+{
+  if (rxChar == CH_CR || rxChar == CH_LF)
+  {
+    if (g_iLoginBufCount == 0)
+      return; // Ignore empty lines (eg. LF of CR+LF)
+
+    g_strLoginBuf[g_iLoginBufCount] = '\0';
+    const bool bMatch = STREQUALS(g_strLoginBuf, TERMINAL_PASSWORD);
+
+    // Don't keep the entered password in memory
+    memset(g_strLoginBuf, 0, sizeof(g_strLoginBuf));
+    g_iLoginBufCount = 0;
+
+    if (bMatch)
+    {
+      g_bSocketLoggedIn = true;
+      client.println("");
+      client.println(FPSTR(VER_STR_P));
+    }
+    else if (++g_iLoginAttempts >= TERMINAL_LOGIN_MAX_ATTEMPTS)
+    {
+      client.println("");
+      client.println("Login failed");
+      client.stop();
+
+#ifdef WIFI_DEBUG
+      TERM_SERIAL.println("Socket terminal: Login failed, client disconnected");
+#endif
+    }
+    else
+    {
+      client.println("");
+      client.print("Wrong password. Password: ");
+    }
+  }
+  else if (rxChar == CH_DELETE || rxChar == CH_BACKSPACE)
+  {
+    if (g_iLoginBufCount != 0)
+      g_iLoginBufCount--;
+  }
+  else if (rxChar >= ' ' && rxChar <= '~' && g_iLoginBufCount < (TERMINAL_LOGIN_BUF_SIZE - 1))
+  {
+    g_strLoginBuf[g_iLoginBufCount++] = rxChar;
+  }
+}
+#endif
 
 
 void CTerminal::Process(void)
@@ -43,6 +118,14 @@ void CTerminal::Process(void)
       if (socketServerClient.available()) // Data available?
       {
         rxChar = socketServerClient.read(); // Read data from socket
+
+#ifdef TERMINAL_PASSWORD
+        if (!g_bSocketLoggedIn)
+        {
+          ProcessLogin(socketServerClient, rxChar);
+          return; // Never pass (password) input to the command buffer or local echo
+        }
+#endif
       }
     }
   }

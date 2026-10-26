@@ -22,6 +22,15 @@
 #define RESULT_BUF_SIZE 80
 #endif
 
+// Socket (network) terminal login. Only used when TERMINAL_PASSWORD is defined
+#ifndef TERMINAL_LOGIN_BUF_SIZE
+#define TERMINAL_LOGIN_BUF_SIZE 33 // Max. password length + 1
+#endif
+
+#ifndef TERMINAL_LOGIN_MAX_ATTEMPTS
+#define TERMINAL_LOGIN_MAX_ATTEMPTS 3 // Client is disconnected after this many failed attempts
+#endif
+
 class CTerminal
 {
   public:
@@ -57,7 +66,7 @@ class CTerminal
     {
       TERM_SERIAL.print(x);
 #ifdef SOCKET_SERVER_PORT
-      if (g_socketServerClient && g_socketServerClient->connected())
+      if (IsSocketOutputEnabled())
           g_socketServerClient->print(x);
 #endif
     }
@@ -67,7 +76,7 @@ class CTerminal
     {
       TERM_SERIAL.println(x);
 #ifdef SOCKET_SERVER_PORT
-      if (g_socketServerClient && g_socketServerClient->connected())
+      if (IsSocketOutputEnabled())
           g_socketServerClient->println(x);
 #endif
     }
@@ -78,7 +87,7 @@ class CTerminal
     {
       TERM_SERIAL.print(x);
 #ifdef SOCKET_SERVER_PORT
-      if (g_socketServerClient && g_socketServerClient->connected())
+      if (IsSocketOutputEnabled())
           g_socketServerClient->print(xSocket);
 #else
       (void) xSocket;
@@ -90,22 +99,33 @@ class CTerminal
     {
         TERM_SERIAL.printf(x);
 #ifdef SOCKET_SERVER_PORT
-        if (g_socketServerClient && g_socketServerClient->connected())
+        if (IsSocketOutputEnabled())
             g_socketServerClient->printf(x);
 #endif
     }
 
 #ifdef SOCKET_SERVER_PORT
-    static void SetSocketClient(NetClient& wifiClient)
-    {
-      g_socketServerClient = &wifiClient;
-    }
+    static void SetSocketClient(NetClient& wifiClient);
 #endif
 
   private:
 #ifdef SOCKET_SERVER_PORT
+    // Socket output is only allowed when connected and logged in (when login is enabled)
+    static bool IsSocketOutputEnabled() { return g_socketServerClient && g_socketServerClient->connected() && g_bSocketLoggedIn; };
+
+#ifdef TERMINAL_PASSWORD
+    static void ProcessLogin(NetClient& client, const char rxChar);
+#endif
+
     CNetwork& m_network;
-   static NetClient* g_socketServerClient;
+    static NetClient* g_socketServerClient;
+    static bool g_bSocketLoggedIn;
+
+#ifdef TERMINAL_PASSWORD
+    static char g_strLoginBuf[TERMINAL_LOGIN_BUF_SIZE];
+    static size_t g_iLoginBufCount;
+    static uint8_t g_iLoginAttempts;
+#endif
 #endif
 
     volatile static bool g_bEchoOnOff;

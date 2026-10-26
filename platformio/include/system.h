@@ -16,6 +16,23 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define DEVICE_MODEL                            "PV-Boiler Controller"
 #define MANUFACTURER                            "Arnova"
 
+// Socket (network) terminal login password (serial terminal doesn't require login). Uncomment to enable
+//#define TERMINAL_PASSWORD                       "changeme"
+
+// Enable below for additional wifi / mqtt debug messages
+#define WIFI_DEBUG
+//#define MQTT_DEBUG
+
+// Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
+// and HA discover new entities (before we publish their values)
+#define MQTT_SETTLE_TIME_MS                     5000  // ms
+
+// Socket server port. Uncomment to disable
+#define SOCKET_SERVER_PORT                      8000
+
+// UART/socket settings
+#define BAUD_RATE                               115200
+
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50    // uS
 
@@ -31,20 +48,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 // Temperature related
 #define TEMPERATURE_MAX_RETRIES                 255
 #define TEMPERATURE_OVERHEATING_MAX             90.0f // Celsius
-
-// Enable below for additional wifi / mqtt debug messages
-#define WIFI_DEBUG
-//#define MQTT_DEBUG
-
-// Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
-// and HA discover new entities (before we publish their values)
-#define MQTT_SETTLE_TIME_MS                     5000  // ms
-
-// Socket server port. Uncomment to disable
-#define SOCKET_SERVER_PORT                      8000
-
-// UART/socket settings
-#define BAUD_RATE                               115200
 
 // GPIO pin numbers
 #define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)
