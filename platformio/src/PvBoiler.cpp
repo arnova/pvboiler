@@ -213,7 +213,7 @@ void CPvBoiler::MqttPublishDiscovery()
   // Diagnostic
   mqttClient.PublishSensorConfig(MQTT_WIFI_SSID, "", "", "", true);
   mqttClient.PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
-//  mqttClient.PublishSensorConfig(MQTT_IP_NETMASK, "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_IP_NETMASK, "", "", "", true);
 
   mqttClient.PublishSensorConfig(MQTT_TRIAC_PHASE_ANGLE, "us", "", "", true);
   mqttClient.PublishSensorConfig(MQTT_TRIAC_ANGLE_FACTOR, "", "", "measurement", true);
