@@ -18,6 +18,10 @@
 #define CMD_BUF_SIZE 80
 #endif
 
+#ifndef RESULT_BUF_SIZE
+#define RESULT_BUF_SIZE 80
+#endif
+
 class CTerminal
 {
   public:

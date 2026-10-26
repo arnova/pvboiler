@@ -195,20 +195,19 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define MQTT_DSMR_ELECTRICITY_DELIVERED         "dsmr/reading/electricity_currently_delivered"
 #define MQTT_DSMR_ELECTRICITY_RETURNED          "dsmr/reading/electricity_currently_returned"
 
-// Socket server settings
-#define SOCKET_SERVER_PORT                      8000
-
 // Misc. (home assistant) settings
-#define DEFAULT_HOST_NAME                       "PvBoiler"
-#define DEVICE_NAME                             "PV-Boiler"
-#define DEVICE_MODEL                            "PV-Boiler Controller"
-#define MANUFACTURER                            "Arnova"
+#define DEFAULT_HOST_NAME       "PvBoiler"
+#define DEVICE_NAME             "PV-Boiler"
+#define DEVICE_MODEL            "PV-Boiler Controller"
+#define MANUFACTURER            "Arnova"
+
+// Socket server settings
+#define SOCKET_SERVER_PORT      8000
 
 // UART/socket settings
-#define BAUD_RATE                     115200
-#define CMD_BUF_SIZE                  80
-#define RESULT_BUF_SIZE               80
-#define SOCKET_CLIENT_TIMEOUT_MS      100 // ms
+#define BAUD_RATE               115200
+#define CMD_BUF_SIZE            80
+#define RESULT_BUF_SIZE         80
 
 // EEPROM byte sizes
 #define EEPROM_MAX_SIZE         512
