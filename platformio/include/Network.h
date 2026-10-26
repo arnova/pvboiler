@@ -3,6 +3,7 @@
 #define NETWORK_H
 
 #include "system.h"
+#include "EepromLayout.h"
 #include "MqttClient.h"
 
 #include <elapsedMillis.h>

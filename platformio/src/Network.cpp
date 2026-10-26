@@ -22,6 +22,7 @@
 #include "Terminal.h"
 #include "util.h"
 #include "EepromSettings.h"
+#include "EepromLayout.h"
 
 
 CNetwork::CNetwork()

@@ -28,6 +28,7 @@
 #include "util.h"
 #include "App.h"
 #include "system.h"
+#include "EepromLayout.h"
 
 // Application global instance
 CApp g_app;

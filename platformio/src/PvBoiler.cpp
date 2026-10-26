@@ -1,6 +1,7 @@
 #include "PvBoiler.h"
 #include "util.h"
 #include "EepromSettings.h"
+#include "EepromLayout.h"
 
 #include <EEPROM.h>
 

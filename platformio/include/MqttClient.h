@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 
 #include "system.h"
+#include "EepromLayout.h"
 
 class CMqttClient : public PubSubClient
 {
