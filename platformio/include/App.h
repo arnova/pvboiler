@@ -3,6 +3,7 @@
 #define APP_H
 
 #include "system.h"
+#include "SettingLimits.h"
 #include "Network.h"
 #include "PvBoiler.h"
 #include "Ssd1306.h"

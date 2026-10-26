@@ -3,6 +3,7 @@
 #define LEGIONELLA_H
 
 #include "system.h"
+#include "SettingLimits.h"
 
 // Maximum hours that fit in our (uint32_t) seconds counters
 #define LEGIONELLA_HOURS_MAX (UINT32_MAX / 3600)

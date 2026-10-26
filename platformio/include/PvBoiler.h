@@ -8,6 +8,7 @@
 #include <DallasTemperature.h>
 
 #include "system.h"
+#include "SettingLimits.h"
 #include "Uptime.h"
 #include "Network.h"
 #include "PvBoilerCommandHandler.h"

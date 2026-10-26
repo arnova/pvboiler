@@ -28,6 +28,7 @@
 #include "util.h"
 #include "App.h"
 #include "system.h"
+#include "SettingLimits.h"
 #include "EepromLayout.h"
 #include "MqttTopics.h"
 

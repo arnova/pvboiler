@@ -5,6 +5,7 @@
 #include "util.h"
 #include "Network.h"
 #include "system.h"
+#include "SettingLimits.h"
 
 #include <string.h>
 
