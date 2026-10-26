@@ -6,7 +6,7 @@
   Target compiler  : (Generic)
   Dependencies     : (none)
   Initial date     : August 27, 2019
-  Last modified    : October 22, 2026
+  Last modified    : October 26, 2026
 */
 
 #include "util.h"
@@ -393,7 +393,7 @@ char *uint64_to_decstr(uint64_t iNum, char *strDec, const size_t iBufSize)
   else
   {
     bool bShow = false;
-    for (uint32_t iDec = 1000000000 /* Biggest decimal that fits in an uint32_t */; (iDec != 0 && iPos < (iBufSize - 1)); iDec /= 10)
+    for (uint64_t iDec = 10000000000000000000ULL /* Biggest decimal that fits in an uint64_t */; (iDec != 0 && iPos < (iBufSize - 1)); iDec /= 10)
     {
       if (iDec <= iNum)
         bShow = true;
