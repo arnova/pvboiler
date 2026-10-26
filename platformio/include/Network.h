@@ -19,6 +19,18 @@
   using NetClient = EthernetClient;
 #endif
 
+#ifndef MQTT_CONNECT_TIMEOUT
+#define MQTT_CONNECT_TIMEOUT 10000 // ms
+#endif
+
+// Wifi disconnect timeout (max. wait for disconnect to complete when restarting WiFi)
+#ifndef WIFI_DISCONNECT_TIMEOUT
+#define WIFI_DISCONNECT_TIMEOUT 1000  // ms
+#endif
+
+#ifndef WIFI_CONNECT_TIMEOUT
+#define WIFI_CONNECT_TIMEOUT 10000 // ms
+#endif
 
 class CNetwork
 {

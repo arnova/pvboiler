@@ -10,6 +10,12 @@
 // Firmware version string
 const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026 Arno van Amersfoort (Arnova)";
 
+// Misc. (home assistant) settings
+#define DEFAULT_HOST_NAME                       "PvBoiler"
+#define DEVICE_NAME                             "PV-Boiler"
+#define DEVICE_MODEL                            "PV-Boiler Controller"
+#define MANUFACTURER                            "Arnova"
+
 // Triac gate pulse width
 #define GATE_PULSE_WIDTH                        50    // uS
 
@@ -70,7 +76,6 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define NET_PERIOD_MAX_US                       11000 // us
 #define NET_PERIOD_INVALID                      65535 // us
 
-
 // Temperature related
 #define TEMPERATURE_MAX_RETRIES                 255
 #define TEMPERATURE_OVERHEATING_MAX             90.0f // Celsius
@@ -114,38 +119,15 @@ const char VER_STR_P[] PROGMEM = "PV-Boiler Controller " MY_VERSION " - (C) 2026
 #define WIFI_DEBUG
 //#define MQTT_DEBUG
 
-// Wifi connect timeout
-#define WIFI_CONNECT_TIMEOUT                    10000 // ms
-
-// Wifi disconnect timeout (max. wait for disconnect to complete when restarting WiFi)
-#define WIFI_DISCONNECT_TIMEOUT                 1000  // ms
-
-// MQTT connect timeout
-#define MQTT_CONNECT_TIMEOUT                    10000 // ms
-
 // Settle time after (re)connecting/subscribing: lets the broker resend retained setters (before we publish our own)
 // and HA discover new entities (before we publish their values)
 #define MQTT_SETTLE_TIME_MS                     5000  // ms
 
-// MQTT settings
-#define MQTT_PORT                               1883
-#define MQTT_MAX_MESSAGE_SIZE                   1024
-#define MQTT_MAX_TOPIC_ITEM_SIZE                64
-#define MQTT_MAX_CONFIG_TOPIC_SIZE              128
-
-// Misc. (home assistant) settings
-#define DEFAULT_HOST_NAME       "PvBoiler"
-#define DEVICE_NAME             "PV-Boiler"
-#define DEVICE_MODEL            "PV-Boiler Controller"
-#define MANUFACTURER            "Arnova"
-
-// Socket server settings
-#define SOCKET_SERVER_PORT      8000
+// Socket server port. Uncomment to disable
+#define SOCKET_SERVER_PORT                      8000
 
 // UART/socket settings
-#define BAUD_RATE               115200
-#define CMD_BUF_SIZE            80
-#define RESULT_BUF_SIZE         80
+#define BAUD_RATE                               115200
 
 // GPIO pin numbers
 #define STATUS_LED 2        // Onboard LED (GPIO2 / D4 on NodeMCUv2)

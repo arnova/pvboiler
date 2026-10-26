@@ -8,6 +8,22 @@
 #include "system.h"
 #include "EepromLayout.h"
 
+#ifndef MQTT_PORT
+#define MQTT_PORT 1883
+#endif
+
+#ifndef MQTT_MAX_MESSAGE_SIZE
+#define MQTT_MAX_MESSAGE_SIZE 1024
+#endif
+
+#ifndef MQTT_MAX_TOPIC_ITEM_SIZE
+#define MQTT_MAX_TOPIC_ITEM_SIZE 64
+#endif
+
+#ifndef MQTT_MAX_CONFIG_TOPIC_SIZE
+#define MQTT_MAX_CONFIG_TOPIC_SIZE 128
+#endif
+
 class CMqttClient : public PubSubClient
 {
   public:
