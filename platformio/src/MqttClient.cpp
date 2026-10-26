@@ -14,6 +14,7 @@
 #include "Network.h"
 #include "Terminal.h"
 #include "util.h"
+#include "MqttTopics.h"
 
 // Topic buffer sizes (including null char)
 #define MQTT_ITEM_TOPIC_SIZE    (HOST_NAME_MAX_SIZE + MQTT_MAX_TOPIC_ITEM_SIZE + 2) // "<host>/<item>"

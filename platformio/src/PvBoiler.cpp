@@ -2,6 +2,7 @@
 #include "util.h"
 #include "EepromSettings.h"
 #include "EepromLayout.h"
+#include "MqttTopics.h"
 
 #include <EEPROM.h>
 

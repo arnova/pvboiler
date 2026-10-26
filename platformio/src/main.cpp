@@ -29,6 +29,7 @@
 #include "App.h"
 #include "system.h"
 #include "EepromLayout.h"
+#include "MqttTopics.h"
 
 // Application global instance
 CApp g_app;
