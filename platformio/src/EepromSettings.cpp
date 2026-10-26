@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : EEPROM
   Initial date     : October 23, 2026
-  Last modified    : October 25, 2026
+  Last modified    : October 26, 2026
 */
 
 #include <EEPROM.h>
@@ -63,6 +63,25 @@ void CEepromSettings::Load(const int iAddr, float& fSetting, const float fMin, c
   if (fSetting < fMin || fSetting > fMax || isnan(fSetting))
   {
     fSetting = fDefault;
+  }
+}
+
+
+void CEepromSettings::Load(const int iAddr, bool& bSetting, const bool bDefault)
+{
+  uint8_t iVal = 0;
+  EEPROM.get(iAddr, iVal);
+  if (iVal == 0x00)
+  {
+    bSetting = false;
+  }
+  else if (iVal == 0x01)
+  {
+    bSetting = true;
+  }
+  else
+  {
+    bSetting = bDefault;
   }
 }
 

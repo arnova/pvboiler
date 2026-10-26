@@ -1,6 +1,6 @@
 /*
   ESP PV-Boiler - ESP Controlled PV Boiler
-  Last update: October 9, 2026
+  Last update: October 26, 2026
   (C) Copyright 2026 by Arno van Amersfoort
   Web                   : https://github.com/arnova/pvboiler
   Email                 : a r n o DOT v a n DOT a m e r s f o o r t AT g m a i l DOT c o m
@@ -113,7 +113,9 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
   const size_t iLen = strlen(strHostName);
   if (strncmp(topic, strHostName, iLen) != 0 ||
       strlen(topic) < iLen + 2)
+  {
     return; // Hostname mismatch or length too small
+  }
 
   char strVal[32] = { 0 };
   memcpy(strVal, payload, (length < sizeof(strVal)) ? length : sizeof(strVal) - 1);
@@ -131,8 +133,11 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_SET_POWER_PERCENTAGE "/set"))
+
+  if (STRIEQUALS(subTopic, "/" MQTT_SET_POWER_PERCENTAGE "/set"))
   {
     if (bValidInt && iVal >=0 && iVal <= 100)
     {
@@ -142,8 +147,11 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_SET_THERMOSTAT_SETPOINT "/set"))
+
+  if (STRIEQUALS(subTopic, "/" MQTT_SET_THERMOSTAT_SETPOINT "/set"))
   {
     if (bValidInt && iVal >= THERMOSTAT_SETPOINT_MIN && iVal <= THERMOSTAT_SETPOINT_MAX)
     {
@@ -153,8 +161,11 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_DISINFECTION_AGE "/set"))
+
+  if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_DISINFECTION_AGE "/set"))
   {
     if (bValidInt && iVal >=0)
     {
@@ -164,8 +175,11 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_IN_DANGER_ZONE "/set"))
+
+  if (STRIEQUALS(subTopic, "/" MQTT_LEGIONELLA_IN_DANGER_ZONE "/set"))
   {
     if (bValidInt && iVal >=0)
     {
@@ -175,8 +189,11 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
-  else if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
+
+  if (STRIEQUALS(subTopic, "/" MQTT_SET_MODE "/set"))
   {
     CPvBoiler::mode_t mode;
     if (CPvBoiler::GetModeFromName(strVal, mode))
@@ -187,6 +204,8 @@ void MqttCallback(char* topic, byte *payload, const unsigned int length)
     {
       CMqttClient::PrintDataError();
     }
+
+    return;
   }
 }
 

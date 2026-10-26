@@ -268,7 +268,7 @@ result_code_t CPvBoilerCommandHandler::CmdRestartNet(const char *strArgs)
 
   m_network.InitWifi(true);
 
-  return pack_result_code(ERR_CODE_OK_NULL);
+  return pack_result_code(ERR_CODE_OK_NULL); // Result already printed
 }
 
 
@@ -501,6 +501,7 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
     return result;
 
   m_pvBoiler.Reset();
+  m_pvBoiler.MqttRequestRepublish(); // Publish all values directly instead of waiting for the update interval
 
   return pack_result_code(ERR_CODE_OK);
 }
@@ -534,6 +535,7 @@ result_code_t CPvBoilerCommandHandler::CmdFactoryReset(const char *strArgs)
     return result;
 
   m_pvBoiler.FactoryReset();
+  m_pvBoiler.MqttRequestRepublish(); // Publish all values directly instead of waiting for the update interval
 
   return pack_result_code(ERR_CODE_OK);
 }

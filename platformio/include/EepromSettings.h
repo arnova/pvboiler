@@ -14,6 +14,7 @@ class CEepromSettings
     static void Load(const int iAddr, uint8_t& iSetting, const uint8_t iMin, const uint8_t iMax, const uint8_t iDefault);
     static void Load(const int iAddr, uint16_t& iSetting, const uint16_t iMin, const uint16_t iMax, const uint16_t iDefault);
     static void Load(const int iAddr, float& fSetting, const float fMin, const float fMax, const float fDefault);
+    static void Load(const int iAddr, bool& bSetting, const bool bDefault); // 0x00 = false, 0x01 = true, else default
     static void LoadString(const int iAddr, char* strSetting, const size_t iMaxSize); // Cleared when not printable
     static void LoadIp(const int iAddr, uint8_t* ipSetting); // Erased (255.255.255.255) becomes 0.0.0.0
 
