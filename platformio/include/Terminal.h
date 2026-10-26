@@ -72,6 +72,19 @@ class CTerminal
 #endif
     }
 
+    // Print x on serial only, socket gets xSocket instead (eg. to hide sensitive data)
+    template<typename T, typename U>
+    static void printSerialOnly(const T& x, const U& xSocket)
+    {
+      TERM_SERIAL.print(x);
+#ifdef SOCKET_SERVER_PORT
+      if (g_socketServerClient && g_socketServerClient->connected())
+          g_socketServerClient->print(xSocket);
+#else
+      (void) xSocket;
+#endif
+    }
+
     template<typename T>
     static void printf(const T& x)
     {

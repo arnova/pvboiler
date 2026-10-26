@@ -4,7 +4,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : CommandParser, Terminal, util
   Initial date     : August 22, 2019
-  Last modified    : October 22, 2026
+  Last modified    : October 26, 2026
 */
 
 #include "CommandHandler.h"
@@ -44,6 +44,22 @@ void CCommandHandler::PrintItemValue(const char* strItem, const char* strValue)
 void CCommandHandler::PrintItemValue(const char* strItem, const bool bValue)
 {
   PrintItemValue(strItem, bValue ? "1" : "0");
+}
+
+
+void CCommandHandler::PrintItemSecret(const char* strItem, const char* strValue)
+{
+  CTerminal::print(strItem);
+  CTerminal::print("=");
+
+  if (strlen(strValue) == 0)
+  {
+    CTerminal::print("(empty)");
+  }
+  else
+  {
+    CTerminal::printSerialOnly(strValue, "***"); // Don't expose secrets on the (network) socket terminal
+  }
 }
 
 

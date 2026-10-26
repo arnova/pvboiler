@@ -283,8 +283,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   PrintItemValue("host_name", m_network.GetHostName());
   PrintItemValue(" wifi_ssid", m_network.GetWifiSsid());
 
-  const char* strWifiPass = m_network.GetWifiPassword();
-  PrintItemValue(" wifi_pass", (strlen(strWifiPass) == 0) ? "(empty)" : strWifiPass);
+  PrintItemSecret(" wifi_pass", m_network.GetWifiPassword());
 
   PrintItemIp(" ip", m_network.GetIpAddr());
   PrintItemIp(" netmask", m_network.GetNetMask());
@@ -293,8 +292,7 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   const char* strMqttUser = m_network.GetMqttUser();
   PrintItemValue(" mqtt_user", (strlen(strMqttUser) == 0) ? "(empty)" : strMqttUser);
 
-  const char* strMqttPass = m_network.GetMqttPassword();
-  PrintItemValue(" mqtt_password", (strlen(strMqttPass) == 0) ? "(empty)" : strMqttPass);
+  PrintItemSecret(" mqtt_password", m_network.GetMqttPassword());
 
   CTerminal::println("");
 
