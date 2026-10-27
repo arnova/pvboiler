@@ -4,7 +4,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : CommandParser, Terminal, util
   Initial date     : August 22, 2019
-  Last modified    : October 26, 2026
+  Last modified    : October 27, 2026
 */
 
 #include "CommandHandler.h"
@@ -58,7 +58,11 @@ void CCommandHandler::PrintItemSecret(const char* strItem, const char* strValue)
   }
   else
   {
-    CTerminal::printSerialOnly(strValue, "***"); // Don't expose secrets on the (network) socket terminal
+#ifdef TERMINAL_PASSWORD
+    CTerminal::print(strValue); // Socket terminal requires login, so secrets can be shown
+#else
+    CTerminal::printSerialOnly(strValue, "***"); // Don't expose secrets on the (network) socket terminal without login
+#endif
   }
 }
 
