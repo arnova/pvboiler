@@ -336,11 +336,10 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  char strBuf[16]; // Enough room for "255.255.255.255"
-
   PrintItemValue("wifi_conn", m_network.IsConnected());
   PrintItemValue(" mqtt_conn", m_network.IsMqttConnected());
-  PrintItemValue(" wifi_ip", CNetwork::FormatIp(WiFi.localIP(), strBuf, sizeof(strBuf)));
+  PrintItemIp(" wifi_ip", WiFi.localIP());
+  PrintItemIp(" wifi_subnet", WiFi.subnetMask());
 
   CTerminal::println("");
 
