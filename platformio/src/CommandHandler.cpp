@@ -4,7 +4,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : CommandParser, Terminal, util
   Initial date     : August 22, 2019
-  Last modified    : October 27, 2026
+  Last modified    : October 29, 2026
 */
 
 #include "CommandHandler.h"
@@ -33,17 +33,45 @@ result_code_t CCommandHandler::FormatIP(uint8_t *data, char *strResult)
 }
 
 
-void CCommandHandler::PrintItemValue(const char* strItem, const char* strValue)
+void CCommandHandler::PrintItemValue(const char* strItem, const char* strValue, const char* strSuffix)
 {
   CTerminal::print(strItem);
   CTerminal::print("=");
   CTerminal::print(strValue);
+  if (strSuffix != nullptr)
+  {
+    CTerminal::print(strSuffix);
+  }
 }
 
 
 void CCommandHandler::PrintItemValue(const char* strItem, const bool bValue)
 {
   PrintItemValue(strItem, bValue ? "1" : "0");
+}
+
+
+void CCommandHandler::PrintItemValue(const char* strItem, const long iValue, const char* strSuffix)
+{
+  char strBuf[12]; // Enough room for a signed 32 bit number
+  snprintf(strBuf, sizeof(strBuf), "%ld", iValue);
+  PrintItemValue(strItem, strBuf, strSuffix);
+}
+
+
+void CCommandHandler::PrintItemValue(const char* strItem, const unsigned long iValue, const char* strSuffix)
+{
+  char strBuf[12]; // Enough room for an unsigned 32 bit number
+  snprintf(strBuf, sizeof(strBuf), "%lu", iValue);
+  PrintItemValue(strItem, strBuf, strSuffix);
+}
+
+
+void CCommandHandler::PrintItemValue(const char* strItem, const float fValue, const uint8_t iDecimals, const char* strSuffix)
+{
+  char strBuf[24]; // Enough room for our floats with 4 digit precision
+  snprintf(strBuf, sizeof(strBuf), "%.*f", iDecimals, fValue);
+  PrintItemValue(strItem, strBuf, strSuffix);
 }
 
 

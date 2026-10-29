@@ -278,8 +278,6 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  char strBuf[20]; // Enough room for float with 3 decimals
-
   PrintItemValue("host_name", m_network.GetHostName());
   PrintItemValue(" wifi_ssid", m_network.GetWifiSsid());
 
@@ -296,65 +294,34 @@ result_code_t CPvBoilerCommandHandler::CmdInfo(const char *strArgs)
 
   CTerminal::println("");
 
-  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBoilerPowerRating());
-  PrintItemValue("boiler_rating", strBuf);
+  PrintItemValue("boiler_rating", m_pvBoiler.GetBoilerPowerRating(), "W");
   PrintItemValue(" dim_style", m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE ? "phase-angle" : "ssr");
-
-  snprintf(strBuf, sizeof(strBuf), "%u", m_pvBoiler.GetSsrPeriodCount());
-  PrintItemValue(" ssr_period_count", strBuf);
+  PrintItemValue(" ssr_period_count", m_pvBoiler.GetSsrPeriodCount());
 
   CTerminal::println("");
 
   PrintItemValue("budget_src", m_pvBoiler.GetDsmrPowerBudget() ? "dsmr-reader" : "direct");
-
-  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainPos());
-  PrintItemValue(" error_gain_pos", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.3f", m_pvBoiler.GetErrorGainNeg());
-  PrintItemValue(" error_gain_neg", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampPos());
-  PrintItemValue(" step_clamp_pos", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetStepClampNeg());
-  PrintItemValue(" step_clamp_neg", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetDeadZone());
-  PrintItemValue(" dead_zone", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetBudgetMargin());
-  PrintItemValue(" budget_margin", strBuf);
+  PrintItemValue(" error_gain_pos", m_pvBoiler.GetErrorGainPos(), 3);
+  PrintItemValue(" error_gain_neg", m_pvBoiler.GetErrorGainNeg(), 3);
+  PrintItemValue(" step_clamp_pos", m_pvBoiler.GetStepClampPos(), 2, "%");
+  PrintItemValue(" step_clamp_neg", m_pvBoiler.GetStepClampNeg(), 2, "%");
+  PrintItemValue(" dead_zone", m_pvBoiler.GetDeadZone(), "W");
+  PrintItemValue(" budget_margin", m_pvBoiler.GetBudgetMargin(), "W");
 
   CTerminal::println("");
 
-  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetThermostatHysteresis());
-  PrintItemValue("thermostat_hysteresis", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneLowTemperature());
-  PrintItemValue(" danger_zone_low", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDangerZoneHighTemperature());
-  PrintItemValue(" danger_zone_high", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%ud", m_pvBoiler.GetDisinfectionIntervalDays());
-  PrintItemValue(" disinfect_interval", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetDisinfectionDurationMinutes());
-  PrintItemValue(" disinfect_duration", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uC", m_pvBoiler.GetDisinfectionTemperature());
-  PrintItemValue(" disinfect_temp", strBuf);
+  PrintItemValue("thermostat_hysteresis", m_pvBoiler.GetThermostatHysteresis(), "C");
+  PrintItemValue(" danger_zone_low", m_pvBoiler.GetDangerZoneLowTemperature(), "C");
+  PrintItemValue(" danger_zone_high", m_pvBoiler.GetDangerZoneHighTemperature(), "C");
+  PrintItemValue(" disinfect_interval", m_pvBoiler.GetDisinfectionIntervalDays(), "d");
+  PrintItemValue(" disinfect_duration", m_pvBoiler.GetDisinfectionDurationMinutes(), "m");
+  PrintItemValue(" disinfect_temp", m_pvBoiler.GetDisinfectionTemperature(), "C");
 
   CTerminal::println("");
 
-  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetMqttUpdateInterval());
-  PrintItemValue("mqtt_update_interval", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogTimeout());
-  PrintItemValue(" net_wd_timeout", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%us", m_pvBoiler.GetNetWatchDogRecovery());
-  PrintItemValue(" net_wd_recovery", strBuf);
+  PrintItemValue("mqtt_update_interval", m_pvBoiler.GetMqttUpdateInterval(), "s");
+  PrintItemValue(" net_wd_timeout", m_pvBoiler.GetNetWatchDogTimeout(), "s");
+  PrintItemValue(" net_wd_recovery", m_pvBoiler.GetNetWatchDogRecovery(), "s");
 
   CTerminal::println("");
   CTerminal::println("");
@@ -369,7 +336,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   if (result.code != ERR_CODE_OK)
     return result;
 
-  char strBuf[20]; // Enough room for float with 3 decimals
+  char strBuf[16]; // Enough room for "255.255.255.255"
 
   PrintItemValue("wifi_conn", m_network.IsConnected());
   PrintItemValue(" mqtt_conn", m_network.IsMqttConnected());
@@ -380,52 +347,36 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   PrintItemValue("mode", CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
   PrintItemValue(" state", CPvBoiler::m_stateNames[m_pvBoiler.GetState()].strCli);
 
-  snprintf(strBuf, sizeof(strBuf), "%u%%", m_pvBoiler.GetPowerPercentage());
-  PrintItemValue(" perc_set", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%dW", m_pvBoiler.GetPowerBudget());
-  PrintItemValue(" budget_set", strBuf);
+  PrintItemValue(" perc_set", m_pvBoiler.GetPowerPercentage(), "%");
+  PrintItemValue(" budget_set", m_pvBoiler.GetPowerBudget(), "W");
 
   CTerminal::println("");
 
-  snprintf(strBuf, sizeof(strBuf), "%uW", m_pvBoiler.GetCurrentPower());
-  PrintItemValue("power_out", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%.2f%%", m_pvBoiler.GetCurrentPercentage());
-  PrintItemValue(" perc_out", strBuf);
+  PrintItemValue("power_out", m_pvBoiler.GetCurrentPower(), "W");
+  PrintItemValue(" perc_out", m_pvBoiler.GetCurrentPercentage(), 2, "%");
 
   CTerminal::println("");
 
   if (m_pvBoiler.GetBoilerTemperature() > 0.0f)
   {
-    snprintf(strBuf, sizeof(strBuf), "%.1fC", m_pvBoiler.GetBoilerTemperature());
+    PrintItemValue("boiler_t", m_pvBoiler.GetBoilerTemperature(), 1, "C");
   }
   else
   {
-    strcpy(strBuf, "n/a");
+    PrintItemValue("boiler_t", "n/a");
   }
-  PrintItemValue("boiler_t", strBuf);
 
   PrintItemValue(" over_heated", m_pvBoiler.IsBoilerOverheated());
-
-  snprintf(strBuf, sizeof(strBuf), "%iC%s", m_pvBoiler.GetThermostatSetpoint(), m_pvBoiler.IsThermostatMode() ? "" : "(off)");
-  PrintItemValue(" thermostat_set", strBuf);
-
+  PrintItemValue(" thermostat_set", m_pvBoiler.GetThermostatSetpoint(), m_pvBoiler.IsThermostatMode() ? "C" : "C(off)");
   PrintItemValue(" thermostat_allows_heating", m_pvBoiler.GetThermostatAllowsHeating());
 
   CTerminal::println("");
 
   PrintItemValue("disinfection_en", m_pvBoiler.GetDisinfectionEnabled() ? "on" : "off");
   PrintItemValue(" disinfection_required", m_pvBoiler.GetLegionellaDisinfectionRequired());
-
-  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaInDangerZoneHours());
-  PrintItemValue(" in_danger_zone", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%uh", m_pvBoiler.GetLegionellaDisinfectionAgeHours());
-  PrintItemValue(" disinfection_age", strBuf);
-
-  snprintf(strBuf, sizeof(strBuf), "%um", m_pvBoiler.GetLegionellaDisinfectingElapsedMinutes());
-  PrintItemValue(" disinfecting_elapsed", strBuf);
+  PrintItemValue(" in_danger_zone", m_pvBoiler.GetLegionellaInDangerZoneHours(), "h");
+  PrintItemValue(" disinfection_age", m_pvBoiler.GetLegionellaDisinfectionAgeHours(), "h");
+  PrintItemValue(" disinfecting_elapsed", m_pvBoiler.GetLegionellaDisinfectingElapsedMinutes(), "m");
 
   CTerminal::println("");
 
@@ -437,11 +388,8 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   }
   else
   {
-    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iPeriod) / 500.0f);
-    PrintItemValue("mains_period", strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.2fHz", (500.0f * 1000.0f) / static_cast<float>(iPeriod));
-    PrintItemValue(" mains_freq", strBuf);
+    PrintItemValue("mains_period", static_cast<float>(iPeriod) / 500.0f, 3, "ms");
+    PrintItemValue(" mains_freq", (500.0f * 1000.0f) / static_cast<float>(iPeriod), 2, "Hz");
   }
 
   const uint16_t iWindow = m_pvBoiler.GetMainsZeroCrossWindow();
@@ -451,8 +399,7 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   }
   else
   {
-    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(iWindow) / 1000.0f);
-    PrintItemValue(" mains_zero_cross_window", strBuf);
+    PrintItemValue(" mains_zero_cross_window", static_cast<float>(iWindow) / 1000.0f, 3, "ms");
   }
 
   PrintItemValue(" mains_error", !m_pvBoiler.GetPowerGoodFlag());
@@ -461,11 +408,8 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
 
   if (m_pvBoiler.GetDimStyle() == CPvBoiler::DIM_STYLE_PHASE_ANGLE)
   {
-    snprintf(strBuf, sizeof(strBuf), "%.3fms", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f);
-    PrintItemValue("triac_phase_angle", strBuf);
-
-    snprintf(strBuf, sizeof(strBuf), "%.4f", m_pvBoiler.GetTriacAngleFactor());
-    PrintItemValue(" triac_angle_factor", strBuf);
+    PrintItemValue("triac_phase_angle", static_cast<float>(m_pvBoiler.GetTriacPhaseAngle()) / 1000.0f, 3, "ms");
+    PrintItemValue(" triac_angle_factor", m_pvBoiler.GetTriacAngleFactor(), 4);
 
     CTerminal::println("");
   }
