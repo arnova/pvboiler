@@ -19,11 +19,12 @@ class CApp
     void UpdateValues();
     void Loop();
 
-    void IRAM_ATTR ZeroCrossHandler();
+    void IRAM_ATTR ZeroCrossHandler(const uint32_t iNow);
     void IRAM_ATTR TriacGateHandler();
 
 #ifdef ESP32
-    void SetTimerHandle(hw_timer_t* hTriacTimer) { m_hTriacTimer = hTriacTimer; };
+    void InitMcpwm(void (*isr)(void*));
+    void IRAM_ATTR McpwmHandler();
 #endif
 
     bool CommandHandler();
@@ -38,12 +39,10 @@ class CApp
   private:
     bool IRAM_ATTR ScheduleTriac(const uint32_t iFireTime);
     void IRAM_ATTR ArmTriacTimer(const uint32_t iDelayUs);
+    void IRAM_ATTR DisarmTriacTimer();
+    bool IRAM_ATTR IsGateBlanking(const uint32_t iNow) const;
 
     static const char* FormatBar(char* strLine, const float fValue);
-
-#ifdef ESP32
-    hw_timer_t *m_hTriacTimer = nullptr;
-#endif
 
     CNetwork m_network;
     CPvBoiler m_pvBoiler;
@@ -64,7 +63,8 @@ class CApp
     uint32_t m_iLastEventTime = 0; // ISR only
 
     volatile bool m_bTriacOn = false;
-    volatile bool m_bGateBlanking = false;
+    volatile bool m_bGateBlanking = false; // ESP8266 only
+    volatile uint32_t m_iGateTime = 0; // ESP32 only: start of the (hardware generated) gate pulse
     volatile bool m_bTriacBackupPending = false;
     volatile uint32_t m_iTriacBackupTime = 0;
     uint16_t m_iSSRPeriodCounter = 0; // ISR only, half periods

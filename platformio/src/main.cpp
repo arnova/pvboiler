@@ -35,10 +35,11 @@
 // Application global instance
 CApp g_app;
 
+#ifdef ESP8266
 // Interrupt generated when crossing zero in either direction
 void IRAM_ATTR ZeroCrossISR()
 {
-  g_app.ZeroCrossHandler();
+  g_app.ZeroCrossHandler(micros());
 }
 
 
@@ -47,6 +48,13 @@ void IRAM_ATTR TriacTimerISR()
 {
   g_app.TriacGateHandler();
 }
+#else // ESP32
+// MCPWM interrupt: zero cross edge captured and/or end of gate pulse
+void IRAM_ATTR McpwmISR(void*)
+{
+  g_app.McpwmHandler();
+}
+#endif
 
 
 void MqttCallback(char* topic, byte *payload, const unsigned int length)
@@ -239,13 +247,11 @@ void setup()
   timer1_isr_init();
   timer1_attachInterrupt(TriacTimerISR);
   timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);   // TIM_SINGLE = single shot
-#else // ESP32
-  hw_timer_t* hTriacTimer = timerBegin(0, 80, true); // timer 0, /80 prescaler of 80 MHz APB → 1 MHz tick
-  timerAttachInterrupt(hTriacTimer, &TriacTimerISR, true);
-  g_app.SetTimerHandle(hTriacTimer);
-#endif
 
   attachInterrupt(digitalPinToInterrupt(ZERO_CROSS_INPUT), ZeroCrossISR, CHANGE);
+#else // ESP32: Zero cross capture and triac gate pulse are done by MCPWM hardware
+  g_app.InitMcpwm(McpwmISR);
+#endif
 
   // Allow the hardware to sort itself out
   delay(1500);
