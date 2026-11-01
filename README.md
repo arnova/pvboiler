@@ -13,7 +13,7 @@ This project is a complete hardware, firmware & software solution to turn your "
 
 Most other solutions use SSR modules for power control. This design uses a (BTA25/BTA40) **triac** for power control to enable **phase-angle control**, which allows for more accurate power control than with a normal SSR.
 
-The hardware was designed using **KiCAD**, and the software uses **MQTT** for communication, targeted to be used with **Home Assistant**. The hardware and firmware were developed for a NodeMCU v2 (Amica) ESP8266 module, but should in principle work with any ESP8266 or ESP32 board. Obviously, ESP boards with alternative form factors and/or pinouts cannot be directly fitted on the PCB but should be connected using wires, and you may need to modify platformio.ini and the GPIO definitions in include/system.h for your specific ESP board.
+The hardware was designed using **KiCAD**, and the software uses **MQTT** for communication, targeted to be used with **Home Assistant**. The hardware and firmware were developed for either a NodeMCU v2 (Amica) ESP8266 module or an ESP32-DevKit (e.g. Olimex) module, but should in principle work with any ESP8266 or ESP32 board. Obviously, ESP boards with alternative form factors and/or pinouts cannot be directly fitted on the PCB but should be connected using wires, and you may need to modify platformio.ini and the GPIO definitions in include/system.h for your specific ESP board.
 
 ## Features
 
@@ -36,14 +36,12 @@ The hardware was designed using **KiCAD**, and the software uses **MQTT** for co
 
 ## Planned features & improvements
 
-- New PCB design to fit a (dual-core) ESP32-DevKit module
 - Support for a CT current clamp
-- Improve control loop for budget logic mode
 - Standalone support for more P1 providers
 
 ## Known issues
 
-- During development it turned out that due to the ESP8266's single-core architecture WiFi interferes with accurate interrupt timing, causing problems with zero-cross detection and triac gate firing. Mitigations are in place but they can't completely fix the issue. Therefore for new designs it's recommended to use an ESP board with a dual-core ESP32-S3, ESP32-WROOM or ESP32-Wrover. Note that single-core ESP32 variants (e.g. ESP32-C3, ESP32-S2) share the ESP8266's limitation.
+- During development it turned out that due to the ESP8266's single-core architecture WiFi interferes with accurate interrupt timing, causing problems with zero-cross detection and triac gate firing. Mitigations are in place but they can't completely fix the issue. Therefore for new designs it's recommended to use an ESP board with a dual-core ESP32-S3, ESP32-WROOM or ESP32-Wrover like the Olimex ESP32-DevKit-Lipo. Note that single-core ESP32 variants (e.g. ESP32-C3, ESP32-S2) share the ESP8266's limitation.
 
 ## Electromagnetic compatibility
 
@@ -56,7 +54,7 @@ Phase-angle control inherently generates harmonics and electromagnetic interfere
 3. Around some power traces the mask has been intentionally left out. You should solder these traces with extra solder to reduce the power losses due to trace resistance
 4. It is recommended to use 1.5 mm² flexible wires for internal wiring
 5. When using the optional one-wire DS18B20 temperature sensor (probe) there are a few things you must adhere to make it work properly. Its supply should be connected to the board's +5V (not +3.3V), and the cable's ground shield should be connected to the (digital) low-voltage ground (NOT the mains ground) of the board. Most (sealed) temperature probes use a metal probe housing which is connected to the cable shield. Since this may short to the mains ground and introduce (switching) noise into the system, it should be isolated. The easiest way to accomplish this is using some shrink-tube
-6. The electronics are designed for ~230 VAC grids. For other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
+6. The electronics are designed for ~230/240 VAC grids. For other (lower) grid voltages some resistors (R1, R2, R11) need to be modified
 7. The controller can only be connected directly to the normal mains connections of "dumb" hot water boilers. Boilers featuring any kind of (digital) electronics (except for an analog thermostat) require a modification of the boiler's internal wiring, see [Boilers with built-in electronics](#boilers-with-built-in-electronics)
 
 ## Boilers with built-in electronics
