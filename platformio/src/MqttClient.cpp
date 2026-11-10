@@ -20,7 +20,11 @@
 #define MQTT_ITEM_TOPIC_SIZE    (HOST_NAME_MAX_SIZE + MQTT_MAX_TOPIC_ITEM_SIZE + 2) // "<host>/<item>"
 #define MQTT_SETTER_TOPIC_SIZE  (MQTT_ITEM_TOPIC_SIZE + 4)                          // "<host>/<item>/set"
 #define MQTT_STATUS_TOPIC_SIZE  (HOST_NAME_MAX_SIZE + 8)                            // "<host>/status"
-#define MQTT_CONFIG_TOPIC_SIZE  (MQTT_MAX_CONFIG_TOPIC_SIZE + 1)                    // "homeassistant/<type>/<host>/<item>/config"
+#define MQTT_CONFIG_TOPIC_SIZE  (HOST_NAME_MAX_SIZE + MQTT_MAX_TOPIC_ITEM_SIZE + 37) // "homeassistant/<type>/<host>/<item>/config"
+                                                                                    // (14 + 13 for longest type "binary_sensor" + 1 + 1 + 7 + 1)
+
+// PubSubClient's buffer must hold a complete packet: fixed header + topic length field + topic + payload
+#define MQTT_BUFFER_SIZE        (MQTT_MAX_HEADER_SIZE + 2 + MQTT_CONFIG_TOPIC_SIZE + MQTT_MAX_MESSAGE_SIZE)
 
 
 void CMqttClient::PrintDataError(void)
@@ -57,6 +61,41 @@ void CMqttClient::GetFriendlyName(const char* strName, char* strFriendly, const 
     }
   }
   strFriendly[iPos] = '\0';
+}
+
+
+bool CMqttClient::Publish(const char* strTopic, const char* strPayload, const bool bRetain /* = false */)
+{
+  if (!connected())
+  {
+    return false;
+  }
+
+  // Same check PubSubClient does: a message that doesn't fit is rejected before anything is sent
+  if (MQTT_MAX_HEADER_SIZE + 2 + strlen(strTopic) + strlen(strPayload) > getBufferSize())
+  {
+#ifdef MQTT_DEBUG
+    CTerminal::print("ERROR: MQTT message too large for topic: ");
+    CTerminal::println(strTopic);
+#endif
+    return false;
+  }
+
+  if (publish(strTopic, strPayload, bRetain))
+  {
+    return true;
+  }
+
+  // The packet was only partially written (e.g. TCP send buffer full and write timed out). The broker
+  // would take the next packet's bytes as the rest of this payload, corrupting both. Drop the connection
+  // so the broker discards the partial packet; the reconnect republishes everything.
+#ifdef MQTT_DEBUG
+  CTerminal::print("ERROR: MQTT publish failed, disconnecting. Topic: ");
+  CTerminal::println(strTopic);
+#endif
+  disconnect();
+
+  return false;
 }
 
 
@@ -121,11 +160,22 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
 void CMqttClient::PublishConfig(JsonDocument& root, const char* strItem, const char* strTopicType)
 {
   // Serialize JSON for MQTT
-  char strMessage[MQTT_MAX_MESSAGE_SIZE];
-  serializeJson(root, strMessage);
-
   char strTopic[MQTT_CONFIG_TOPIC_SIZE];
-  publish(GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic)), strMessage, true);
+  GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic));
+
+  // serializeJson() silently truncates, which would publish invalid JSON
+  char strMessage[MQTT_MAX_MESSAGE_SIZE];
+  if (measureJson(root) >= sizeof(strMessage))
+  {
+#ifdef MQTT_DEBUG
+    CTerminal::print("ERROR: MQTT config message too large for topic: ");
+    CTerminal::println(strTopic);
+#endif
+    return;
+  }
+  serializeJson(root, strMessage, sizeof(strMessage));
+
+  Publish(strTopic, strMessage, true);
 
 #ifdef MQTT_DEBUG
   CTerminal::print(strTopic);
@@ -166,7 +216,7 @@ void CMqttClient::PublishGetterConfig(JsonDocument& root, const char* strItem, c
 void CMqttClient::UnpublishConfig(const char* strItem, const char* strTopicType, const bool bSetter /* = false */)
 {
   char strTopic[MQTT_CONFIG_TOPIC_SIZE];
-  publish(GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic)), "", true);
+  Publish(GetConfigTopic(strItem, strTopicType, strTopic, sizeof(strTopic)), "", true);
 
 #ifdef MQTT_DEBUG
   CTerminal::print(strTopic);
@@ -304,7 +354,7 @@ void CMqttClient::PublishEnumSensorConfig(const char* strItem, const char* const
 bool CMqttClient::PublishMessage(const char* strItem, const char* strPayload, const bool bRetain /* = false */)
 {
   char strTopic[MQTT_ITEM_TOPIC_SIZE];
-  return publish(GetItemTopic(strItem, strTopic, sizeof(strTopic)), strPayload, bRetain);
+  return Publish(GetItemTopic(strItem, strTopic, sizeof(strTopic)), strPayload, bRetain);
 }
 
 
@@ -342,7 +392,7 @@ void CMqttClient::Init(const uint8_t* serverIp, const char* strHostName, const c
 {
   memcpy(m_serverIp, serverIp, 4);
 
-  setBufferSize(MQTT_MAX_MESSAGE_SIZE);
+  setBufferSize(MQTT_BUFFER_SIZE);
   setServer(m_serverIp, MQTT_PORT);
 
   strcpy(m_strHostName, strHostName);
@@ -398,7 +448,7 @@ bool CMqttClient::ServerConnect()
     return false;
   }
 
-  publish(strWillTopic, "online", true);
+  Publish(strWillTopic, "online", true);
 
   // Get notified when Home Assistant (re)starts so we can republish our (non-retained) states
   subscribe(MQTT_HA_STATUS_TOPIC, 1);
@@ -417,7 +467,7 @@ void CMqttClient::ServerDisconnect()
   {
     // Clean disconnect: will isn't sent by the broker, so explicitly report offline
     char strWillTopic[MQTT_STATUS_TOPIC_SIZE];
-    publish(GetStatusTopic(strWillTopic, sizeof(strWillTopic)), "offline", true);
+    Publish(GetStatusTopic(strWillTopic, sizeof(strWillTopic)), "offline", true);
 
     disconnect();
   }

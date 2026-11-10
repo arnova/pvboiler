@@ -20,9 +20,6 @@
 #define MQTT_MAX_TOPIC_ITEM_SIZE 64
 #endif
 
-#ifndef MQTT_MAX_CONFIG_TOPIC_SIZE
-#define MQTT_MAX_CONFIG_TOPIC_SIZE 128
-#endif
 
 class CMqttClient : public PubSubClient
 {
@@ -55,6 +52,8 @@ class CMqttClient : public PubSubClient
     const char* GetHostName() const { return m_strHostName; };
 
   private:
+    bool Publish(const char* strTopic, const char* strPayload, const bool bRetain = false);
+
     const char* GetItemTopic(const char* strItem, char* strBuf, const size_t iBufSize) const;
     const char* GetSetterTopic(const char* strItem, char* strBuf, const size_t iBufSize) const;
     const char* GetStatusTopic(char* strBuf, const size_t iBufSize) const;
