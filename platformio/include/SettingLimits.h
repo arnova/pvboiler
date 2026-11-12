@@ -41,7 +41,7 @@
 #define STEP_CLAMP_NEG_MAX                      100.0f  // %
 
 // Thermostat related
-#define THERMOSTAT_SETPOINT_DEFAULT             55    // Celsius
+#define THERMOSTAT_SETPOINT_DEFAULT             60    // Celsius
 #define THERMOSTAT_SETPOINT_MIN                 45    // Celsius
 #define THERMOSTAT_SETPOINT_MAX                 90    // Celsius
 #define THERMOSTAT_HYSTERESIS_DEFAULT           1     // Celsius
