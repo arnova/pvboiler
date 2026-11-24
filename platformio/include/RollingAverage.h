@@ -13,6 +13,7 @@ class CRollingAverage
     void SetAvgCount(uint32_t iCount);
     float GetValue();
     bool HasValue() { return m_iAccCount != 0; };
+    bool HasCompleteValue() { return m_iAccCount == m_iAvgCountSet; };
     uint32_t GetAccCount() { return m_iAccCount; };
     float UpdateValue(const float fVal);
     float RemoveValue();

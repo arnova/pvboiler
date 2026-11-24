@@ -6,7 +6,7 @@
   Target compiler  : (Generic)
   Dependencies     : (none)
   Initial date     : August 27, 2019
-  Last modified    : October 26, 2026
+  Last modified    : November 23, 2026
 */
 
 #include "util.h"
@@ -30,6 +30,30 @@ uint32_t x_to_y(const uint32_t iX, const uint32_t iY)
   }
 
   return iResult;
+}
+
+
+/* calc_crc8 - Calculate a CRC-8 (MSB first, no reflection, no final XOR)
+   Arguments : *buf     = Byte buffer to calculate the CRC over
+               iBufSize = Size of *buf
+               iPoly    = Polynomial (eg. 0x07)
+               iInit    = Initial value (eg. 0x00 or 0xFF)
+   Returns   : The CRC-8 of *buf
+ */
+uint8_t calc_crc8(const uint8_t *buf, const size_t iBufSize, const uint8_t iPoly, const uint8_t iInit)
+{
+  uint8_t iCrc = iInit;
+
+  for (size_t it = 0; it < iBufSize; it++)
+  {
+    iCrc ^= buf[it];
+    for (uint8_t iBit = 0; iBit < 8; iBit++)
+    {
+      iCrc = (iCrc & 0x80) ? (uint8_t)((iCrc << 1) ^ iPoly) : (uint8_t)(iCrc << 1);
+    }
+  }
+
+  return iCrc;
 }
 
 
@@ -570,7 +594,7 @@ bool dblstr_to_double(const char *str, double *pValue)
 bool decstr_to_int32(const char *str, int32_t *pValue)
 {
   char *end;
-  *pValue = strtol(str, &end, 0);
+  *pValue = strtol(str, &end, 10);
 
   // Make sure it's not zero-length and it's a proper number (not suffixed with anything):
   if (*end || end == str)
@@ -584,7 +608,7 @@ bool decstr_to_int32(const char *str, int32_t *pValue)
 bool decstr_to_uint32(const char *str, uint32_t *pValue)
 {
   char *end;
-  *pValue = strtoul(str, &end, 0);
+  *pValue = strtoul(str, &end, 10);
 
   // Make sure it's not zero-length and it's a proper number (not suffixed with anything):
   if (*end || end == str)
@@ -834,7 +858,7 @@ bool bytes_to_int32(const uint8_t* buf, const size_t iBufSize, int32_t* pValue)
   strBytes[iBufSize] = '\0';
 
   char *end;
-  int32_t iResult32 = strtol(strBytes, &end, 0);
+  int32_t iResult32 = strtol(strBytes, &end, 10);
   *pValue = iResult32;
 
   // Make sure it's not zero-length and it's a proper number (not suffixed with anything):
@@ -857,7 +881,7 @@ bool bytes_to_float(const uint8_t* buf, const size_t iBufSize, float* pValue)
   strBytes[iBufSize] = '\0';
 
   char *end;
-  *pValue = strtof(strBytes, &end);
+  *pValue = (float)strtod(strBytes, &end); // NOTE: Not strtof(), avr-libc doesn't have it
 
   // Make sure it's not zero-length and it's a proper number (not suffixed with anything):
   if (*end || end == strBytes)

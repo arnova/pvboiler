@@ -39,17 +39,18 @@ extern "C"{
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 // Get the integer size of n-bits
-#define BIT_INT_SIZE(n) ((1 << (n)) - 1)
+#define BIT_INT_SIZE(n) ((1 << n) - 1)
 
 // Divide and round up
-#define DIV_CEIL(x,y) (((x) / (y)) + ((x) % (y) == 0 ? 0 : 1))
+#define DIV_CEIL(x,y) ((x / y) + (x % y == 0 ? 0 : 1))
 
 /* Macros for getting (sub)bytes from e.g. bigger numbers */
-#define LOBYTE(x)     ((x) & 0xFF)
-#define HIBYTE(x)     (((x) >> 8) & 0xFF)
+#define LOBYTE(x)     (x & 0xFF)
+#define HIBYTE(x)     ((x >> 8) & 0xFF)
 #define SUBBYTE(x, n) ((char*)(&x))[n]
 
 uint32_t x_to_y(const uint32_t iX, const uint32_t iY);
+uint8_t calc_crc8(const uint8_t *buf, const size_t iBufSize, const uint8_t iPoly, const uint8_t iInit);
 bool check_bit_size(const uint8_t *buf, const size_t iBufSize, const uint8_t iMaxBitSize);
 char *strsplit(char *str, const char* delims);
 int strcount(const char *str, const char* delims);
