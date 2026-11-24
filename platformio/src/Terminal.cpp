@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : util
   Initial date     : July 30, 2026
-  Last modified    : October 26, 2026
+  Last modified    : November 20, 2026
 */
 
 #include "Terminal.h"
@@ -133,10 +133,14 @@ void CTerminal::Process(void)
 
   // No data?
   if (rxChar == 0x00)
+  {
     return;
+  }
 
   if (m_pActiveTermRxData->state == RX_STATE_READY)
+  {
     return; // All buffers full
+  }
 
   if (m_pActiveTermRxData->state == RX_STATE_DONE)
   {
@@ -146,7 +150,8 @@ void CTerminal::Process(void)
 
   if (rxChar == '!') // Repeat the previous command but don't execute it yet
   {
-    if (m_pActiveTermRxData->buf_count == 0)
+    // Only when nothing has been typed yet and the previous command has been processed (else it would never execute)
+    if (m_pActiveTermRxData->buf_count == 0 && m_pInactiveTermRxData->state == RX_STATE_DONE)
     {
       // Swap pointers
       volatile rx_data_t* p_temp = m_pActiveTermRxData;
