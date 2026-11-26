@@ -5,6 +5,7 @@
 #include "system.h"
 #include "EepromLayout.h"
 #include "MqttClient.h"
+#include "Uptime.h"
 
 #include <elapsedMillis.h>
 
@@ -68,8 +69,7 @@ class CNetwork
     const char* GetMqttPassword() { return m_strMqttPassword; };
 
     bool IsConnected() { return m_bWifiConnected; };
-    uint32_t GetWifiReconnectCount() { return m_iWifiReconnectCount; };
-    void ResetWifiReconnectCount() { m_iWifiReconnectCount = 0; };
+    CUptime::uptime_t GetWifiConnTime() const { return m_wifiConnTime.GetBreakdown(); }; // Time since the last WiFi (re)connect
     bool IsMqttConnected() { return m_bWifiConnected && m_mqttClient.connected(); };
     bool HandleMqttClient();
 
@@ -97,7 +97,7 @@ class CNetwork
     uint8_t m_mqttIpAddr[4] = { 0 };
 
     bool m_bWifiConnected = false;
-    uint32_t m_iWifiReconnectCount = 0; // Number of times the WiFi connection was lost (since boot)
+    CUptime m_wifiConnTime; // Time since the last WiFi (re)connect
     bool m_bMqttRepublish = false;
     elapsedMillis m_wifiTimeoutTimer = 0;
     elapsedMillis m_mqttTimeoutTimer = 0;

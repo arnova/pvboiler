@@ -21,6 +21,14 @@ void CUptime::Update()
 }
 
 
+void CUptime::Reset()
+{
+  m_iLastMillis = millis();
+  m_iAccumMs    = 0;
+  m_iSeconds    = 0;
+}
+
+
 CUptime::uptime_t CUptime::GetBreakdown() const
 {
   uint32_t iSeconds = m_iSeconds;

@@ -17,6 +17,7 @@ class CUptime
     typedef struct uptime_s uptime_t;
 
     void Update();
+    void Reset();
     uptime_t GetBreakdown() const;
 
     uint32_t Get() const { return m_iSeconds; }

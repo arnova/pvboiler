@@ -28,7 +28,7 @@
 #define MQTT_WIFI_SSID                          "wifi_ssid"
 #define MQTT_WIFI_RSSI                          "wifi_rssi"
 #define MQTT_WIFI_CHANNEL                       "wifi_channel"
-#define MQTT_WIFI_RECONNECT_COUNT               "wifi_reconnect_count"
+#define MQTT_WIFI_CONN_TIME                     "wifi_conn_time"
 #define MQTT_MAC_ADDRESS                        "mac_address"
 #define MQTT_IP_ADDRESS                         "ip_address"
 #define MQTT_IP_NETMASK                         "ip_netmask"
