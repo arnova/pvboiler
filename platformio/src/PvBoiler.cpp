@@ -212,6 +212,10 @@ void CPvBoiler::MqttPublishDiscovery()
 
   // Diagnostic
   mqttClient.PublishSensorConfig(MQTT_WIFI_SSID, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_WIFI_RSSI, "dBm", "signal_strength", "measurement", true);
+  mqttClient.PublishSensorConfig(MQTT_WIFI_CHANNEL, "", "", "", true);
+  mqttClient.PublishSensorConfig(MQTT_WIFI_RECONNECT_COUNT, "", "", "total_increasing", true);
+  mqttClient.PublishSensorConfig(MQTT_MAC_ADDRESS, "", "", "", true);
   mqttClient.PublishSensorConfig(MQTT_IP_ADDRESS, "", "", "", true);
   mqttClient.PublishSensorConfig(MQTT_IP_NETMASK, "", "", "", true);
 
@@ -446,6 +450,9 @@ bool CPvBoiler::MqttPublishValues()
     char strBuf[24]; // Enough room for "65535d 23:59:59"
     snprintf(strBuf, sizeof(strBuf), "%ud %02u:%02u:%02u", upTime.iDays, upTime.iHours, upTime.iMinutes, upTime.iSeconds);
     mqttClient.PublishMessage(MQTT_UP_TIME, strBuf);
+
+    // Publish WiFi signal strength. Note: Always published since it fluctuates continuously
+    mqttClient.PublishInt(MQTT_WIFI_RSSI, WiFi.RSSI());
   }
 
   m_bMqttRepublish = false;

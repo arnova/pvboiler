@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : PubSubClient ArduinoJson Terminal util
   Initial date     : July 30, 2026
-  Last modified    : October 22, 2026
+  Last modified    : November 26, 2026
 */
 
 #include <Arduino.h>
@@ -154,6 +154,10 @@ void CMqttClient::ConstructConfigMessage(JsonDocument& root, const char* strItem
   device["model"] = DEVICE_MODEL;
   device["manufacturer"] = MANUFACTURER;
   device["sw_version"] = MY_VERSION;
+
+  // Lets Home Assistant link this device to e.g. the router's entry for it
+  device["connections"][0][0] = "mac";
+  device["connections"][0][1] = WiFi.macAddress();
 }
 
 

@@ -341,6 +341,28 @@ result_code_t CPvBoilerCommandHandler::CmdStatus(const char *strArgs)
   PrintItemIp(" wifi_ip", WiFi.localIP());
   PrintItemIp(" wifi_subnet", WiFi.subnetMask());
 
+  if (m_network.IsConnected())
+  {
+    PrintItemValue(" wifi_rssi", static_cast<long>(WiFi.RSSI()), "dBm");
+  }
+  else
+  {
+    PrintItemValue(" wifi_rssi", "n/a");
+  }
+
+  CTerminal::println("");
+
+  PrintItemValue("wifi_mac", WiFi.macAddress().c_str());
+  if (m_network.IsConnected())
+  {
+    PrintItemValue(" wifi_channel", static_cast<long>(WiFi.channel()));
+  }
+  else
+  {
+    PrintItemValue(" wifi_channel", "n/a");
+  }
+  PrintItemValue(" wifi_reconnects", static_cast<unsigned long>(m_network.GetWifiReconnectCount()));
+
   CTerminal::println("");
 
   PrintItemValue("mode", CPvBoiler::m_modeNames[m_pvBoiler.GetMode()].strCli);
@@ -442,7 +464,11 @@ result_code_t CPvBoilerCommandHandler::CmdReset(const char *strArgs)
     return result;
 
   m_pvBoiler.Reset();
-  m_pvBoiler.MqttRequestRepublish(); // Publish all values directly instead of waiting for the update interval
+  m_network.ResetWifiReconnectCount();
+
+  // Publish all values directly instead of waiting for the update interval
+  m_pvBoiler.MqttRequestRepublish();
+  m_network.MqttRequestRepublish();
 
   return pack_result_code(ERR_CODE_OK);
 }

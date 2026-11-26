@@ -5,7 +5,7 @@
   Written by       : Arno van Amersfoort
   Dependencies     : elapsedMillis MqttClient Terminal util
   Initial date     : July 11, 2026
-  Last modified    : October 26, 2026
+  Last modified    : November 26, 2026
 */
 
 #include <Arduino.h>
@@ -239,6 +239,11 @@ void CNetwork::MqttPublishValues()
   m_mqttClient.PublishMessage(MQTT_IP_ADDRESS, FormatIp(WiFi.localIP(), strBuf, sizeof(strBuf)));
   m_mqttClient.PublishMessage(MQTT_IP_NETMASK, FormatIp(WiFi.subnetMask(), strBuf, sizeof(strBuf)));
 
+  // Note: These only change on a (WiFi) reconnect, which also triggers a republish
+  m_mqttClient.PublishInt(MQTT_WIFI_CHANNEL, WiFi.channel());
+  m_mqttClient.PublishUInt(MQTT_WIFI_RECONNECT_COUNT, m_iWifiReconnectCount);
+  m_mqttClient.PublishMessage(MQTT_MAC_ADDRESS, WiFi.macAddress().c_str());
+
   m_bMqttRepublish = false;
 }
 
@@ -362,6 +367,7 @@ void CNetwork::Loop()
     {
       // Connection lost
       m_bWifiConnected = false;
+      m_iWifiReconnectCount++;
 
 #ifdef WIFI_DEBUG
       TERM_SERIAL.println("");
